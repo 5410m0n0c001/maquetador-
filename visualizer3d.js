@@ -353,7 +353,8 @@ window.Visualizer3D = (function () {
       }
 
       // Update positions (x -> X, y -> Z)
-      group.position.set(elem.x, 0, elem.y);
+      var yOffset = (elem.category === 'estructuras') ? 0 : 0.025;
+      group.position.set(elem.x, yOffset, elem.y);
       group.rotation.y = -(elem.rotation || 0) * Math.PI / 180;
     });
 
@@ -422,10 +423,10 @@ window.Visualizer3D = (function () {
     if (elem.type === 'salon') {
       // Floor slab
       var floor = new THREE.Mesh(
-        new THREE.BoxGeometry(w, 0.04, h),
+        new THREE.BoxGeometry(w, 0.0201, h),
         new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.5 })
       );
-      floor.position.y = 0.02;
+      floor.position.y = 0.01;
       floor.receiveShadow = true;
       group.add(floor);
 
