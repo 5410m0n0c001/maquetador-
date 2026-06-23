@@ -1,0 +1,1713 @@
+// ============================================================
+// app.js — Universal Venue Floor Plan Builder
+// Primavera Events Group
+// Standalone, no ES modules. Loads after: elements-db.js, editor2d.js, visualizer3d.js
+// ============================================================
+
+(function () {
+  'use strict';
+
+  // ══════════════════════════════════════════════════════════
+  // GLOBAL STATE
+  // ══════════════════════════════════════════════════════════
+  window.AppState = {
+    elements: [],
+    terrain: { w: 50, h: 60 },
+    selectedId: null,
+    activeView: '2d',
+    useGrid: true,
+    history: [],
+    historyIndex: -1,
+    pendingType: null,
+    layers: {
+      estructuras:      true,
+      accesos:          true,
+      mobiliario:       true,
+      entretenimiento:  true,
+      decoracion:       true,
+      proveedores:      true,
+      flujo_invitados:  true,
+      flujo_proveedores: true,
+      flujo_staff:      true
+    }
+  };
+
+  var LS_KEY = 'primavera_universal_planner';
+  var _idCounter = 1;
+  var _tableCounter = 0;
+  
+  var _supabase = null;
+  var SB_URL_KEY = 'primavera_supabase_url';
+  var SB_ANON_KEY = 'primavera_supabase_key';
+
+  // ══════════════════════════════════════════════════════════
+  // UTILITY
+  // ══════════════════════════════════════════════════════════
+  function uid() {
+    return 'el_' + Date.now() + '_' + (_idCounter++);
+  }
+
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function $(sel, ctx) {
+    return (ctx || document).querySelector(sel);
+  }
+
+  function $$(sel, ctx) {
+    return Array.prototype.slice.call((ctx || document).querySelectorAll(sel));
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // TOAST NOTIFICATIONS
+  // ══════════════════════════════════════════════════════════
+  function showToast(message, type) {
+    type = type || 'info';
+    var colors = {
+      info:    '#3b82f6',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error:   '#ef4444'
+    };
+    var icons = {
+      info:    'ℹ',
+      success: '✓',
+      warning: '⚠',
+      error:   '✕'
+    };
+
+    var container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      container.style.cssText = [
+        'position:fixed',
+        'bottom:24px',
+        'right:24px',
+        'z-index:99999',
+        'display:flex',
+        'flex-direction:column',
+        'gap:8px',
+        'pointer-events:none'
+      ].join(';');
+      document.body.appendChild(container);
+    }
+
+    var toast = document.createElement('div');
+    toast.style.cssText = [
+      'background:' + colors[type],
+      'color:#fff',
+      'padding:10px 16px',
+      'border-radius:8px',
+      'font-size:14px',
+      'font-family:sans-serif',
+      'box-shadow:0 4px 16px rgba(0,0,0,0.35)',
+      'display:flex',
+      'align-items:center',
+      'gap:8px',
+      'pointer-events:auto',
+      'animation:toastIn 0.25s ease',
+      'max-width:320px'
+    ].join(';');
+    toast.innerHTML = '<span style="font-size:16px">' + (icons[type] || '•') + '</span>' +
+                      '<span>' + message + '</span>';
+
+    container.appendChild(toast);
+
+    setTimeout(function () {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s';
+      setTimeout(function () {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 350);
+    }, 3000);
+  }
+
+  // Inject toast animation
+  (function () {
+    var style = document.createElement('style');
+    style.textContent = '@keyframes toastIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }';
+    document.head.appendChild(style);
+  })();
+
+  // ══════════════════════════════════════════════════════════
+  // HISTORY (UNDO/REDO)
+  // ══════════════════════════════════════════════════════════
+  function saveHistory() {
+    var s = AppState;
+    // Truncate forward history
+    s.history = s.history.slice(0, s.historyIndex + 1);
+    s.history.push(deepClone(s.elements));
+    if (s.history.length > 60) s.history.shift();
+    s.historyIndex = s.history.length - 1;
+  }
+
+  function undo() {
+    var s = AppState;
+    if (s.historyIndex <= 0) {
+      showToast('No hay más acciones para deshacer.', 'warning');
+      return;
+    }
+    s.historyIndex--;
+    s.elements = deepClone(s.history[s.historyIndex]);
+    s.selectedId = null;
+    _refresh();
+    updateCounters();
+    showToast('Deshecho', 'info');
+  }
+
+  function redo() {
+    var s = AppState;
+    if (s.historyIndex >= s.history.length - 1) {
+      showToast('No hay más acciones para rehacer.', 'warning');
+      return;
+    }
+    s.historyIndex++;
+    s.elements = deepClone(s.history[s.historyIndex]);
+    s.selectedId = null;
+    _refresh();
+    updateCounters();
+    showToast('Rehecho', 'info');
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // ELEMENT CRUD
+  // ══════════════════════════════════════════════════════════
+  function addElement(type, x, y) {
+    var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
+    if (!cat) {
+      showToast('Elemento desconocido: ' + type, 'error');
+      return null;
+    }
+
+    // Imperial table: prompt for tablones
+    if (type === 'table_imperial') {
+      _promptImperial(x, y);
+      return null;
+    }
+
+    _tableCounter++;
+    var isMesa = cat.defaultChairs > 0 || type.startsWith('table_') || type === 'lounge_set';
+    var elem = {
+      id: uid(),
+      type: type,
+      category: cat.category,
+      name: cat.name,
+      x: x,
+      y: y,
+      w: cat.defaultW,
+      h: cat.defaultH,
+      rotation: 0,
+      color: cat.color,
+      chairs: cat.defaultChairs,
+      editable: true,
+      removable: true,
+      layer: cat.layer || cat.category,
+      mesaConfig: {
+        mantelColor: '#ffffff',
+        caminoColor: '#c9a96e',
+        servilletaColor: '#ffffff',
+        cubiertos: 'dorado',
+        vajilla: true,
+        cristal: true,
+        tipoSilla: 'tiffany',
+        menu: '',
+        mesaNum: isMesa ? _tableCounter : 0
+      }
+    };
+
+    saveHistory();
+    AppState.elements.push(elem);
+    _refresh();
+    updateCounters();
+    selectElement(elem.id);
+    showToast(cat.name + ' agregado.', 'success');
+    return elem;
+  }
+
+  function _promptImperial(x, y) {
+    var modal = document.createElement('div');
+    modal.style.cssText = [
+      'position:fixed', 'inset:0', 'background:rgba(0,0,0,0.7)',
+      'z-index:50000', 'display:flex', 'align-items:center', 'justify-content:center'
+    ].join(';');
+
+    var box = document.createElement('div');
+    box.style.cssText = [
+      'background:#1e293b', 'border:1px solid #334155', 'border-radius:12px',
+      'padding:28px 32px', 'min-width:300px', 'font-family:sans-serif', 'color:#e2e8f0'
+    ].join(';');
+
+    box.innerHTML = [
+      '<h3 style="margin:0 0 16px;color:#c9a96e;font-size:18px">Mesa Imperial</h3>',
+      '<p style="margin:0 0 14px;font-size:14px;color:#94a3b8">¿Cuántos tablones? <br><small>(mínimo 2 — cada tablón = 2.4m, 10 personas)</small></p>',
+      '<input id="imperial-tablones" type="number" min="2" max="20" value="3" style="width:100%;padding:8px 12px;background:#0f172a;border:1px solid #475569;border-radius:6px;color:#fff;font-size:16px;box-sizing:border-box;">',
+      '<div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">',
+      '<button id="imperial-cancel" style="padding:8px 18px;background:#374151;color:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-size:14px">Cancelar</button>',
+      '<button id="imperial-ok" style="padding:8px 18px;background:#c9a96e;color:#1e293b;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700">Agregar</button>',
+      '</div>'
+    ].join('');
+
+    modal.appendChild(box);
+    document.body.appendChild(modal);
+
+    var inp = box.querySelector('#imperial-tablones');
+    inp.focus();
+    inp.select();
+
+    box.querySelector('#imperial-cancel').onclick = function () { modal.remove(); };
+    box.querySelector('#imperial-ok').onclick = function () {
+      var n = Math.max(2, parseInt(inp.value, 10) || 3);
+      modal.remove();
+      _createImperial(n, x, y);
+    };
+    inp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') box.querySelector('#imperial-ok').click();
+      if (e.key === 'Escape') box.querySelector('#imperial-cancel').click();
+    });
+  }
+
+  function _createImperial(tablones, x, y) {
+    var cat = window.getCatalogEntry('table_imperial');
+    _tableCounter++;
+    var elem = {
+      id: uid(),
+      type: 'table_imperial',
+      category: 'mobiliario',
+      name: 'Mesa Imperial',
+      x: x,
+      y: y,
+      w: tablones * 2.4,
+      h: 0.8,
+      rotation: 0,
+      color: cat ? cat.color : '#5c3d2e',
+      chairs: tablones * 10,
+      tablones: tablones,
+      editable: true,
+      removable: true,
+      layer: 'mobiliario',
+      mesaConfig: {
+        mantelColor: '#ffffff',
+        caminoColor: '#c9a96e',
+        servilletaColor: '#ffffff',
+        cubiertos: 'dorado',
+        vajilla: true,
+        cristal: true,
+        tipoSilla: 'tiffany',
+        menu: '',
+        mesaNum: _tableCounter
+      }
+    };
+    saveHistory();
+    AppState.elements.push(elem);
+    _refresh();
+    updateCounters();
+    selectElement(elem.id);
+    showToast('Mesa Imperial (' + tablones + ' tablones) agregada.', 'success');
+  }
+
+  function removeElement(id) {
+    var idx = AppState.elements.findIndex(function (e) { return e.id === id; });
+    if (idx === -1) return;
+    saveHistory();
+    AppState.elements.splice(idx, 1);
+    if (AppState.selectedId === id) {
+      AppState.selectedId = null;
+      deselectAll();
+    }
+    _refresh();
+    updateCounters();
+    showToast('Elemento eliminado.', 'warning');
+  }
+
+  function updateElement(id, changes) {
+    var elem = AppState.elements.find(function (e) { return e.id === id; });
+    if (!elem) return;
+    Object.assign(elem, changes);
+    _refresh();
+    updateCounters();
+  }
+
+  function selectElement(id) {
+    AppState.selectedId = id;
+    var elem = AppState.elements.find(function (e) { return e.id === id; });
+
+    if (window.Editor2D) window.Editor2D.select(id);
+    if (window.Visualizer3D) window.Visualizer3D.select(id);
+
+    if (elem) {
+      _populateInspector(elem);
+    }
+    _updateInspectorVisibility(!!elem);
+  }
+
+  function deselectAll() {
+    AppState.selectedId = null;
+    if (window.Editor2D) window.Editor2D.deselect();
+    if (window.Visualizer3D) window.Visualizer3D.deselect();
+    _updateInspectorVisibility(false);
+  }
+
+  function duplicateElement(id) {
+    var src = AppState.elements.find(function (e) { return e.id === id; });
+    if (!src) return;
+    saveHistory();
+    var copy = deepClone(src);
+    copy.id = uid();
+    copy.x = Math.min(src.x + 1.5, AppState.terrain.w - src.w / 2);
+    copy.y = Math.min(src.y + 1.5, AppState.terrain.h - src.h / 2);
+    if (copy.mesaConfig) {
+      _tableCounter++;
+      copy.mesaConfig.mesaNum = _tableCounter;
+    }
+    AppState.elements.push(copy);
+    _refresh();
+    updateCounters();
+    selectElement(copy.id);
+    showToast('Elemento duplicado.', 'success');
+  }
+
+  function rotateElement(id, deg) {
+    var elem = AppState.elements.find(function (e) { return e.id === id; });
+    if (!elem) return;
+    saveHistory();
+    elem.rotation = ((elem.rotation || 0) + (deg || 45)) % 360;
+    _refresh();
+    updateInspectorField('inp-rotation', elem.rotation);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // REFRESH — update both 2D and 3D views
+  // ══════════════════════════════════════════════════════════
+  function _refresh() {
+    if (window.Editor2D) window.Editor2D.update(AppState.elements);
+    if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
+    if (AppState.selectedId) window.Editor2D && window.Editor2D.select(AppState.selectedId);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // COUNTERS
+  // ══════════════════════════════════════════════════════════
+  function updateCounters() {
+    var totalGuests = 0;
+    var tableCounts = {};
+
+    AppState.elements.forEach(function (elem) {
+      if (elem.chairs) totalGuests += elem.chairs;
+      var t = elem.type;
+      tableCounts[t] = (tableCounts[t] || 0) + 1;
+    });
+
+    var guestEl = document.getElementById('counter-guests');
+    if (guestEl) guestEl.textContent = totalGuests;
+
+    var tableEl = document.getElementById('counter-tables');
+    if (tableEl) {
+      var tableTotal = 0;
+      Object.keys(tableCounts).forEach(function (k) {
+        if (k.startsWith('table_') || k === 'lounge_set') tableTotal += tableCounts[k];
+      });
+      tableEl.textContent = tableTotal;
+    }
+
+    var imperialEl = document.getElementById('counter-imperial');
+    if (imperialEl) {
+      imperialEl.textContent = tableCounts['table_imperial'] || 0;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // INSPECTOR
+  // ══════════════════════════════════════════════════════════
+  function _populateInspector(elem) {
+    function setVal(id, v) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = !!v;
+      else el.value = (v !== undefined && v !== null) ? v : '';
+    }
+
+    setVal('inspector-name', elem.name);
+    setVal('inspector-x', parseFloat(elem.x).toFixed(2));
+    setVal('inspector-y', parseFloat(elem.y).toFixed(2));
+    setVal('inspector-w', parseFloat(elem.w).toFixed(2));
+    setVal('inspector-h', parseFloat(elem.h).toFixed(2));
+    setVal('inspector-rotation', elem.rotation || 0);
+    setVal('inspector-color', elem.color || '#888888');
+    
+    var disp = document.getElementById('color-hex-display');
+    if (disp) disp.textContent = (elem.color || '#888888').toUpperCase();
+
+    setVal('inspector-chairs', elem.chairs || 0);
+
+    // Imperial tablones row (hidden unless imperial table)
+    var tablonRow = document.getElementById('mesa-tablones-row');
+    if (tablonRow) {
+      if (elem.type === 'table_imperial') {
+        tablonRow.classList.remove('hidden');
+        setVal('mesa-num-tablones', elem.tablones || 3);
+      } else {
+        tablonRow.classList.add('hidden');
+      }
+    }
+
+    // Mesa config
+    var hasMesa = !!(elem.mesaConfig);
+    var tabMesaBtn = document.getElementById('tab-mesa');
+    if (tabMesaBtn) {
+      tabMesaBtn.style.display = hasMesa ? '' : 'none';
+      if (!hasMesa && tabMesaBtn.classList.contains('active')) {
+        var tabPropsBtn = document.getElementById('tab-settings');
+        if (tabPropsBtn) tabPropsBtn.click();
+      }
+    }
+
+    if (hasMesa && elem.mesaConfig) {
+      setVal('mesa-numero', elem.mesaConfig.mesaNum || 0);
+      setVal('mesa-mantel-color', elem.mesaConfig.mantelColor);
+      setVal('mesa-camino-color', elem.mesaConfig.caminoColor);
+      setVal('mesa-servilleta-color', elem.mesaConfig.servilletaColor);
+      setVal('mesa-cubiertos', elem.mesaConfig.cubiertos);
+      setVal('mesa-vajilla', elem.mesaConfig.vajilla);
+      setVal('mesa-cristal', elem.mesaConfig.cristal);
+      setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla);
+      setVal('mesa-menu', elem.mesaConfig.menu || '');
+    }
+
+    // Type badge
+    var typeBadge = document.getElementById('inspector-type');
+    if (typeBadge) {
+      var cat = window.getCatalogEntry ? window.getCatalogEntry(elem.type) : null;
+      typeBadge.textContent = (cat ? cat.name : elem.type) + (elem.type === 'table_imperial' ? ' (' + (elem.tablones || 3) + ' tablones)' : '');
+    }
+  }
+
+  function _updateInspectorVisibility(hasElem) {
+    var panel = document.getElementById('inspector-empty');
+    var content = document.getElementById('inspector-panel');
+    if (panel) panel.style.display = hasElem ? 'none' : '';
+    if (content) content.style.display = hasElem ? '' : 'none';
+  }
+
+  function updateInspectorField(id, value) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = !!value;
+    else el.value = value;
+  }
+
+  function _wireInspector() {
+    function onInpChange(id, fn) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', function () {
+        var sid = AppState.selectedId;
+        if (!sid) return;
+        fn(sid, el);
+      });
+      el.addEventListener('change', function () {
+        var sid = AppState.selectedId;
+        if (!sid) return;
+        fn(sid, el);
+      });
+    }
+
+    onInpChange('inspector-name', function (id, el) {
+      updateElement(id, { name: el.value });
+      showToast('Nombre actualizado.', 'info');
+    });
+
+    onInpChange('inspector-x', function (id, el) {
+      var v = parseFloat(el.value);
+      if (!isNaN(v)) updateElement(id, { x: v });
+    });
+    onInpChange('inspector-y', function (id, el) {
+      var v = parseFloat(el.value);
+      if (!isNaN(v)) updateElement(id, { y: v });
+    });
+    onInpChange('inspector-w', function (id, el) {
+      var v = parseFloat(el.value);
+      if (!isNaN(v) && v > 0) { saveHistory(); updateElement(id, { w: v }); }
+    });
+    onInpChange('inspector-h', function (id, el) {
+      var v = parseFloat(el.value);
+      if (!isNaN(v) && v > 0) { saveHistory(); updateElement(id, { h: v }); }
+    });
+    onInpChange('inspector-rotation', function (id, el) {
+      var v = parseFloat(el.value);
+      if (!isNaN(v)) updateElement(id, { rotation: v });
+    });
+    onInpChange('inspector-color', function (id, el) {
+      updateElement(id, { color: el.value });
+      var disp = document.getElementById('color-hex-display');
+      if (disp) disp.textContent = el.value.toUpperCase();
+    });
+    onInpChange('inspector-chairs', function (id, el) {
+      var v = parseInt(el.value, 10);
+      if (!isNaN(v) && v >= 0) { saveHistory(); updateElement(id, { chairs: v }); updateCounters(); }
+    });
+
+    // Imperial tablones
+    onInpChange('mesa-num-tablones', function (id, el) {
+      var n = Math.max(2, parseInt(el.value, 10) || 3);
+      saveHistory();
+      updateElement(id, { tablones: n, w: n * 2.4, chairs: n * 10 });
+      updateInspectorField('inspector-w', (n * 2.4).toFixed(2));
+      updateInspectorField('inspector-chairs', n * 10);
+      updateCounters();
+    });
+
+    // Mesa config
+    function mesaInp(id, field) {
+      onInpChange(id, function (eid, el) {
+        var elem = AppState.elements.find(function (e) { return e.id === eid; });
+        if (!elem || !elem.mesaConfig) return;
+        var val = el.type === 'checkbox' ? el.checked : el.value;
+        elem.mesaConfig[field] = val;
+        _refresh();
+      });
+    }
+    mesaInp('mesa-numero', 'mesaNum');
+    mesaInp('mesa-mantel-color', 'mantelColor');
+    mesaInp('mesa-camino-color', 'caminoColor');
+    mesaInp('mesa-servilleta-color', 'servilletaColor');
+    mesaInp('mesa-cubiertos', 'cubiertos');
+    mesaInp('mesa-vajilla', 'vajilla');
+    mesaInp('mesa-cristal', 'cristal');
+    mesaInp('mesa-silla-tipo', 'tipoSilla');
+    mesaInp('mesa-menu', 'menu');
+
+    // Action buttons
+    var btnRotate = document.getElementById('btn-rotate-90');
+    if (btnRotate) btnRotate.onclick = function () {
+      if (AppState.selectedId) rotateElement(AppState.selectedId, 90);
+    };
+
+    var btnDuplicate = document.getElementById('btn-duplicate-element');
+    if (btnDuplicate) btnDuplicate.onclick = function () {
+      if (AppState.selectedId) duplicateElement(AppState.selectedId);
+    };
+
+    var btnDelete = document.getElementById('btn-delete-element');
+    if (btnDelete) btnDelete.onclick = function () {
+      if (AppState.selectedId) {
+        if (confirm('¿Eliminar este elemento?')) removeElement(AppState.selectedId);
+      }
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // TOOLBOX
+  // ══════════════════════════════════════════════════════════
+  function _buildToolbox() {
+    var container = document.getElementById('toolbox-list');
+    if (!container) return;
+    container.innerHTML = '';
+
+    var cats = ['estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores'];
+
+    cats.forEach(function (cat) {
+      var catMeta = window.ELEMENT_CATEGORIES[cat] || { label: cat, icon: 'fa-cube', color: '#888' };
+      var items = window.ELEMENTS_CATALOG.filter(function (e) { return e.category === cat; });
+
+      var section = document.createElement('div');
+      section.className = 'toolbox-section';
+      section.dataset.category = cat;
+
+      var header = document.createElement('div');
+      header.className = 'toolbox-cat-header';
+      header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;user-select:none;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:4px;';
+      header.innerHTML = '<i class="fas ' + catMeta.icon + '" style="color:' + catMeta.color + ';width:16px;text-align:center"></i>' +
+                         '<span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em">' + catMeta.label + '</span>' +
+                         '<span class="cat-badge" style="margin-left:auto;font-size:10px;background:#334155;color:#94a3b8;border-radius:999px;padding:1px 6px">' + items.length + '</span>' +
+                         '<i class="fas fa-chevron-down cat-chevron" style="font-size:10px;color:#64748b;margin-left:4px;transition:transform 0.2s"></i>';
+
+      var grid = document.createElement('div');
+      grid.className = 'toolbox-grid';
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:2px 0 8px;';
+
+      items.forEach(function (item) {
+        var card = document.createElement('div');
+        card.className = 'toolbox-card';
+        card.dataset.type = item.type;
+        card.style.cssText = [
+          'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
+          'gap:4px', 'padding:10px 6px', 'background:#1e293b', 'border:1px solid #334155',
+          'border-radius:8px', 'cursor:pointer', 'transition:all 0.15s', 'text-align:center',
+          'user-select:none'
+        ].join(';');
+
+        card.innerHTML = '<i class="fas ' + item.icon + '" style="font-size:18px;color:' + item.color + '"></i>' +
+                         '<span style="font-size:10px;color:#cbd5e1;line-height:1.3;max-width:72px">' + item.name + '</span>';
+
+        card.addEventListener('mouseenter', function () {
+          card.style.background = '#2d3f54';
+          card.style.borderColor = item.color;
+          card.style.transform = 'scale(1.03)';
+        });
+        card.addEventListener('mouseleave', function () {
+          card.style.background = AppState.pendingType === item.type ? '#1e3a5f' : '#1e293b';
+          card.style.borderColor = AppState.pendingType === item.type ? item.color : '#334155';
+          card.style.transform = '';
+        });
+        card.addEventListener('click', function () {
+          _setPendingType(item.type, item.color, card);
+        });
+
+        grid.appendChild(card);
+      });
+
+      // Collapse toggle
+      var collapsed = false;
+      header.addEventListener('click', function () {
+        collapsed = !collapsed;
+        grid.style.display = collapsed ? 'none' : 'grid';
+        var chev = header.querySelector('.cat-chevron');
+        if (chev) chev.style.transform = collapsed ? 'rotate(-90deg)' : '';
+      });
+
+      section.appendChild(header);
+      section.appendChild(grid);
+      container.appendChild(section);
+    });
+  }
+
+  var _lastPendingCard = null;
+  var _lastPendingColor = null;
+
+  function _setPendingType(type, color, card) {
+    // Switch to 2D view for editing/placing
+    if (window.App_setView) {
+      window.App_setView('2d');
+    }
+
+    var banner = document.getElementById('placement-banner');
+    var bannerTxt = document.getElementById('placement-banner-text');
+
+    // Deselect previous card
+    if (_lastPendingCard) {
+      _lastPendingCard.style.background = '#1e293b';
+      _lastPendingCard.style.borderColor = '#334155';
+      _lastPendingCard.style.outline = '';
+    }
+
+    if (AppState.pendingType === type || !type) {
+      // Toggle off / cancel placement
+      AppState.pendingType = null;
+      _lastPendingCard = null;
+      _updateCanvasCursor(false);
+      if (banner) banner.classList.add('hidden');
+      if (type) showToast('Colocación cancelada.', 'info');
+      return;
+    }
+
+    AppState.pendingType = type;
+    _lastPendingCard = card;
+    _lastPendingColor = color;
+
+    if (card) {
+      card.style.background = '#1e3a5f';
+      card.style.borderColor = color || '#c9a96e';
+      card.style.outline = '2px solid ' + (color || '#c9a96e');
+    }
+    _updateCanvasCursor(true);
+
+    var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
+    var name = cat ? cat.name : type;
+    
+    // Update and show placement banner
+    if (banner && bannerTxt) {
+      bannerTxt.textContent = 'Modo Colocación: Haz clic en el terreno para colocar "' + name + '".';
+      banner.classList.remove('hidden');
+    }
+    showToast('Haz clic en el plano para colocar: ' + name, 'info');
+  }
+
+  function _updateCanvasCursor(crosshair) {
+    var svgEl = document.getElementById('svg-canvas');
+    if (svgEl) svgEl.style.cursor = crosshair ? 'crosshair' : '';
+    var c3d = document.getElementById('canvas-3d');
+    if (c3d) c3d.style.cursor = crosshair ? 'crosshair' : '';
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // SEARCH / FILTER TOOLBOX
+  // ══════════════════════════════════════════════════════════
+  function _wireSearch() {
+    var inp = document.getElementById('search-elements');
+    if (!inp) return;
+    inp.addEventListener('input', function () {
+      var q = inp.value.toLowerCase().trim();
+      var cards = $$('.toolbox-card');
+      cards.forEach(function (c) {
+        var name = (c.querySelector('span') || {}).textContent || '';
+        var type = c.dataset.type || '';
+        var match = !q || name.toLowerCase().includes(q) || type.toLowerCase().includes(q);
+        c.style.display = match ? '' : 'none';
+      });
+      // Show/hide sections based on visible cards
+      $$('.toolbox-section').forEach(function (sec) {
+        var visible = sec.querySelectorAll('.toolbox-card:not([style*="display: none"])').length > 0;
+        sec.style.display = visible ? '' : 'none';
+      });
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // VIEW SWITCHER (2D ↔ 3D)
+  // ══════════════════════════════════════════════════════════
+  function _wireViewSwitcher() {
+    var btn2d = document.getElementById('btn-view-2d');
+    var btn3d = document.getElementById('btn-view-3d');
+    var container2d = document.getElementById('container-2d');
+    var container3d = document.getElementById('container-3d');
+
+    function setView(view) {
+      AppState.activeView = view;
+      if (view === '2d') {
+        if (container2d) container2d.style.display = 'block';
+        if (container3d) container3d.style.display = 'none';
+        if (btn2d) { btn2d.classList.add('active'); }
+        if (btn3d) { btn3d.classList.remove('active'); }
+      } else {
+        if (container2d) container2d.style.display = 'none';
+        if (container3d) container3d.style.display = 'block';
+        if (btn3d) { btn3d.classList.add('active'); }
+        if (btn2d) { btn2d.classList.remove('active'); }
+        if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
+      }
+    }
+
+    // Expose internally for auto-switching
+    window.App_setView = setView;
+
+    if (btn2d) btn2d.onclick = function () { setView('2d'); };
+    if (btn3d) btn3d.onclick = function () { setView('3d'); };
+
+    // Default to 2D for initial blueprinting
+    setView('2d');
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // LIGHTING
+  // ══════════════════════════════════════════════════════════
+  function _wireLighting() {
+    var modes = ['day', 'night', 'gala'];
+    modes.forEach(function (mode) {
+      var btn = document.getElementById('btn-light-' + mode);
+      if (!btn) return;
+      btn.onclick = function () {
+        if (window.Visualizer3D) window.Visualizer3D.setLighting(mode);
+        $$('.lighting-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        showToast('Iluminación: ' + mode, 'info');
+      };
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // LAYER TOGGLES
+  // ══════════════════════════════════════════════════════════
+  function _wireLayerToggles() {
+    var cats = [
+      'estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores',
+      'flujo_invitados', 'flujo_proveedores', 'flujo_staff'
+    ];
+    cats.forEach(function (cat) {
+      var cb = document.getElementById('layer-toggle-' + cat);
+      if (!cb) return;
+      cb.addEventListener('change', function () {
+        AppState.layers[cat] = cb.checked;
+        if (window.Editor2D) window.Editor2D.setLayerVisibility(cat, cb.checked);
+        _refresh();
+      });
+      cb.checked = AppState.layers[cat] !== false;
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // ZOOM BUTTONS
+  // ══════════════════════════════════════════════════════════
+  function _wireZoomButtons() {
+    var btnIn = document.getElementById('zoom-in');
+    var btnOut = document.getElementById('zoom-out');
+    var btnReset = document.getElementById('zoom-reset');
+
+    if (btnIn) btnIn.onclick = function () { if (window.Editor2D) window.Editor2D.zoomIn(); };
+    if (btnOut) btnOut.onclick = function () { if (window.Editor2D) window.Editor2D.zoomOut(); };
+    if (btnReset) btnReset.onclick = function () {
+      if (window.Editor2D) window.Editor2D.resetZoom();
+      if (window.Visualizer3D) window.Visualizer3D.resetCamera();
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // GRID SNAP TOGGLE
+  // ══════════════════════════════════════════════════════════
+  function _wireGridToggle() {
+    var cb = document.getElementById('grid-toggle');
+    if (!cb) return;
+    cb.addEventListener('change', function () {
+      AppState.useGrid = cb.checked;
+      if (window.Editor2D) window.Editor2D.setGridSnap(AppState.useGrid);
+      showToast('Cuadrícula ' + (AppState.useGrid ? 'activada' : 'desactivada') + '.', 'info');
+    });
+    cb.checked = !!AppState.useGrid;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // TERRAIN WIZARD / SETTINGS
+  // ══════════════════════════════════════════════════════════
+  function _wireTerrainSettings() {
+    var btnApply = document.getElementById('btn-apply-terrain');
+    if (!btnApply) return;
+
+    btnApply.onclick = function () {
+      var wEl = document.getElementById('terrain-width');
+      var hEl = document.getElementById('terrain-height');
+      if (!wEl || !hEl) return;
+      var w = parseFloat(wEl.value);
+      var h = parseFloat(hEl.value);
+      if (isNaN(w) || isNaN(h) || w < 5 || h < 5) {
+        showToast('Dimensiones inválidas (mínimo 5×5 m).', 'error');
+        return;
+      }
+      AppState.terrain = { w: w, h: h };
+      if (window.Editor2D) window.Editor2D.setTerrain(w, h);
+      showToast('Terreno actualizado: ' + w + 'm × ' + h + 'm.', 'success');
+    };
+
+    // Populate current values
+    var wEl = document.getElementById('terrain-width');
+    var hEl = document.getElementById('terrain-height');
+    if (wEl) wEl.value = AppState.terrain.w;
+    if (hEl) hEl.value = AppState.terrain.h;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // SUPABASE INTEGRATION
+  // ══════════════════════════════════════════════════════════
+  function _initSupabase() {
+    var statusLbl = document.getElementById('db-status-lbl');
+    var layoutsGroup = document.getElementById('supabase-layouts-group');
+    var urlInp = document.getElementById('db-url');
+    var keyInp = document.getElementById('db-key');
+
+    // First try fetching config.json
+    fetch('config.json')
+      .then(function (res) { return res.json(); })
+      .then(function (cfg) {
+        if (cfg.supabaseUrl && cfg.supabaseKey) {
+          localStorage.setItem(SB_URL_KEY, cfg.supabaseUrl);
+          localStorage.setItem(SB_ANON_KEY, cfg.supabaseKey);
+          console.log('[Supabase] Configured automatically from config.json');
+        }
+        _connectSupabase();
+      })
+      .catch(function () {
+        // Fallback to localStorage if config.json fails or isn't present
+        _connectSupabase();
+      });
+
+    function _connectSupabase() {
+      var url = localStorage.getItem(SB_URL_KEY);
+      var key = localStorage.getItem(SB_ANON_KEY);
+
+      if (urlInp && url) urlInp.value = url;
+      if (keyInp && key) keyInp.value = key;
+
+      if (url && key && typeof supabase !== 'undefined') {
+        try {
+          _supabase = supabase.createClient(url, key);
+          if (statusLbl) {
+            statusLbl.textContent = 'Conectado';
+            statusLbl.style.color = 'var(--success)';
+          }
+          if (layoutsGroup) layoutsGroup.style.display = 'block';
+          _fetchSupabaseLayouts();
+        } catch (e) {
+          console.error('[Supabase] Init error:', e);
+          _supabase = null;
+          if (statusLbl) {
+            statusLbl.textContent = 'Error';
+            statusLbl.style.color = 'var(--danger)';
+          }
+        }
+      } else {
+        _supabase = null;
+        if (statusLbl) {
+          statusLbl.textContent = 'Desconectado';
+          statusLbl.style.color = 'var(--danger)';
+        }
+        if (layoutsGroup) layoutsGroup.style.display = 'none';
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // LOCAL SERVER FILE API (layouts/ folder)
+  // ══════════════════════════════════════════════════════════
+  function _fetchLocalLayouts() {
+    var select = document.getElementById('local-layouts-select');
+    if (!select) return;
+    
+    // Only fetch if running on localhost or 127.0.0.1
+    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      select.innerHTML = '<option value="">Solo disponible localmente (localhost)</option>';
+      return;
+    }
+    
+    fetch('/api/list')
+      .then(function (res) { return res.json(); })
+      .then(function (files) {
+        select.innerHTML = '<option value="">Selecciona un plano local...</option>';
+        if (files && files.length > 0) {
+          files.forEach(function (file) {
+            var opt = document.createElement('option');
+            opt.value = file;
+            opt.textContent = file + '.json';
+            select.appendChild(opt);
+          });
+        } else {
+          select.innerHTML = '<option value="">No hay planos guardados en /layouts</option>';
+        }
+      })
+      .catch(function (err) {
+        console.warn('[LocalServer] Error listing layouts:', err);
+        select.innerHTML = '<option value="">Error al conectar con servidor local</option>';
+      });
+  }
+
+  function _saveLayoutToLocalServer(name, payload) {
+    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      return;
+    }
+    
+    fetch('/api/save', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        if (res.status === 'success') {
+          showToast(res.message, 'success');
+          _fetchLocalLayouts();
+        } else {
+          showToast('Error de servidor: ' + res.message, 'error');
+        }
+      })
+      .catch(function (err) {
+        console.warn('[LocalServer] Error saving layout:', err);
+        showToast('Error al conectar con el servidor para guardar.', 'error');
+      });
+  }
+
+  function _loadLayoutFromLocalServer(name) {
+    showToast('Cargando plano local...', 'info');
+    fetch('/layouts/' + name + '.json')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        saveHistory();
+        if (data.elements) AppState.elements = data.elements;
+        if (data.terrain) AppState.terrain = data.terrain;
+        if (data.layers) Object.assign(AppState.layers, data.layers);
+        
+        var wEl = document.getElementById('terrain-width');
+        var hEl = document.getElementById('terrain-height');
+        if (wEl) wEl.value = AppState.terrain.w;
+        if (hEl) hEl.value = AppState.terrain.h;
+        
+        if (window.Editor2D) {
+          window.Editor2D.setTerrain(AppState.terrain.w, AppState.terrain.h);
+        }
+        _refresh();
+        updateCounters();
+        
+        var cats = ['estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores'];
+        cats.forEach(function (cat) {
+          var cb = document.getElementById('layer-toggle-' + cat);
+          if (cb) cb.checked = !!AppState.layers[cat];
+        });
+        
+        showToast('Plano local "' + name + '" cargado exitosamente.', 'success');
+      })
+      .catch(function (err) {
+        showToast('Error al cargar plano local: ' + err.message, 'error');
+      });
+  }
+
+  function _wireLocalServerUI() {
+    var btnLoad = document.getElementById('btn-local-load');
+    if (btnLoad) {
+      btnLoad.onclick = function () {
+        var select = document.getElementById('local-layouts-select');
+        if (!select || !select.value) {
+          showToast('Selecciona un plano local para cargar.', 'warning');
+          return;
+        }
+        _loadLayoutFromLocalServer(select.value);
+      };
+    }
+  }
+
+  function _wireSupabaseUI() {
+    var btnSave = document.getElementById('btn-db-save');
+    var btnTest = document.getElementById('btn-db-test');
+    var btnClear = document.getElementById('btn-db-clear');
+    var btnLoad = document.getElementById('btn-db-load');
+
+    if (btnSave) {
+      btnSave.onclick = function () {
+        var urlInp = document.getElementById('db-url');
+        var keyInp = document.getElementById('db-key');
+        var url = (urlInp ? urlInp.value : '').trim();
+        var key = (keyInp ? keyInp.value : '').trim();
+        if (!url || !key) {
+          showToast('Por favor ingresa la URL y la clave anon.', 'error');
+          return;
+        }
+        
+        showToast('Validando conexión...', 'info');
+        _testSupabaseConnection(url, key, function (ok, errMsg) {
+          if (ok) {
+            localStorage.setItem(SB_URL_KEY, url);
+            localStorage.setItem(SB_ANON_KEY, key);
+            _initSupabase();
+            showToast('Conexión exitosa y configurada.', 'success');
+          } else {
+            showToast('Error de conexión: ' + errMsg, 'error');
+          }
+        });
+      };
+    }
+
+    if (btnTest) {
+      btnTest.onclick = function () {
+        var urlInp = document.getElementById('db-url');
+        var keyInp = document.getElementById('db-key');
+        var url = (urlInp ? urlInp.value : '').trim();
+        var key = (keyInp ? keyInp.value : '').trim();
+        if (!url || !key) {
+          showToast('Ingresa credenciales para probar.', 'warning');
+          return;
+        }
+        showToast('Probando conexión...', 'info');
+        _testSupabaseConnection(url, key, function (ok, errMsg) {
+          if (ok) {
+            showToast('Conexión exitosa.', 'success');
+          } else {
+            showToast('Fallo: ' + errMsg, 'error');
+          }
+        });
+      };
+    }
+
+    if (btnClear) {
+      btnClear.onclick = function () {
+        localStorage.removeItem(SB_URL_KEY);
+        localStorage.removeItem(SB_ANON_KEY);
+        var urlInp = document.getElementById('db-url');
+        var keyInp = document.getElementById('db-key');
+        if (urlInp) urlInp.value = '';
+        if (keyInp) keyInp.value = '';
+        _initSupabase();
+        showToast('Desconectado de Supabase.', 'warning');
+      };
+    }
+
+    if (btnLoad) {
+      btnLoad.onclick = function () {
+        var select = document.getElementById('supabase-layouts-select');
+        if (!select || !select.value) {
+          showToast('Selecciona un plano para cargar.', 'warning');
+          return;
+        }
+        _loadLayoutFromSupabase(select.value);
+      };
+    }
+  }
+
+  function _testSupabaseConnection(url, key, callback) {
+    if (typeof supabase === 'undefined') {
+      callback(false, 'SDK de Supabase no cargado');
+      return;
+    }
+    try {
+      var client = supabase.createClient(url, key);
+      client.from('venue_layouts').select('name').limit(1).then(function (res) {
+        if (res.error) {
+          if (res.error.code === '42P01') {
+            callback(true, 'successful but table venue_layouts missing');
+          } else {
+            callback(false, res.error.message);
+          }
+        } else {
+          callback(true);
+        }
+      }).catch(function (err) {
+        callback(false, err.message || err);
+      });
+    } catch (e) {
+      callback(false, e.message || e);
+    }
+  }
+
+  function _fetchSupabaseLayouts() {
+    if (!_supabase) return;
+    _supabase.from('venue_layouts').select('name').order('name').then(function (res) {
+      var select = document.getElementById('supabase-layouts-select');
+      if (!select) return;
+      
+      select.innerHTML = '<option value="">Selecciona un plano...</option>';
+      
+      if (res.error) {
+        console.warn('[Supabase] Error listing layouts:', res.error);
+        if (res.error.code === '42P01') {
+          showToast('Aviso: la tabla venue_layouts no existe en tu proyecto.', 'warning');
+        }
+        return;
+      }
+      
+      if (res.data) {
+        res.data.forEach(function (row) {
+          var opt = document.createElement('option');
+          opt.value = row.name;
+          opt.textContent = row.name;
+          select.appendChild(opt);
+        });
+      }
+    }).catch(function (err) {
+      console.warn('[Supabase] Catch listing layouts:', err);
+    });
+  }
+
+  function _saveLayoutToSupabase(name) {
+    if (!_supabase) return;
+    var payload = {
+      name: name,
+      terrain: AppState.terrain,
+      elements: AppState.elements,
+      layers: AppState.layers,
+      updated_at: new Date().toISOString()
+    };
+    showToast('Guardando en Supabase...', 'info');
+    _supabase.from('venue_layouts').upsert(payload, { onConflict: 'name' }).then(function (res) {
+      if (res.error) {
+        showToast('Error al guardar en Supabase: ' + res.error.message, 'error');
+      } else {
+        showToast('Plano "' + name + '" guardado en Supabase.', 'success');
+        _fetchSupabaseLayouts();
+      }
+    }).catch(function (err) {
+      showToast('Error al guardar: ' + (err.message || err), 'error');
+    });
+  }
+
+  function _loadLayoutFromSupabase(name) {
+    if (!_supabase) return;
+    showToast('Cargando desde Supabase...', 'info');
+    _supabase.from('venue_layouts').select('*').eq('name', name).maybeSingle().then(function (res) {
+      if (res.error) {
+        showToast('Error al cargar: ' + res.error.message, 'error');
+        return;
+      }
+      if (!res.data) {
+        showToast('No se encontró el plano.', 'error');
+        return;
+      }
+      var data = res.data;
+      saveHistory();
+      if (data.elements) AppState.elements = data.elements;
+      if (data.terrain) AppState.terrain = data.terrain;
+      if (data.layers) Object.assign(AppState.layers, data.layers);
+      
+      var wEl = document.getElementById('terrain-width');
+      var hEl = document.getElementById('terrain-height');
+      if (wEl) wEl.value = AppState.terrain.w;
+      if (hEl) hEl.value = AppState.terrain.h;
+      
+      if (window.Editor2D) {
+        window.Editor2D.setTerrain(AppState.terrain.w, AppState.terrain.h);
+      }
+      _refresh();
+      updateCounters();
+      
+      var cats = ['estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores'];
+      cats.forEach(function (cat) {
+        var cb = document.getElementById('layer-toggle-' + cat);
+        if (cb) cb.checked = !!AppState.layers[cat];
+      });
+      
+      showToast('Plano "' + name + '" cargado exitosamente.', 'success');
+    }).catch(function (err) {
+      showToast('Error de carga: ' + (err.message || err), 'error');
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // SAVE / LOAD / EXPORT
+  // ══════════════════════════════════════════════════════════
+  function saveToLocalStorage() {
+    var defaultName = localStorage.getItem(LS_KEY + '_name') || 'Mi Plano';
+    var name = prompt('Nombre del plano:', defaultName);
+    if (name === null) return;
+    name = name.trim();
+    if (!name) {
+      showToast('Nombre inválido.', 'error');
+      return;
+    }
+
+    var payload = {
+      name: name,
+      elements: AppState.elements,
+      terrain: AppState.terrain,
+      layers: AppState.layers,
+      savedAt: new Date().toISOString()
+    };
+
+    // 1. Save in local browser storage
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      localStorage.setItem(LS_KEY + '_name', name);
+    } catch (e) {
+      console.warn('[app] LocalStorage save error:', e);
+    }
+
+    // 2. Save on local Python server if running on localhost
+    var isLocalhost = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    if (isLocalhost) {
+      _saveLayoutToLocalServer(name, payload);
+    }
+
+    // 3. Save in Supabase cloud if connected
+    if (_supabase) {
+      _saveLayoutToSupabase(name);
+    } else if (!isLocalhost) {
+      // If not running locally and not connected to Supabase, just say saved in browser
+      showToast('Guardado en la memoria de este navegador.', 'success');
+    }
+  }
+
+  function loadFromLocalStorage() {
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return false;
+      var data = JSON.parse(raw);
+      if (data.elements) AppState.elements = data.elements;
+      if (data.terrain) AppState.terrain = data.terrain;
+      if (data.layers) Object.assign(AppState.layers, data.layers);
+      AppState.elements.forEach(function (e) {
+        var n = parseInt((e.id || '').replace('el_', ''), 10);
+        if (!isNaN(n) && n >= _idCounter) _idCounter = n + 1;
+        if (e.mesaConfig && e.mesaConfig.mesaNum > _tableCounter) _tableCounter = e.mesaConfig.mesaNum;
+      });
+      return true;
+    } catch (e) {
+      console.warn('[app] Failed to load from localStorage:', e);
+      return false;
+    }
+  }
+
+  function exportJSON() {
+    var payload = {
+      version: '1.0',
+      appName: 'Primavera Universal Planner',
+      exportedAt: new Date().toISOString(),
+      terrain: AppState.terrain,
+      elements: AppState.elements,
+      layers: AppState.layers
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'plano_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Plano exportado como JSON.', 'success');
+  }
+
+  function importJSON(file) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (data.elements) {
+          saveHistory();
+          AppState.elements = data.elements;
+          if (data.terrain) AppState.terrain = data.terrain;
+          if (data.layers) Object.assign(AppState.layers, data.layers);
+          if (window.Editor2D) window.Editor2D.setTerrain(AppState.terrain.w, AppState.terrain.h);
+          _refresh();
+          updateCounters();
+          showToast('Plano importado: ' + data.elements.length + ' elementos.', 'success');
+        }
+      } catch (err) {
+        showToast('Error al importar: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function exportPNG() {
+    var svgEl = document.getElementById('svg-canvas');
+    if (!svgEl) { showToast('Canvas SVG no encontrado.', 'error'); return; }
+
+    var svgData = new XMLSerializer().serializeToString(svgEl);
+    var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    var url = URL.createObjectURL(svgBlob);
+    var img = new Image();
+    img.onload = function () {
+      var canvas = document.createElement('canvas');
+      canvas.width = svgEl.clientWidth || 1200;
+      canvas.height = svgEl.clientHeight || 800;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      var a = document.createElement('a');
+      a.download = 'plano_' + new Date().toISOString().slice(0, 10) + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      showToast('PNG exportado.', 'success');
+    };
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      showToast('Error al exportar PNG. Intenta desde vista 2D.', 'warning');
+    };
+    img.src = url;
+  }
+
+  function _wireExportButtons() {
+    var btnSave = document.getElementById('btn-save');
+    if (btnSave) btnSave.onclick = saveToLocalStorage;
+
+    var btnExportJSON = document.getElementById('btn-export-json');
+    if (btnExportJSON) btnExportJSON.onclick = exportJSON;
+
+    var btnExportPNG = document.getElementById('btn-export-png');
+    if (btnExportPNG) btnExportPNG.onclick = exportPNG;
+
+    var btnImport = document.getElementById('btn-import-json');
+    var fileInput = document.getElementById('import-file-input');
+    if (btnImport && fileInput) {
+      btnImport.onclick = function () { fileInput.click(); };
+      fileInput.addEventListener('change', function () {
+        if (fileInput.files && fileInput.files[0]) {
+          importJSON(fileInput.files[0]);
+          fileInput.value = '';
+        }
+      });
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // CLEAR
+  // ══════════════════════════════════════════════════════════
+  function _wireClear() {
+    var btn = document.getElementById('btn-clear');
+    if (!btn) return;
+    btn.onclick = function () {
+      if (!confirm('¿Eliminar todos los elementos? Esta acción no se puede deshacer.')) return;
+      saveHistory();
+      AppState.elements = [];
+      _tableCounter = 0;
+      deselectAll();
+      _refresh();
+      updateCounters();
+      showToast('Plano limpiado.', 'warning');
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // KEYBOARD SHORTCUTS (global)
+  // ══════════════════════════════════════════════════════════
+  function _wireKeyboard() {
+    document.addEventListener('keydown', function (e) {
+      var tag = (document.activeElement && document.activeElement.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        undo();
+      } else if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault();
+        redo();
+      } else if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        saveToLocalStorage();
+      } else if (e.key === 'Escape') {
+        _setPendingType(null);
+        deselectAll();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (AppState.selectedId) {
+          removeElement(AppState.selectedId);
+        }
+      } else if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey) {
+        if (AppState.selectedId) rotateElement(AppState.selectedId, 45);
+      } else if (e.ctrlKey && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        if (AppState.selectedId) duplicateElement(AppState.selectedId);
+      }
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // EDITOR2D CALLBACKS
+  // ══════════════════════════════════════════════════════════
+  function _buildEditor2DCallbacks() {
+    return {
+      onSelect: function (elem) {
+        AppState.selectedId = elem.id;
+        if (window.Visualizer3D) window.Visualizer3D.select(elem.id);
+        _populateInspector(elem);
+        _updateInspectorVisibility(true);
+      },
+      onDeselect: function () {
+        deselectAll();
+      },
+      onMove: function (id, x, y) {
+        var elem = AppState.elements.find(function (e) { return e.id === id; });
+        if (!elem) return;
+        elem.x = Math.max(0, Math.min(x, AppState.terrain.w));
+        elem.y = Math.max(0, Math.min(y, AppState.terrain.h));
+        if (window.Editor2D) window.Editor2D.update(AppState.elements);
+        if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
+        // Live-update inspector position fields
+        updateInspectorField('inp-x', parseFloat(elem.x).toFixed(2));
+        updateInspectorField('inp-y', parseFloat(elem.y).toFixed(2));
+      },
+      onPlaceElement: function (type, x, y) {
+        AppState.pendingType = null;
+        if (_lastPendingCard) {
+          _lastPendingCard.style.background = '#1e293b';
+          _lastPendingCard.style.borderColor = '#334155';
+          _lastPendingCard.style.outline = '';
+          _lastPendingCard = null;
+        }
+        _updateCanvasCursor(false);
+        var banner = document.getElementById('placement-banner');
+        if (banner) banner.classList.add('hidden');
+        addElement(type, x, y);
+      },
+      onRename: function (id, name) {
+        updateElement(id, { name: name });
+        updateInspectorField('inspector-name', name);
+      },
+      onContext_rotate: function (id) {
+        rotateElement(id, 45);
+      },
+      onContext_duplicate: function (id) {
+        duplicateElement(id);
+      },
+      onContext_delete: function (id) {
+        removeElement(id);
+      },
+      onUndo: undo,
+      onRedo: redo
+    };
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // NAVIGATION & QUICK-ADD
+  // ══════════════════════════════════════════════════════════
+  var QUICK_ADD_TYPE_MAP = {
+    'salon': 'salon',
+    'jardin': 'garden',
+    'cocina': 'kitchen',
+    'barra': 'bar_area',
+    'terraza': 'terrace',
+    'estacionamiento': 'parking',
+    'capilla': 'chapel',
+    'alberca': 'pool',
+    'entrada': 'door_main',
+    'salida': 'door_exit',
+    'banos': 'bathroom',
+    'rampa': 'ramp',
+    'escaleras': 'stairs'
+  };
+
+  function _wireWizardSteps() {
+    var btns = $$('.wizard-step-btn');
+    btns.forEach(function (btn) {
+      btn.onclick = function () {
+        var step = btn.dataset.step;
+        btns.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        $$('.wizard-panel').forEach(function (p) { p.classList.remove('active'); });
+        var activePanel = document.getElementById('wizard-content-' + step);
+        if (activePanel) activePanel.classList.add('active');
+      };
+    });
+  }
+
+  function _wireInspectorTabs() {
+    var tabs = $$('.inspector-tab');
+    tabs.forEach(function (tab) {
+      tab.onclick = function () {
+        var tabId = tab.dataset.tab;
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        $$('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+        var activePanel = $('[data-panel="' + tabId + '"]');
+        if (activePanel) activePanel.classList.add('active');
+      };
+    });
+  }
+
+  function _wireQuickAdd() {
+    var btns = $$('.quick-add-btn');
+    btns.forEach(function (btn) {
+      btn.onclick = function () {
+        var key = btn.dataset.type;
+        var type = QUICK_ADD_TYPE_MAP[key] || key;
+        var cat = window.getCatalogEntry(type);
+        var color = cat ? cat.color : '#c9a96e';
+        _setPendingType(type, color, btn);
+      };
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // AUTO-SAVE TIMER
+  // ══════════════════════════════════════════════════════════
+  function _startAutoSave() {
+    setInterval(function () {
+      if (AppState.elements.length > 0) {
+        var payload = {
+          elements: AppState.elements,
+          terrain: AppState.terrain,
+          layers: AppState.layers,
+          savedAt: new Date().toISOString()
+        };
+        try {
+          localStorage.setItem(LS_KEY + '_auto', JSON.stringify(payload));
+        } catch (e) { /* quota exceeded silently */ }
+      }
+    }, 60000); // every 60s
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // INITIALIZE
+  // ══════════════════════════════════════════════════════════
+  function init() {
+    console.log('[App] Initializing Universal Venue Planner...');
+
+    // Load saved state
+    var hadSaved = loadFromLocalStorage();
+
+    // Build toolbox
+    _buildToolbox();
+    _wireSearch();
+
+    // Init 2D Editor
+    var svgCanvas = document.getElementById('svg-canvas');
+    if (svgCanvas && window.Editor2D) {
+      window.Editor2D.init(
+        svgCanvas,
+        function () { return AppState.elements; },
+        function () { return AppState; },
+        _buildEditor2DCallbacks()
+      );
+    }
+
+    // Init 3D Visualizer
+    var container3d = document.getElementById('canvas-3d');
+    if (container3d && window.Visualizer3D && typeof THREE !== 'undefined') {
+      window.Visualizer3D.init(
+        container3d,
+        function () { return AppState.elements; },
+        function () { return AppState; }
+      );
+    } else if (!window.Visualizer3D) {
+      console.warn('[App] Visualizer3D not loaded.');
+    } else if (typeof THREE === 'undefined') {
+      console.warn('[App] THREE.js not loaded — 3D view unavailable.');
+    }
+
+    // Wire UI Navigation & Actions
+    _wireWizardSteps();
+    _wireInspectorTabs();
+    _wireQuickAdd();
+
+    // Wire UI Views & Buttons
+    _wireViewSwitcher();
+    _wireLighting();
+    _wireLayerToggles();
+    _wireZoomButtons();
+    _wireGridToggle();
+    _wireTerrainSettings();
+    _wireInspector();
+    _wireExportButtons();
+    _wireClear();
+    _wireKeyboard();
+
+    // Init Supabase Connection
+    _initSupabase();
+    _wireSupabaseUI();
+
+    // Local layouts
+    _fetchLocalLayouts();
+    _wireLocalServerUI();
+
+    // Cancel placement button in banner
+    var btnCancel = document.getElementById('btn-cancel-placement');
+    if (btnCancel) {
+      btnCancel.onclick = function (e) {
+        e.stopPropagation();
+        _setPendingType(null);
+      };
+    }
+
+    // Initial state
+    saveHistory();
+    _refresh();
+    updateCounters();
+    _updateInspectorVisibility(false);
+    _startAutoSave();
+
+    if (hadSaved) {
+      showToast('Plano restaurado desde guardado anterior.', 'success');
+    } else {
+      showToast('¡Bienvenido al Planeador Universal Primavera!', 'info');
+    }
+
+    console.log('[App] Ready. Elements loaded:', AppState.elements.length);
+  }
+
+  // ─── Boot on DOMContentLoaded ────────────────────────────
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // ─── Expose public API ───────────────────────────────────
+  window.App = {
+    addElement: addElement,
+    removeElement: removeElement,
+    updateElement: updateElement,
+    selectElement: selectElement,
+    deselectAll: deselectAll,
+    duplicateElement: duplicateElement,
+    rotateElement: rotateElement,
+    undo: undo,
+    redo: redo,
+    save: saveToLocalStorage,
+    exportJSON: exportJSON,
+    exportPNG: exportPNG,
+    importJSON: importJSON,
+    updateCounters: updateCounters,
+    refresh: _refresh,
+    showToast: showToast,
+    getState: function () { return AppState; }
+  };
+
+})();
+
+console.log('[app] App module loaded.');

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Maquetador Universal de Planos para eventos y venues — Primavera Events Group" />
+  <title>Maquetador Universal de Planos | Primavera Events Group</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome 6.5 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Three.js r134 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <!-- OrbitControls -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- APP WRAPPER -->
+<div id="app-wrapper">
+
+  <!-- LEFT SIDEBAR -->
+  <aside id="sidebar-left">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">🌸</div>
+      <div class="logo-text">
+        <span class="logo-brand">Primavera</span>
+        <span class="logo-sub">Maquetador de Planos</span>
+      </div>
+    </div>
+
+    <!-- Sidebar Navigation Tabs -->
+    <div id="wizard-steps" class="wizard-steps">
+      <button class="wizard-step-btn active" data-step="1">
+        <i class="fa-solid fa-ruler-combined" style="font-size:12px; margin-bottom: 2px;"></i>
+        <span class="step-label">Terreno</span>
+      </button>
+      <button class="wizard-step-btn" data-step="2">
+        <i class="fa-solid fa-boxes-stacked" style="font-size:12px; margin-bottom: 2px;"></i>
+        <span class="step-label">Inventario</span>
+      </button>
+      <button class="wizard-step-btn" data-step="3">
+        <i class="fa-solid fa-floppy-disk" style="font-size:12px; margin-bottom: 2px;"></i>
+        <span class="step-label">Guardado</span>
+      </button>
+    </div>
+
+    <!-- Panel 1: Terrain -->
+    <div id="wizard-content-1" class="wizard-panel active">
+      <div class="panel-header">
+        <i class="fa-solid fa-ruler-combined"></i>
+        <span>Dimensiones del Terreno</span>
+      </div>
+      <p class="panel-hint">Define la forma y tamaño de tu terreno para empezar a maquetar.</p>
+
+      <div class="form-group">
+        <label class="form-label" for="terrain-width">
+          <i class="fa-solid fa-arrows-left-right"></i> Ancho del Terreno (m)
+        </label>
+        <input type="number" id="terrain-width" class="form-input" value="50" min="5" max="500" step="0.5" placeholder="50" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="terrain-height">
+          <i class="fa-solid fa-arrows-up-down"></i> Largo del Terreno (m)
+        </label>
+        <input type="number" id="terrain-height" class="form-input" value="40" min="5" max="500" step="0.5" placeholder="40" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="terrain-orientation">
+          <i class="fa-solid fa-compass"></i> Orientación del Norte
+        </label>
+        <select class="form-input" id="terrain-orientation">
+          <option value="N">Norte (Arriba)</option>
+          <option value="S">Sur (Abajo)</option>
+          <option value="E">Este (Derecha)</option>
+          <option value="W">Oeste (Izquierda)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <i class="fa-solid fa-image"></i> Croquis de Fondo (Opcional)
+        </label>
+        <label class="file-upload-btn">
+          <i class="fa-solid fa-upload"></i> Subir croquis base
+          <input type="file" id="terrain-bg-image" accept="image/*" style="display:none;" />
+        </label>
+      </div>
+
+      <button id="btn-apply-terrain" class="btn-primary full-width">
+        <i class="fa-solid fa-check"></i> Establecer Terreno
+      </button>
+
+      <div class="divider"></div>
+
+      <div class="form-group">
+        <div class="toggle-label">
+          <span><i class="fa-solid fa-grip-dots"></i> Ajustar a cuadrícula</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="grid-toggle" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 2: Inventario (Catálogo Completo) -->
+    <div id="wizard-content-2" class="wizard-panel">
+      <div class="panel-header">
+        <i class="fa-solid fa-toolbox"></i>
+        <span>Inventario de Elementos</span>
+      </div>
+      <p class="panel-hint">Selecciona y arrastra un elemento al plano. Puedes colocarlos <strong>dentro o fuera</strong> del terreno.</p>
+
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="search-elements" class="form-input search-input" placeholder="Buscar en el inventario..." />
+      </div>
+
+      <div id="toolbox-list" class="toolbox-list">
+        <div class="toolbox-empty">
+          <i class="fa-solid fa-box-open"></i>
+          <p>Cargando catálogo...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 3: Guardar / Nube -->
+    <div id="wizard-content-3" class="wizard-panel">
+      <div class="panel-header">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>Guardar y Cargar</span>
+      </div>
+      
+      <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+        El plano se guarda automáticamente en tu navegador. Si ejecutas el servidor en tu PC, se guardará como archivo JSON en el proyecto.
+      </p>
+
+      <!-- Local Plan Operations -->
+      <div class="form-group" id="local-layouts-group">
+        <label class="form-label" for="local-layouts-select">Planos Locales en PC (/layouts)</label>
+        <div class="input-btn-row">
+          <select id="local-layouts-select" class="form-input" style="flex:1;">
+            <option value="">Cargando planos locales...</option>
+          </select>
+          <button id="btn-local-load" class="btn-icon-sm" title="Cargar plano local">
+            <i class="fa-solid fa-folder-open"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="divider-xs"></div>
+
+      <!-- Supabase cloud load section -->
+      <div class="form-group" id="supabase-layouts-group" style="display:none;">
+        <label class="form-label" for="supabase-layouts-select">Planos en Supabase (Nube)</label>
+        <div class="input-btn-row">
+          <select id="supabase-layouts-select" class="form-input" style="flex:1;">
+            <option value="">Selecciona un plano...</option>
+          </select>
+          <button id="btn-db-load" class="btn-icon-sm" title="Cargar plano desde nube">
+            <i class="fa-solid fa-cloud-arrow-down"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Collapsible Supabase Accordion -->
+      <details class="supabase-details" style="margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: rgba(255,255,255,0.01);">
+        <summary style="font-size: 12px; font-weight:600; cursor:pointer; color:#fff; display:flex; align-items:center; gap:6px; outline:none; user-select:none;">
+          <i class="fa-solid fa-database" style="color:var(--accent);"></i> Base de Datos Supabase (Opcional)
+        </summary>
+        <div style="margin-top: 10px;">
+          <p style="font-size: 10px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.3;">
+            Configura tu proyecto Supabase si deseas sincronizar en la nube para publicar el plano.
+          </p>
+          <div class="form-group">
+            <label class="form-label" for="db-url" style="font-size:11px;">URL de Supabase</label>
+            <input type="text" id="db-url" class="form-input" style="padding: 6px 8px; font-size:12px;" placeholder="https://xxxx.supabase.co" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="db-key" style="font-size:11px;">Clave Anon Key</label>
+            <input type="password" id="db-key" class="form-input" style="padding: 6px 8px; font-size:12px;" placeholder="Clave anónima" />
+          </div>
+          <div class="form-row">
+            <button id="btn-db-save" class="btn-primary half" style="font-size:11px; padding:6px;">
+              <i class="fa-solid fa-floppy-disk"></i> Conectar
+            </button>
+            <button id="btn-db-test" class="btn-icon-sm" title="Probar conexión" style="width:30px; height:30px;">
+              <i class="fa-solid fa-plug"></i>
+            </button>
+            <button id="btn-db-clear" class="btn-danger half" style="font-size:11px; padding:6px; background-color:#374151;">
+              <i class="fa-solid fa-eraser"></i> Quitar
+            </button>
+          </div>
+          <div id="db-status-display" style="font-size: 10px; color: var(--text-secondary); margin-top: 8px; text-align: center;">
+            Estado Nube: <span id="db-status-lbl" style="color: var(--danger); font-weight: 600;">Desconectado</span>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Layer Toggles -->
+    <div class="layers-section">
+      <div class="section-header">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Capas</span>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-building layer-icon icon-estructuras"></i> Estructuras
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-estructuras" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-door-open layer-icon icon-accesos"></i> Accesos
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-accesos" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-chair layer-icon icon-mobiliario"></i> Mobiliario
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-mobiliario" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-music layer-icon icon-entretenimiento"></i> Entretenimiento
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-entretenimiento" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-spa layer-icon icon-decoracion"></i> Decoracion
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-decoracion" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-truck layer-icon icon-proveedores"></i> Proveedores
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-proveedores" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Flujos de Circulación -->
+      <div class="divider-xs" style="margin: 10px 0 6px;"></div>
+      <div class="layers-section-subtitle">Flujos de circulación</div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-person-walking layer-icon icon-flujo-invitados"></i> Invitados
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_invitados" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-dolly layer-icon icon-flujo-proveedores"></i> Proveedores
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_proveedores" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-user-tie layer-icon icon-flujo-staff"></i> Staff
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_staff" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+  </aside><!-- /#sidebar-left -->
+
+
+  <!-- MAIN CANVAS AREA -->
+  <main id="main-canvas">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="view-toggle">
+          <button id="btn-view-3d" class="view-btn" title="Vista 3D">
+            <i class="fa-solid fa-cube"></i> 3D
+          </button>
+          <button id="btn-view-2d" class="view-btn active" title="Vista 2D">
+            <i class="fa-solid fa-map"></i> 2D
+          </button>
+        </div>
+        <div class="view-toggle" style="margin-left: 12px; border-color: rgba(255,255,255,0.05);">
+          <button id="btn-light-day" class="view-btn active lighting-btn" title="Luz de Día">
+            <i class="fa-solid fa-sun"></i> Día
+          </button>
+          <button id="btn-light-night" class="view-btn lighting-btn" title="Luz de Noche">
+            <i class="fa-solid fa-moon"></i> Noche
+          </button>
+          <button id="btn-light-gala" class="view-btn lighting-btn" title="Ambiente de Gala">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Gala
+          </button>
+        </div>
+      </div>
+
+      <div class="topbar-center">
+        <div class="counters-row">
+          <div class="counter-badge">
+            <i class="fa-solid fa-users"></i>
+            <span class="counter-value" id="counter-guests">0</span>
+            <span class="counter-lbl">Invitados</span>
+          </div>
+          <div class="counter-badge">
+            <i class="fa-solid fa-circle-dot"></i>
+            <span class="counter-value" id="counter-tables">0</span>
+            <span class="counter-lbl">Mesas</span>
+          </div>
+          <div class="counter-badge">
+            <i class="fa-solid fa-table-list"></i>
+            <span class="counter-value" id="counter-imperial">0</span>
+            <span class="counter-lbl">Imperiales</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="zoom-controls">
+          <button id="zoom-in" class="zoom-btn" title="Acercar">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <button id="zoom-reset" class="zoom-btn" title="Restablecer zoom">
+            <i class="fa-solid fa-compress"></i>
+          </button>
+          <button id="zoom-out" class="zoom-btn" title="Alejar">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Canvas Area -->
+    <div class="canvas-area">
+
+      <!-- Placement Banner -->
+      <div id="placement-banner" class="placement-banner hidden">
+        <i class="fa-solid fa-wand-magic-sparkles icon-spin"></i>
+        <span id="placement-banner-text">Modo Colocación: Haz clic en el terreno para colocar el elemento.</span>
+        <button id="btn-cancel-placement" class="btn-cancel-placement" title="Cancelar colocación (Esc)">✕</button>
+      </div>
+
+      <!-- 3D Container (default hidden) -->
+      <div id="container-3d" class="view-container">
+        <div id="canvas-3d"></div>
+        <div class="canvas-hint">
+          <i class="fa-solid fa-mouse-pointer"></i>
+          <span>Arrastra para orbitar &middot; Scroll para zoom &middot; Clic derecho para mover</span>
+        </div>
+      </div>
+
+      <!-- 2D Container (default visible) -->
+      <div id="container-2d" class="view-container active">
+        <svg id="svg-canvas" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <defs>
+            <pattern id="grid-pattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect id="grid-rect" width="100%" height="100%" fill="url(#grid-pattern)" />
+          <g id="terrain-group"></g>
+          <g id="elements-group"></g>
+          <g id="selection-group"></g>
+        </svg>
+        <div class="canvas-hint">
+          <i class="fa-solid fa-hand"></i>
+          <span>Arrastra fondo para mover · Scroll zoom · Clic elemento para seleccionar · Clic derecho menú</span>
+        </div>
+      </div>
+
+      <!-- Floating Action Buttons -->
+      <div class="fab-group">
+        <button id="btn-save" class="fab-btn fab-primary" title="Guardar proyecto">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span class="fab-label">Guardar</span>
+        </button>
+        <button id="btn-export-png" class="fab-btn fab-secondary" title="Exportar PNG">
+          <i class="fa-solid fa-image"></i>
+          <span class="fab-label">PNG</span>
+        </button>
+        <button id="btn-export-json" class="fab-btn fab-secondary" title="Exportar JSON">
+          <i class="fa-solid fa-file-code"></i>
+          <span class="fab-label">JSON</span>
+        </button>
+        <button id="btn-import-json" class="fab-btn fab-secondary" title="Importar JSON">
+          <i class="fa-solid fa-file-import"></i>
+          <span class="fab-label">Importar</span>
+        </button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none;" />
+      </div>
+
+    </div><!-- /.canvas-area -->
+
+  </main><!-- /#main-canvas -->
+
+
+  <!-- RIGHT SIDEBAR - INSPECTOR -->
+  <aside id="sidebar-right">
+
+    <div class="inspector-header">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Inspector de Elementos</span>
+    </div>
+
+    <!-- Inspector Tabs -->
+    <div class="inspector-tabs">
+      <button class="inspector-tab active" id="tab-settings" data-tab="properties">
+        <i class="fa-solid fa-gear"></i> Propiedades
+      </button>
+      <button class="inspector-tab" id="tab-mesa" data-tab="mesa">
+        <i class="fa-solid fa-circle-dot"></i> Mesa
+      </button>
+    </div>
+
+    <!-- No-selection placeholder -->
+    <div class="inspector-empty" id="inspector-empty">
+      <div class="inspector-empty-icon">
+        <i class="fa-solid fa-arrow-pointer"></i>
+      </div>
+      <p class="inspector-empty-title">Nada seleccionado</p>
+      <p class="inspector-empty-hint">Haz clic en un elemento del plano para inspeccionarlo</p>
+    </div>
+
+    <!-- Inspector Panel -->
+    <div id="inspector-panel" class="inspector-content" style="display:none;">
+
+      <!-- TAB: PROPERTIES -->
+      <div class="tab-panel active" data-panel="properties">
+
+        <div class="form-group">
+          <label class="form-label" for="inspector-name">
+            <i class="fa-solid fa-tag"></i> Nombre
+          </label>
+          <input type="text" id="inspector-name" class="form-input" placeholder="Nombre del elemento" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label class="form-label" for="inspector-x">
+              <i class="fa-solid fa-x"></i> X (m)
+            </label>
+            <input type="number" id="inspector-x" class="form-input" step="0.1" placeholder="0" />
+          </div>
+          <div class="form-group half">
+            <label class="form-label" for="inspector-y">
+              <i class="fa-solid fa-y"></i> Y (m)
+            </label>
+            <input type="number" id="inspector-y" class="form-input" step="0.1" placeholder="0" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label class="form-label" for="inspector-w">
+              <i class="fa-solid fa-arrows-left-right"></i> W (m)
+            </label>
+            <input type="number" id="inspector-w" class="form-input" step="0.1" min="0.1" placeholder="1" />
+          </div>
+          <div class="form-group half">
+            <label class="form-label" for="inspector-h">
+              <i class="fa-solid fa-arrows-up-down"></i> H (m)
+            </label>
+            <input type="number" id="inspector-h" class="form-input" step="0.1" min="0.1" placeholder="1" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inspector-rotation">
+            <i class="fa-solid fa-rotate"></i> Rotacion (grados)
+          </label>
+          <div class="input-btn-row">
+            <input type="number" id="inspector-rotation" class="form-input" step="1" min="0" max="360" placeholder="0" />
+            <button id="btn-rotate-90" class="btn-icon-sm" title="Rotar 90 grados">
+              <i class="fa-solid fa-rotate-right"></i> +90
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inspector-color">
+            <i class="fa-solid fa-palette"></i> Color
+          </label>
+          <div class="color-row">
+            <input type="color" id="inspector-color" class="color-picker" value="#C9A96E" />
+            <span class="color-hex-display" id="color-hex-display">#C9A96E</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inspector-chairs">
+            <i class="fa-solid fa-chair"></i> Sillas / Capacidad
+          </label>
+          <input type="number" id="inspector-chairs" class="form-input" min="0" step="1" placeholder="0" />
+        </div>
+
+        <div class="divider"></div>
+
+        <button id="btn-duplicate-element" class="btn-primary full-width" style="margin-bottom: 10px; background-color: var(--bg-primary); border: 1px solid var(--border-color);">
+          <i class="fa-solid fa-copy"></i> Duplicar Elemento
+        </button>
+
+        <button id="btn-delete-element" class="btn-danger full-width">
+          <i class="fa-solid fa-trash"></i> Eliminar Elemento
+        </button>
+      </div><!-- /.tab-panel properties -->
+
+      <!-- TAB: MESA CONFIG -->
+      <div class="tab-panel" data-panel="mesa">
+
+        <div id="mesa-config-panel">
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-numero">
+              <i class="fa-solid fa-hashtag"></i> Numero de Mesa
+            </label>
+            <input type="number" id="mesa-numero" class="form-input" min="1" placeholder="1" />
+          </div>
+
+          <div class="divider-xs"></div>
+          <p class="config-section-label">
+            <i class="fa-solid fa-shirt"></i> Manteleria
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-mantel-color">Mantel</label>
+            <select id="mesa-mantel-color" class="form-input">
+              <option value="blanco">Blanco</option>
+              <option value="marfil">Marfil</option>
+              <option value="negro">Negro</option>
+              <option value="rosa">Rosa</option>
+              <option value="oro">Oro / Champagne</option>
+              <option value="azul">Azul</option>
+              <option value="verde">Verde</option>
+              <option value="bordo">Bordo / Vino</option>
+              <option value="personalizado">Personalizado...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-camino-color">Camino de Mesa</label>
+            <select id="mesa-camino-color" class="form-input">
+              <option value="ninguno">Sin camino</option>
+              <option value="blanco">Blanco</option>
+              <option value="dorado">Dorado</option>
+              <option value="rosa">Rosa</option>
+              <option value="plateado">Plateado</option>
+              <option value="yute">Yute Natural</option>
+              <option value="negro">Negro</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-servilleta-color">Servilletas</label>
+            <select id="mesa-servilleta-color" class="form-input">
+              <option value="blanco">Blanco</option>
+              <option value="marfil">Marfil</option>
+              <option value="negro">Negro</option>
+              <option value="rosa">Rosa</option>
+              <option value="oro">Dorado</option>
+            </select>
+          </div>
+
+          <div class="divider-xs"></div>
+          <p class="config-section-label">
+            <i class="fa-solid fa-utensils"></i> Servicio
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-cubiertos">Cubiertos</label>
+            <select id="mesa-cubiertos" class="form-input">
+              <option value="acero">Acero Inoxidable</option>
+              <option value="dorado">Dorado</option>
+              <option value="plateado">Plateado</option>
+              <option value="negro">Negro Mate</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-vajilla">Vajilla</label>
+            <select id="mesa-vajilla" class="form-input">
+              <option value="blanca">Blanca Clasica</option>
+              <option value="dorada">Con ribete dorado</option>
+              <option value="negra">Negra</option>
+              <option value="rustica">Rustica / Ceramica</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-cristal">Cristaleria</label>
+            <select id="mesa-cristal" class="form-input">
+              <option value="standard">Estandar</option>
+              <option value="premium">Premium</option>
+              <option value="bohemia">Bohemia / Cristal</option>
+              <option value="copas-altas">Copas Altas</option>
+            </select>
+          </div>
+
+          <div class="divider-xs"></div>
+          <p class="config-section-label">
+            <i class="fa-solid fa-chair"></i> Sillas
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-silla-tipo">Tipo de Silla</label>
+            <select id="mesa-silla-tipo" class="form-input">
+              <option value="tiffany">Tiffany Blanca</option>
+              <option value="napoleon">Napoleon Dorada</option>
+              <option value="banquete">Banquete Tapizada</option>
+              <option value="ghost">Ghost Acrilica</option>
+              <option value="crossback">Cross Back Madera</option>
+              <option value="metalica">Metalica</option>
+            </select>
+          </div>
+
+          <!-- Imperial tablones row (hidden unless imperial table) -->
+          <div id="mesa-tablones-row" class="form-group hidden">
+            <label class="form-label" for="mesa-num-tablones">
+              <i class="fa-solid fa-table-list"></i> N. Tablones
+            </label>
+            <input type="number" id="mesa-num-tablones" class="form-input" min="1" max="10" step="1" placeholder="2" />
+          </div>
+
+          <div class="divider-xs"></div>
+          <p class="config-section-label">
+            <i class="fa-solid fa-book-open"></i> Menu
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-menu">Descripcion del Menu</label>
+            <textarea id="mesa-menu" class="form-input form-textarea" rows="4" placeholder="Ej: Entrada: Carpaccio&#10;Plato fuerte: Filete..."></textarea>
+          </div>
+
+        </div><!-- /#mesa-config-panel -->
+
+      </div><!-- /.tab-panel mesa -->
+
+    </div><!-- /#inspector-panel -->
+
+  </aside><!-- /#sidebar-right -->
+
+</div><!-- /#app-wrapper -->
+
+
+<!-- TOAST NOTIFICATION -->
+<div id="notification-toast" class="toast" aria-live="polite" role="status">
+  <i class="fa-solid fa-circle-check toast-icon"></i>
+  <span class="toast-message">Listo</span>
+</div>
+
+
+<!-- SCRIPTS (order matters) -->
+<script src="elements-db.js"></script>
+<script src="editor2d.js"></script>
+<script src="visualizer3d.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
