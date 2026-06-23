@@ -92,4 +92,9 @@ El repositorio local está 100% al día y sincronizado con tu GitHub remoto.
    - **Límites de Arrastre Expandidos**: Flexibilizamos las restricciones de coordenadas en `onMove` para permitir el arrastre de elementos hasta **40 metros fuera del límite del terreno**, permitiendo colocar de manera realista calles, entradas y otros elementos urbanos externos.
    - **Estética de Vía en 2D y 3D**: Implementamos una línea central discontinua amarilla para simular el divisor de carril. En 2D se genera dinámicamente como una línea discontinua SVG en la orientación correcta (horizontal o vertical). En 3D, el modelo se ajusta según la relación de aspecto del elemento para alinear la línea de forma longitudinal.
 
-
+6. **División de Menús Colapsables y Corrección del Inventario**:
+   - **Causa**: La sección de capas y flujos de circulación se encontraba fija y unificada, lo que reducía el espacio vertical disponible en el sidebar izquierdo y dificultaba la visibilidad de los paneles principales ("Terreno", "Inventario" y "Guardado"). Además, el catálogo de inventario tenía clases desalineadas y estilos en línea forzados por JS que desconfiguraban el grid.
+   - **Solución**:
+       - Separamos **Capas** y **Flujos de Circulación** en dos secciones colapsables independientes (`<details class="layers-section">` y `<details class="flows-section">`) en [index.html](file:///c:/Users/Lenovo/Documents/maquetador/index.html) y [styles.css](file:///c:/Users/Lenovo/Documents/maquetador/styles.css).
+       - Restauramos las clases semánticas del catálogo (`toolbox-category-header`, `toolbox-category-grid` y `toolbox-item-btn`) en [app.js](file:///c:/Users/Lenovo/Documents/maquetador/app.js) y las vinculamos a las transiciones y estilos de [styles.css](file:///c:/Users/Lenovo/Documents/maquetador/styles.css), removiendo los overrides dinámicos de mouseenter/mouseleave en Javascript.
+       - De este modo, el diseñador puede colapsar independientemente ambos paneles inferiores para recuperar el 100% del área de trabajo de las pestañas principales.
