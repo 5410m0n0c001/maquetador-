@@ -582,7 +582,7 @@ window.Visualizer3D = (function () {
     var h = elem.h;
     var colorNum = parseColor(elem.color);
 
-    if (elem.type.indexOf('door') === 0) {
+    if (elem.type.indexOf('door') === 0 || elem.type.indexOf('gate') === 0) {
       // Simple gate pillars
       var pilGeom = new THREE.BoxGeometry(0.4, 2.2, 0.4);
       var pilMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
@@ -981,7 +981,7 @@ window.Visualizer3D = (function () {
       flowers.position.set(0, 1.2, 0);
       group.add(flowers);
 
-    } else if (elem.type.indexOf('arch') > 0) {
+    } else if (elem.type.indexOf('arch') > -1) {
       // Flower arch archway
       var archMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.8 });
       var archWidth = w;
@@ -1002,6 +1002,23 @@ window.Visualizer3D = (function () {
       topBar.position.set(0, archHeight, 0);
       topBar.castShadow = true;
       group.add(topBar);
+
+    } else if (elem.type.indexOf('tree') > -1) {
+      // Standalone Tree
+      var trunkGeom = new THREE.CylinderGeometry(0.12, 0.2, 2.0, 8);
+      var trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+      var foliageGeom = new THREE.SphereGeometry(w/2, 10, 10);
+      var foliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 });
+
+      var trunk = new THREE.Mesh(trunkGeom, trunkMat);
+      trunk.position.y = 1.0;
+      trunk.castShadow = true;
+      group.add(trunk);
+
+      var foliage = new THREE.Mesh(foliageGeom, foliageMat);
+      foliage.position.y = 2.2;
+      foliage.castShadow = true;
+      group.add(foliage);
 
     } else if (elem.type === 'shrub') {
       // Green decorative foliage sphere
