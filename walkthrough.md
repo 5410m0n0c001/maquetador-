@@ -98,3 +98,10 @@ El repositorio local está 100% al día y sincronizado con tu GitHub remoto.
        - Separamos **Capas** y **Flujos de Circulación** en dos secciones colapsables independientes (`<details class="layers-section">` y `<details class="flows-section">`) en [index.html](file:///c:/Users/Lenovo/Documents/maquetador/index.html) y [styles.css](file:///c:/Users/Lenovo/Documents/maquetador/styles.css).
        - Restauramos las clases semánticas del catálogo (`toolbox-category-header`, `toolbox-category-grid` y `toolbox-item-btn`) en [app.js](file:///c:/Users/Lenovo/Documents/maquetador/app.js) y las vinculamos a las transiciones y estilos de [styles.css](file:///c:/Users/Lenovo/Documents/maquetador/styles.css), removiendo los overrides dinámicos de mouseenter/mouseleave en Javascript.
        - De este modo, el diseñador puede colapsar independientemente ambos paneles inferiores para recuperar el 100% del área de trabajo de las pestañas principales.
+
+7. **Configuración de Salón Techado con Muros vs. Carpa sin Muros**:
+   - **Nueva Característica**: Al seleccionar la estructura "Salón Techado", en la barra lateral del Inspector de Elementos (lado derecho, pestaña Propiedades) se habilita dinámicamente un dropdown para elegir el **"Tipo de Salón"**.
+   - **Visualización en 3D**:
+       - **Salón Techado con Muros**: Renderiza un piso de concreto, columnas, techado plano gris y muros perimetrales sólidos (laterales y trasero) con una entrada frontal libre de 5m de ancho.
+       - **Salón Techado sin Muros (Carpa)**: Renderiza postes metálicos perimetrales delgados colocados cada 6m, elegantes drapes de lona blanca colgando de los postes, y un techo piramidal de lona blanca de 2 metros de altura sobre los postes, representando de forma fiel una carpa para eventos.
+       - **Estabilidad de Sillas**: Declaramos los valores hexadecimales por defecto para `COLORS.chairSeat` y `COLORS.chairWood` evitando advertencias de valores indefinidos.
