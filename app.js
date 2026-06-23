@@ -484,6 +484,17 @@
       setVal('mesa-menu', elem.mesaConfig.menu || '');
     }
 
+    // Show/hide salon walls configuration
+    var salonWallsGroup = document.getElementById('inspector-salon-walls-group');
+    if (salonWallsGroup) {
+      if (elem.type === 'salon') {
+        salonWallsGroup.classList.remove('hidden');
+        setVal('inspector-salon-walls', elem.salonType || 'muros');
+      } else {
+        salonWallsGroup.classList.add('hidden');
+      }
+    }
+
     // Type badge
     var typeBadge = document.getElementById('inspector-type');
     if (typeBadge) {
@@ -555,6 +566,11 @@
     onInpChange('inspector-chairs', function (id, el) {
       var v = parseInt(el.value, 10);
       if (!isNaN(v) && v >= 0) { saveHistory(); updateElement(id, { chairs: v }); updateCounters(); }
+    });
+    onInpChange('inspector-salon-walls', function (id, el) {
+      saveHistory();
+      updateElement(id, { salonType: el.value });
+      showToast('Tipo de salón actualizado.', 'info');
     });
 
     // Imperial tablones
