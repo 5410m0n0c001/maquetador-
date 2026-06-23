@@ -1705,7 +1705,8 @@ window.Visualizer3D = (function () {
     resetCamera: resetCamera,
     setTerrain: setTerrain,
     setLighting: setLighting,
-    destroy: destroy
+    destroy: destroy,
+    resize: _onResize
   };
 })();
 
