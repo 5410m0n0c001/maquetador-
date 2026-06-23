@@ -24,7 +24,9 @@ window.Visualizer3D = (function () {
     limo: 0x1f2937,
     pink: 0xf472b6,
     orange: 0xf97316,
-    white: 0xffffff
+    white: 0xffffff,
+    chairSeat: 0xffffff,
+    chairWood: 0x8d6e63
   };
 
   // ─── Internal State ───────────────────────────────────────
@@ -420,7 +422,16 @@ window.Visualizer3D = (function () {
     var h = elem.h;
     var colorNum = parseColor(elem.color);
 
-    if (elem.type === 'salon') {
+    if (elem.type === 'terrain') {
+      // Draw as a very flat ground slab (carpet style)
+      var slab = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.005, h),
+        new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.9 })
+      );
+      slab.position.y = 0.0025;
+      slab.receiveShadow = true;
+      group.add(slab);
+    } else if (elem.type === 'salon') {
       // Floor slab
       var floor = new THREE.Mesh(
         new THREE.BoxGeometry(w, 0.0201, h),
@@ -1244,7 +1255,8 @@ window.Visualizer3D = (function () {
     resetCamera: resetCamera,
     setTerrain: setTerrain,
     setLighting: setLighting,
-    destroy: destroy
+    destroy: destroy,
+    resize: _onResize
   };
 })();
 

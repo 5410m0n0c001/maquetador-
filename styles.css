@@ -873,6 +873,12 @@ button, input, select, textarea {
   user-select: none;
 }
 
+/* Disable pointer events on all elements when in placement mode */
+#svg-canvas.placement-active .elem-group {
+  pointer-events: none;
+}
+
+
 .canvas-hint {
   position: absolute;
   bottom: 20px;

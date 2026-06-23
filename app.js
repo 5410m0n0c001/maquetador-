@@ -683,6 +683,7 @@
       AppState.pendingType = null;
       _lastPendingCard = null;
       _updateCanvasCursor(false);
+      _updateCanvasPointerEvents(false);
       if (banner) banner.classList.add('hidden');
       if (type) showToast('Colocación cancelada.', 'info');
       return;
@@ -696,6 +697,7 @@
       card.classList.add('active-placement');
     }
     _updateCanvasCursor(true);
+    _updateCanvasPointerEvents(true);
 
     var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
     var name = cat ? cat.name : type;
@@ -713,6 +715,17 @@
     if (svgEl) svgEl.style.cursor = crosshair ? 'crosshair' : '';
     var c3d = document.getElementById('canvas-3d');
     if (c3d) c3d.style.cursor = crosshair ? 'crosshair' : '';
+  }
+
+  function _updateCanvasPointerEvents(active) {
+    var svgEl = document.getElementById('svg-canvas');
+    if (svgEl) {
+      if (active) {
+        svgEl.classList.add('placement-active');
+      } else {
+        svgEl.classList.remove('placement-active');
+      }
+    }
   }
 
   // ══════════════════════════════════════════════════════════
@@ -759,7 +772,13 @@
         if (container3d) container3d.style.display = 'block';
         if (btn3d) { btn3d.classList.add('active'); }
         if (btn2d) { btn2d.classList.remove('active'); }
-        if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
+        if (window.Visualizer3D) {
+          window.Visualizer3D.sync(AppState.elements);
+          window.Visualizer3D.resize();
+          setTimeout(function () {
+            if (window.Visualizer3D) window.Visualizer3D.resize();
+          }, 50);
+        }
       }
     }
 
@@ -1475,6 +1494,7 @@
           _lastPendingCard = null;
         }
         _updateCanvasCursor(false);
+        _updateCanvasPointerEvents(false);
         var banner = document.getElementById('placement-banner');
         if (banner) banner.classList.add('hidden');
         addElement(type, x, y);

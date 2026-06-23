@@ -177,7 +177,7 @@ window.Editor2D = (function () {
 
     // Layer groups (including flow layers)
     var layers = [
-      'estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores',
+      'bg', 'estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores',
       'flujo_invitados', 'flujo_proveedores', 'flujo_staff'
     ];
     _layerGroups = {};
