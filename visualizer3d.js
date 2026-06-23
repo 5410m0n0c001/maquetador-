@@ -24,9 +24,7 @@ window.Visualizer3D = (function () {
     limo: 0x1f2937,
     pink: 0xf472b6,
     orange: 0xf97316,
-    white: 0xffffff,
-    chairSeat: 0xffffff,
-    chairWood: 0x8d6e63
+    white: 0xffffff
   };
 
   // ─── Internal State ───────────────────────────────────────
@@ -50,6 +48,418 @@ window.Visualizer3D = (function () {
   function parseColor(hex) {
     if (!hex) return 0xffffff;
     return parseInt(hex.replace('#', '0x'));
+  }
+
+  // 🌸 COLOR MAP AND MATERIAL HELPERS FOR TABLEWARE & LINENS
+  var _colorMap = {
+    blanco: 0xffffff,
+    marfil: 0xfffff0,
+    negro: 0x18181b,
+    caqui: 0xc3b091,
+    azul_marino: 0x0f172a,
+    arena: 0xe5e5e5,
+    chocolate: 0x3b2314,
+    dorado: 0xd4af37,
+    palo_de_rosa: 0xd39e9e,
+    rojo: 0xb91c1c,
+    verde: 0x15803d,
+    amarillo: 0xeab308,
+    champagne: 0xf7e7ce,
+    verde_olivo: 0x556b2f,
+    azul_rey: 0x0f52ba,
+    azul_cielo: 0x87ceeb,
+    azul_turquesa: 0x30d5c8,
+    rosa_baby: 0xffb7c5,
+    rosa_blush: 0xde5d83,
+    rosa_brillante: 0xff69b4,
+    fuchsia: 0xff00ff,
+    corrugado_ivory: 0xfffff4,
+    corrugado_verde_olivo: 0x6b8e23,
+    verde_bandera: 0x006400,
+    verde_navidad: 0x0b6623,
+    shedron: 0xa0522d,
+    beige: 0xf5f5dc,
+    durazno: 0xffcbd1,
+    lila: 0xc8a2c8,
+    morado: 0x800080,
+    salmon: 0xfa8072,
+    rosa_mexicano: 0xe4007f,
+    hueso: 0xf5f5f5,
+    transparente: 0xffffff,
+    ambar: 0xffbf00,
+    uva: 0x5d3fd3,
+    azul: 0x2563eb,
+    plateado: 0xc0c0c0,
+    gold_rose: 0xb76e79
+  };
+
+  function getHexColor(name, defaultHex) {
+    if (!name) return defaultHex || 0xffffff;
+    var key = name.toLowerCase();
+    if (_colorMap[key] !== undefined) return _colorMap[key];
+    if (key.indexOf('#') === 0) return parseInt(key.replace('#', '0x'));
+    return defaultHex || 0xffffff;
+  }
+
+  var _materialsCache = {};
+
+  function _getPlatoBaseMaterial(style) {
+    if (!style || style === 'ninguno') return null;
+    var cacheKey = 'base_' + style;
+    if (_materialsCache[cacheKey]) return _materialsCache[cacheKey];
+
+    var mat;
+    if (style === 'cristal_aperlado') {
+      mat = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        roughness: 0.1,
+        metalness: 0.1,
+        transmission: 0.8,
+        transparent: true,
+        opacity: 0.7
+      });
+    } else if (style === 'vintage' || style === 'romano') {
+      mat = new THREE.MeshStandardMaterial({
+        color: 0xeadbc8,
+        roughness: 0.5,
+        metalness: 0.1
+      });
+    } else if (style === 'concha_dorado' || style === 'plateado') {
+      mat = new THREE.MeshStandardMaterial({
+        color: (style === 'plateado') ? 0xd1d5db : 0xd4af37,
+        metalness: 0.9,
+        roughness: 0.2
+      });
+    } else if (style === 'chocolate') {
+      mat = new THREE.MeshStandardMaterial({
+        color: 0x3b2314,
+        roughness: 0.6
+      });
+    } else if (style === 'gotico') {
+      mat = new THREE.MeshStandardMaterial({
+        color: 0x1c1917,
+        roughness: 0.4,
+        metalness: 0.2
+      });
+    } else {
+      mat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.3
+      });
+    }
+    _materialsCache[cacheKey] = mat;
+    return mat;
+  }
+
+  function _getPlatoTrincheMaterial(style) {
+    var cacheKey = 'trinche_' + style;
+    if (_materialsCache[cacheKey]) return _materialsCache[cacheKey];
+
+    var mat;
+    if (style === 'negro') {
+      mat = new THREE.MeshStandardMaterial({
+        color: 0x18181b,
+        roughness: 0.5
+      });
+    } else if (style === 'entremes_blanco') {
+      mat = new THREE.MeshStandardMaterial({
+        color: 0xfafafa,
+        roughness: 0.4
+      });
+    } else {
+      mat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.3
+      });
+    }
+    _materialsCache[cacheKey] = mat;
+    return mat;
+  }
+
+  function _getCutleryMaterial(color) {
+    var cacheKey = 'cutlery_' + color;
+    if (_materialsCache[cacheKey]) return _materialsCache[cacheKey];
+
+    var hex = getHexColor(color, 0xc0c0c0);
+    var mat = new THREE.MeshStandardMaterial({
+      color: hex,
+      metalness: 0.9,
+      roughness: 0.2
+    });
+    _materialsCache[cacheKey] = mat;
+    return mat;
+  }
+
+  function _getGlasswareMaterial(style, color) {
+    var cacheKey = 'glass_' + style + '_' + color;
+    if (_materialsCache[cacheKey]) return _materialsCache[cacheKey];
+
+    var hex = getHexColor(color, 0xffffff);
+    var mat = new THREE.MeshPhysicalMaterial({
+      color: hex,
+      roughness: 0.1,
+      metalness: 0.1,
+      transmission: 0.9,
+      opacity: 1.0,
+      transparent: true,
+      thickness: 0.02
+    });
+    _materialsCache[cacheKey] = mat;
+    return mat;
+  }
+
+  function _getNapkinMaterial(color) {
+    var cacheKey = 'napkin_' + color;
+    if (_materialsCache[cacheKey]) return _materialsCache[cacheKey];
+
+    var hex = getHexColor(color, 0xffffff);
+    var mat = new THREE.MeshStandardMaterial({
+      color: hex,
+      roughness: 0.7
+    });
+    _materialsCache[cacheKey] = mat;
+    return mat;
+  }
+
+  function _create3DGlassware(style, glassMat) {
+    var gGroup = new THREE.Group();
+    if (style === 'cubero') {
+      var cup = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.12, 12), glassMat);
+      cup.position.y = 0.06;
+      cup.castShadow = true;
+      gGroup.add(cup);
+    } else if (style === 'old_fashion') {
+      var cup = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.08, 12), glassMat);
+      cup.position.y = 0.04;
+      cup.castShadow = true;
+      gGroup.add(cup);
+    } else if (style === 'tequilero') {
+      var cup = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.015, 0.05, 10), glassMat);
+      cup.position.y = 0.025;
+      cup.castShadow = true;
+      gGroup.add(cup);
+    } else if (style === 'flauta') {
+      var base = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.004, 12), glassMat);
+      base.position.y = 0.002;
+      gGroup.add(base);
+      var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.07, 8), glassMat);
+      stem.position.y = 0.039;
+      gGroup.add(stem);
+      var bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.018, 0.08, 12), glassMat);
+      bowl.position.y = 0.114;
+      gGroup.add(bowl);
+    } else if (style === 'martinera') {
+      var base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.004, 12), glassMat);
+      base.position.y = 0.002;
+      gGroup.add(base);
+      var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.08, 8), glassMat);
+      stem.position.y = 0.044;
+      gGroup.add(stem);
+      var bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.003, 0.05, 12, 1, true), glassMat);
+      bowl.position.y = 0.109;
+      gGroup.add(bowl);
+    } else if (style === 'romana') {
+      var base = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.004, 12), glassMat);
+      base.position.y = 0.002;
+      gGroup.add(base);
+      var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.05, 8), glassMat);
+      stem.position.y = 0.029;
+      gGroup.add(stem);
+      var bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.025, 0.07, 12), glassMat);
+      bowl.position.y = 0.089;
+      gGroup.add(bowl);
+    } else {
+      var base = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.004, 12), glassMat);
+      base.position.y = 0.002;
+      gGroup.add(base);
+      var stem = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.06, 8), glassMat);
+      stem.position.y = 0.034;
+      gGroup.add(stem);
+      var bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.02, 0.065, 12), glassMat);
+      bowl.position.y = 0.096;
+      gGroup.add(bowl);
+    }
+    return gGroup;
+  }
+
+  function _addTablewareRadial(group, tableRadius, numSeats, config) {
+    if (numSeats <= 0) return;
+
+    var baseMat = _getPlatoBaseMaterial(config.platoBase);
+    var trincheMat = _getPlatoTrincheMaterial(config.platoTrinche);
+    var cutleryMat = _getCutleryMaterial(config.cubiertos);
+    var glassMat = _getGlasswareMaterial(config.cristal, config.copasColor);
+    var napkinMat = _getNapkinMaterial(config.servilletaColor);
+
+    var plateRadius = tableRadius - 0.12;
+    var tableSurfaceY = 0.775;
+
+    for (var i = 0; i < numSeats; i++) {
+      var angle = (i * 2 * Math.PI) / numSeats;
+      var px = Math.sin(angle) * plateRadius;
+      var pz = Math.cos(angle) * plateRadius;
+
+      var tablewareGroup = new THREE.Group();
+      tablewareGroup.position.set(px, tableSurfaceY, pz);
+      tablewareGroup.rotation.y = angle;
+
+      var currentY = 0.003;
+      if (config.platoBase && config.platoBase !== 'ninguno') {
+        var baseGeom = new THREE.CylinderGeometry(0.14, 0.14, 0.006, 16);
+        var baseMesh = new THREE.Mesh(baseGeom, baseMat);
+        baseMesh.position.y = currentY;
+        baseMesh.castShadow = true;
+        tablewareGroup.add(baseMesh);
+        currentY += 0.006;
+      }
+
+      if (config.platoTrinche && config.platoTrinche !== 'ninguno') {
+        var trincheGeom = (config.platoTrinche === 'cuadrado_blanco')
+          ? new THREE.BoxGeometry(0.2, 0.006, 0.2)
+          : new THREE.CylinderGeometry(0.1, 0.1, 0.006, 16);
+        var trincheMesh = new THREE.Mesh(trincheGeom, trincheMat);
+        trincheMesh.position.y = currentY;
+        trincheMesh.castShadow = true;
+        tablewareGroup.add(trincheMesh);
+        currentY += 0.006;
+      }
+
+      if (config.servilletaColor) {
+        var napkinGeom;
+        var napkinMesh;
+        var ny = currentY;
+        if (config.servilletaDoblez === 'loto') {
+          napkinGeom = new THREE.ConeGeometry(0.04, 0.06, 6);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'abanico') {
+          napkinGeom = new THREE.BoxGeometry(0.08, 0.06, 0.015);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'piramide') {
+          napkinGeom = new THREE.ConeGeometry(0.04, 0.06, 4);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'capullo') {
+          napkinGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.05, 8);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.025;
+        } else {
+          napkinGeom = new THREE.BoxGeometry(0.07, 0.004, 0.07);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.002;
+        }
+        napkinMesh.castShadow = true;
+        tablewareGroup.add(napkinMesh);
+      }
+
+      var forkGeom = new THREE.BoxGeometry(0.012, 0.003, 0.14);
+      var fork = new THREE.Mesh(forkGeom, cutleryMat);
+      fork.position.set(-0.13, 0.0015, 0);
+      fork.castShadow = true;
+      tablewareGroup.add(fork);
+
+      var knifeGeom = new THREE.BoxGeometry(0.01, 0.003, 0.14);
+      var knife = new THREE.Mesh(knifeGeom, cutleryMat);
+      knife.position.set(0.13, 0.0015, 0);
+      knife.castShadow = true;
+      tablewareGroup.add(knife);
+
+      var glassGroup = _create3DGlassware(config.cristal, glassMat);
+      glassGroup.position.set(0.12, 0, -0.12);
+      tablewareGroup.add(glassGroup);
+
+      group.add(tablewareGroup);
+    }
+  }
+
+  function _addTablewareLine(group, offsetZ, totalWidth, numSeats, config, plateRotY) {
+    if (numSeats <= 0) return;
+
+    var baseMat = _getPlatoBaseMaterial(config.platoBase);
+    var trincheMat = _getPlatoTrincheMaterial(config.platoTrinche);
+    var cutleryMat = _getCutleryMaterial(config.cubiertos);
+    var glassMat = _getGlasswareMaterial(config.cristal, config.copasColor);
+    var napkinMat = _getNapkinMaterial(config.servilletaColor);
+
+    var tableSurfaceY = 0.775;
+    var step = totalWidth / numSeats;
+
+    for (var i = 0; i < numSeats; i++) {
+      var cx = -totalWidth/2 + step * (i + 0.5);
+
+      var tablewareGroup = new THREE.Group();
+      tablewareGroup.position.set(cx, tableSurfaceY, offsetZ);
+      tablewareGroup.rotation.y = plateRotY;
+
+      var currentY = 0.003;
+      if (config.platoBase && config.platoBase !== 'ninguno') {
+        var baseGeom = new THREE.CylinderGeometry(0.14, 0.14, 0.006, 16);
+        var baseMesh = new THREE.Mesh(baseGeom, baseMat);
+        baseMesh.position.y = currentY;
+        baseMesh.castShadow = true;
+        tablewareGroup.add(baseMesh);
+        currentY += 0.006;
+      }
+
+      if (config.platoTrinche && config.platoTrinche !== 'ninguno') {
+        var trincheGeom = (config.platoTrinche === 'cuadrado_blanco')
+          ? new THREE.BoxGeometry(0.2, 0.006, 0.2)
+          : new THREE.CylinderGeometry(0.1, 0.1, 0.006, 16);
+        var trincheMesh = new THREE.Mesh(trincheGeom, trincheMat);
+        trincheMesh.position.y = currentY;
+        trincheMesh.castShadow = true;
+        tablewareGroup.add(trincheMesh);
+        currentY += 0.006;
+      }
+
+      if (config.servilletaColor) {
+        var napkinGeom;
+        var napkinMesh;
+        var ny = currentY;
+        if (config.servilletaDoblez === 'loto') {
+          napkinGeom = new THREE.ConeGeometry(0.04, 0.06, 6);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'abanico') {
+          napkinGeom = new THREE.BoxGeometry(0.08, 0.06, 0.015);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'piramide') {
+          napkinGeom = new THREE.ConeGeometry(0.04, 0.06, 4);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'capullo') {
+          napkinGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.05, 8);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.025;
+        } else {
+          napkinGeom = new THREE.BoxGeometry(0.07, 0.004, 0.07);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.002;
+        }
+        napkinMesh.castShadow = true;
+        tablewareGroup.add(napkinMesh);
+      }
+
+      var forkGeom = new THREE.BoxGeometry(0.012, 0.003, 0.14);
+      var fork = new THREE.Mesh(forkGeom, cutleryMat);
+      fork.position.set(-0.13, 0.0015, 0);
+      fork.castShadow = true;
+      tablewareGroup.add(fork);
+
+      var knifeGeom = new THREE.BoxGeometry(0.01, 0.003, 0.14);
+      var knife = new THREE.Mesh(knifeGeom, cutleryMat);
+      knife.position.set(0.13, 0.0015, 0);
+      knife.castShadow = true;
+      tablewareGroup.add(knife);
+
+      var glassGroup = _create3DGlassware(config.cristal, glassMat);
+      glassGroup.position.set(0.12, 0, -0.12);
+      tablewareGroup.add(glassGroup);
+
+      group.add(tablewareGroup);
+    }
   }
 
   // ─── Init Three.js ────────────────────────────────────────
@@ -355,8 +765,7 @@ window.Visualizer3D = (function () {
       }
 
       // Update positions (x -> X, y -> Z)
-      var yOffset = (elem.category === 'estructuras') ? 0 : 0.025;
-      group.position.set(elem.x, yOffset, elem.y);
+      group.position.set(elem.x, 0, elem.y);
       group.rotation.y = -(elem.rotation || 0) * Math.PI / 180;
     });
 
@@ -422,22 +831,13 @@ window.Visualizer3D = (function () {
     var h = elem.h;
     var colorNum = parseColor(elem.color);
 
-    if (elem.type === 'terrain') {
-      // Draw as a very flat ground slab (carpet style)
-      var slab = new THREE.Mesh(
-        new THREE.BoxGeometry(w, 0.005, h),
-        new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.9 })
-      );
-      slab.position.y = 0.0025;
-      slab.receiveShadow = true;
-      group.add(slab);
-    } else if (elem.type === 'salon') {
+    if (elem.type === 'salon') {
       // Floor slab
       var floor = new THREE.Mesh(
-        new THREE.BoxGeometry(w, 0.0201, h),
+        new THREE.BoxGeometry(w, 0.04, h),
         new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.5 })
       );
-      floor.position.y = 0.01;
+      floor.position.y = 0.02;
       floor.receiveShadow = true;
       group.add(floor);
 
@@ -594,7 +994,7 @@ window.Visualizer3D = (function () {
     var h = elem.h;
     var colorNum = parseColor(elem.color);
 
-    if (elem.type.indexOf('door') === 0 || elem.type.indexOf('gate') === 0) {
+    if (elem.type.indexOf('door') === 0) {
       // Simple gate pillars
       var pilGeom = new THREE.BoxGeometry(0.4, 2.2, 0.4);
       var pilMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
@@ -675,11 +1075,9 @@ window.Visualizer3D = (function () {
       street.receiveShadow = true;
       group.add(street);
 
-      // Yellow lines (drawn dynamically based on road orientation)
-      var lineW = (w >= h) ? w : 0.1;
-      var lineH = (w >= h) ? 0.1 : h;
+      // Yellow lines
       var yellowLine = new THREE.Mesh(
-        new THREE.BoxGeometry(lineW, 0.03, lineH),
+        new THREE.BoxGeometry(w, 0.03, 0.1),
         new THREE.MeshBasicMaterial({ color: 0xeab308 })
       );
       yellowLine.position.set(0, 0.021, 0);
@@ -699,7 +1097,10 @@ window.Visualizer3D = (function () {
 
     // A) Table top (rendered with tablecloth)
     var tableTop;
-    var clothMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+    var mantelHex = (elem.mesaConfig && elem.mesaConfig.mantelColor)
+      ? getHexColor(elem.mesaConfig.mantelColor, colorNum)
+      : colorNum;
+    var clothMat = new THREE.MeshStandardMaterial({ color: mantelHex, roughness: 0.4 });
     var legMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.7, roughness: 0.3 });
 
     if (isCircle) {
@@ -713,6 +1114,22 @@ window.Visualizer3D = (function () {
       leg.position.y = 0.36;
       leg.castShadow = true;
       group.add(leg);
+
+      // Table runner (Camino de mesa)
+      if (elem.mesaConfig && elem.mesaConfig.caminoColor && elem.mesaConfig.caminoColor !== 'ninguno') {
+        var runnerMat = new THREE.MeshStandardMaterial({
+          color: getHexColor(elem.mesaConfig.caminoColor, 0xc9a96e),
+          roughness: 0.5
+        });
+        var runner = new THREE.Mesh(new THREE.BoxGeometry(w, 0.002, 0.4), runnerMat);
+        runner.position.y = 0.776;
+        group.add(runner);
+      }
+
+      // Tableware
+      if (elem.mesaConfig) {
+        _addTablewareRadial(group, w/2, numChairs, elem.mesaConfig);
+      }
 
       // Radial chairs
       _addChairsRadial(group, w/2 + 0.18, numChairs, 0.75);
@@ -738,16 +1155,33 @@ window.Visualizer3D = (function () {
         group.add(tLeg);
       });
 
-      // Sweetheart or honor table special chairs
+      // Table runner (Camino de mesa)
+      if (elem.mesaConfig && elem.mesaConfig.caminoColor && elem.mesaConfig.caminoColor !== 'ninguno') {
+        var runnerMat = new THREE.MeshStandardMaterial({
+          color: getHexColor(elem.mesaConfig.caminoColor, 0xc9a96e),
+          roughness: 0.5
+        });
+        var runner = new THREE.Mesh(new THREE.BoxGeometry(w, 0.002, 0.4), runnerMat);
+        runner.position.y = 0.776;
+        group.add(runner);
+      }
+
+      // Sweetheart or honor table special chairs & tableware
       if (elem.type === 'table_honor_bride' || elem.type === 'table_honor_xv') {
-        // Place chairs on one side only (facing forward)
         _addChairsLine(group, -h/2 - 0.18, w, numChairs, 0.75, 0); // facing North
+        if (elem.mesaConfig) {
+          _addTablewareLine(group, -h/2 + 0.12, w, numChairs, elem.mesaConfig, 0);
+        }
       } else {
-        // Standard rectangular table chairs on long edges
+        // Standard rectangular table chairs & tableware on long edges
         var chairsPerSide = Math.floor(numChairs / 2);
         if (chairsPerSide > 0) {
           _addChairsLine(group, -h/2 - 0.18, w, chairsPerSide, 0.75, 0); // Side 1
           _addChairsLine(group, h/2 + 0.18, w, chairsPerSide, 0.75, Math.PI); // Side 2
+          if (elem.mesaConfig) {
+            _addTablewareLine(group, -h/2 + 0.12, w, chairsPerSide, elem.mesaConfig, 0);
+            _addTablewareLine(group, h/2 - 0.12, w, chairsPerSide, elem.mesaConfig, Math.PI);
+          }
         }
       }
 
@@ -772,10 +1206,25 @@ window.Visualizer3D = (function () {
         group.add(legR);
       }
 
-      // Chairs on both long edges
+      // Table runner (Camino de mesa)
+      if (elem.mesaConfig && elem.mesaConfig.caminoColor && elem.mesaConfig.caminoColor !== 'ninguno') {
+        var runnerMat = new THREE.MeshStandardMaterial({
+          color: getHexColor(elem.mesaConfig.caminoColor, 0xc9a96e),
+          roughness: 0.5
+        });
+        var runner = new THREE.Mesh(new THREE.BoxGeometry(w, 0.002, 0.4), runnerMat);
+        runner.position.y = 0.776;
+        group.add(runner);
+      }
+
+      // Chairs and tableware on both long edges
       var sideChairs = Math.floor(numChairs / 2);
       _addChairsLine(group, -h/2 - 0.18, w, sideChairs, 0.75, 0); // Top side
       _addChairsLine(group, h/2 + 0.18, w, sideChairs, 0.75, Math.PI); // Bottom side
+      if (elem.mesaConfig) {
+        _addTablewareLine(group, -h/2 + 0.12, w, sideChairs, elem.mesaConfig, 0);
+        _addTablewareLine(group, h/2 - 0.12, w, sideChairs, elem.mesaConfig, Math.PI);
+      }
 
     } else if (elem.type === 'table_umbrella') {
       // Table
@@ -787,6 +1236,22 @@ window.Visualizer3D = (function () {
       var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.6, 8), legMat);
       pole.position.y = 1.3;
       group.add(pole);
+
+      // Table runner (Camino de mesa)
+      if (elem.mesaConfig && elem.mesaConfig.caminoColor && elem.mesaConfig.caminoColor !== 'ninguno') {
+        var runnerMat = new THREE.MeshStandardMaterial({
+          color: getHexColor(elem.mesaConfig.caminoColor, 0xc9a96e),
+          roughness: 0.5
+        });
+        var runner = new THREE.Mesh(new THREE.BoxGeometry(w, 0.002, 0.4), runnerMat);
+        runner.position.y = 0.776;
+        group.add(runner);
+      }
+
+      // Tableware
+      if (elem.mesaConfig) {
+        _addTablewareRadial(group, w/2, numChairs, elem.mesaConfig);
+      }
 
       // Umbrella cone canvas
       var canvasMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
@@ -995,7 +1460,7 @@ window.Visualizer3D = (function () {
       flowers.position.set(0, 1.2, 0);
       group.add(flowers);
 
-    } else if (elem.type.indexOf('arch') > -1) {
+    } else if (elem.type.indexOf('arch') > 0) {
       // Flower arch archway
       var archMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.8 });
       var archWidth = w;
@@ -1016,23 +1481,6 @@ window.Visualizer3D = (function () {
       topBar.position.set(0, archHeight, 0);
       topBar.castShadow = true;
       group.add(topBar);
-
-    } else if (elem.type.indexOf('tree') > -1) {
-      // Standalone Tree
-      var trunkGeom = new THREE.CylinderGeometry(0.12, 0.2, 2.0, 8);
-      var trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
-      var foliageGeom = new THREE.SphereGeometry(w/2, 10, 10);
-      var foliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 });
-
-      var trunk = new THREE.Mesh(trunkGeom, trunkMat);
-      trunk.position.y = 1.0;
-      trunk.castShadow = true;
-      group.add(trunk);
-
-      var foliage = new THREE.Mesh(foliageGeom, foliageMat);
-      foliage.position.y = 2.2;
-      foliage.castShadow = true;
-      group.add(foliage);
 
     } else if (elem.type === 'shrub') {
       // Green decorative foliage sphere
@@ -1257,8 +1705,7 @@ window.Visualizer3D = (function () {
     resetCamera: resetCamera,
     setTerrain: setTerrain,
     setLighting: setLighting,
-    destroy: destroy,
-    resize: _onResize
+    destroy: destroy
   };
 })();
 

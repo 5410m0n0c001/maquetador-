@@ -189,53 +189,15 @@
 
     _tableCounter++;
     var isMesa = cat.defaultChairs > 0 || type.startsWith('table_') || type === 'lounge_set';
-    
-    var elemW = cat.defaultW;
-    var elemH = cat.defaultH;
-    var elemX = x;
-    var elemY = y;
-    
-    if (type === 'street') {
-      var tw = AppState.terrain.w;
-      var th = AppState.terrain.h;
-      var distTop = Math.abs(y);
-      var distBottom = Math.abs(th - y);
-      var distLeft = Math.abs(x);
-      var distRight = Math.abs(tw - x);
-      var minDist = Math.min(distTop, distBottom, distLeft, distRight);
-      
-      if (minDist === distTop) {
-        elemX = tw / 2;
-        elemY = -3;
-        elemW = tw;
-        elemH = 6;
-      } else if (minDist === distBottom) {
-        elemX = tw / 2;
-        elemY = th + 3;
-        elemW = tw;
-        elemH = 6;
-      } else if (minDist === distLeft) {
-        elemX = -3;
-        elemY = th / 2;
-        elemW = 6;
-        elemH = th;
-      } else {
-        elemX = tw + 3;
-        elemY = th / 2;
-        elemW = 6;
-        elemH = th;
-      }
-    }
-
     var elem = {
       id: uid(),
       type: type,
       category: cat.category,
       name: cat.name,
-      x: elemX,
-      y: elemY,
-      w: elemW,
-      h: elemH,
+      x: x,
+      y: y,
+      w: cat.defaultW,
+      h: cat.defaultH,
       rotation: 0,
       color: cat.color,
       chairs: cat.defaultChairs,
@@ -243,15 +205,18 @@
       removable: true,
       layer: cat.layer || cat.category,
       mesaConfig: {
-        mantelColor: '#ffffff',
-        caminoColor: '#c9a96e',
-        servilletaColor: '#ffffff',
-        cubiertos: 'dorado',
-        vajilla: true,
-        cristal: true,
+        mesaNum: isMesa ? _tableCounter : 0,
+        mantelColor: 'blanco',
+        caminoColor: 'ninguno',
+        servilletaColor: 'blanco',
+        servilletaDoblez: 'loto',
+        cubiertos: 'plateado',
+        platoBase: 'ninguno',
+        platoTrinche: 'redondo_blanco',
+        cristal: 'standard',
+        copasColor: 'transparente',
         tipoSilla: 'tiffany',
-        menu: '',
-        mesaNum: isMesa ? _tableCounter : 0
+        menu: ''
       }
     };
 
@@ -326,12 +291,15 @@
       removable: true,
       layer: 'mobiliario',
       mesaConfig: {
-        mantelColor: '#ffffff',
-        caminoColor: '#c9a96e',
-        servilletaColor: '#ffffff',
-        cubiertos: 'dorado',
-        vajilla: true,
-        cristal: true,
+        mantelColor: 'blanco',
+        caminoColor: 'ninguno',
+        servilletaColor: 'blanco',
+        servilletaDoblez: 'loto',
+        cubiertos: 'plateado',
+        platoBase: 'ninguno',
+        platoTrinche: 'redondo_blanco',
+        cristal: 'standard',
+        copasColor: 'transparente',
         tipoSilla: 'tiffany',
         menu: '',
         mesaNum: _tableCounter
@@ -503,13 +471,16 @@
 
     if (hasMesa && elem.mesaConfig) {
       setVal('mesa-numero', elem.mesaConfig.mesaNum || 0);
-      setVal('mesa-mantel-color', elem.mesaConfig.mantelColor);
-      setVal('mesa-camino-color', elem.mesaConfig.caminoColor);
-      setVal('mesa-servilleta-color', elem.mesaConfig.servilletaColor);
-      setVal('mesa-cubiertos', elem.mesaConfig.cubiertos);
-      setVal('mesa-vajilla', elem.mesaConfig.vajilla);
-      setVal('mesa-cristal', elem.mesaConfig.cristal);
-      setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla);
+      setVal('mesa-mantel-color', elem.mesaConfig.mantelColor || 'blanco');
+      setVal('mesa-camino-color', elem.mesaConfig.caminoColor || 'ninguno');
+      setVal('mesa-servilleta-color', elem.mesaConfig.servilletaColor || 'blanco');
+      setVal('mesa-servilleta-doblez', elem.mesaConfig.servilletaDoblez || 'loto');
+      setVal('mesa-cubiertos', elem.mesaConfig.cubiertos || 'plateado');
+      setVal('mesa-plato-base', elem.mesaConfig.platoBase || 'ninguno');
+      setVal('mesa-plato-trinche', elem.mesaConfig.platoTrinche || 'redondo_blanco');
+      setVal('mesa-cristal', elem.mesaConfig.cristal || 'standard');
+      setVal('mesa-copas-color', elem.mesaConfig.copasColor || 'transparente');
+      setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
     }
 
@@ -610,9 +581,12 @@
     mesaInp('mesa-mantel-color', 'mantelColor');
     mesaInp('mesa-camino-color', 'caminoColor');
     mesaInp('mesa-servilleta-color', 'servilletaColor');
+    mesaInp('mesa-servilleta-doblez', 'servilletaDoblez');
     mesaInp('mesa-cubiertos', 'cubiertos');
-    mesaInp('mesa-vajilla', 'vajilla');
+    mesaInp('mesa-plato-base', 'platoBase');
+    mesaInp('mesa-plato-trinche', 'platoTrinche');
     mesaInp('mesa-cristal', 'cristal');
+    mesaInp('mesa-copas-color', 'copasColor');
     mesaInp('mesa-silla-tipo', 'tipoSilla');
     mesaInp('mesa-menu', 'menu');
 
@@ -654,7 +628,7 @@
       section.dataset.category = cat;
 
       var header = document.createElement('div');
-      header.className = 'toolbox-category-header';
+      header.className = 'toolbox-cat-header';
       header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;user-select:none;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:4px;';
       header.innerHTML = '<i class="fas ' + catMeta.icon + '" style="color:' + catMeta.color + ';width:16px;text-align:center"></i>' +
                          '<span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em">' + catMeta.label + '</span>' +
@@ -662,21 +636,33 @@
                          '<i class="fas fa-chevron-down cat-chevron" style="font-size:10px;color:#64748b;margin-left:4px;transition:transform 0.2s"></i>';
 
       var grid = document.createElement('div');
-      grid.className = 'toolbox-category-grid';
+      grid.className = 'toolbox-grid';
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:2px 0 8px;';
 
       items.forEach(function (item) {
         var card = document.createElement('div');
-        card.className = 'toolbox-item-btn';
+        card.className = 'toolbox-card';
         card.dataset.type = item.type;
+        card.style.cssText = [
+          'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
+          'gap:4px', 'padding:10px 6px', 'background:#1e293b', 'border:1px solid #334155',
+          'border-radius:8px', 'cursor:pointer', 'transition:all 0.15s', 'text-align:center',
+          'user-select:none'
+        ].join(';');
 
-        // active class if currently pending placement
-        if (AppState.pendingType === item.type) {
-          card.classList.add('active-placement');
-        }
+        card.innerHTML = '<i class="fas ' + item.icon + '" style="font-size:18px;color:' + item.color + '"></i>' +
+                         '<span style="font-size:10px;color:#cbd5e1;line-height:1.3;max-width:72px">' + item.name + '</span>';
 
-        card.innerHTML = '<i class="fas ' + item.icon + ' item-icon" style="color:' + item.color + '"></i>' +
-                         '<span class="item-title">' + item.name + '</span>';
-
+        card.addEventListener('mouseenter', function () {
+          card.style.background = '#2d3f54';
+          card.style.borderColor = item.color;
+          card.style.transform = 'scale(1.03)';
+        });
+        card.addEventListener('mouseleave', function () {
+          card.style.background = AppState.pendingType === item.type ? '#1e3a5f' : '#1e293b';
+          card.style.borderColor = AppState.pendingType === item.type ? item.color : '#334155';
+          card.style.transform = '';
+        });
         card.addEventListener('click', function () {
           _setPendingType(item.type, item.color, card);
         });
@@ -713,7 +699,9 @@
 
     // Deselect previous card
     if (_lastPendingCard) {
-      _lastPendingCard.classList.remove('active-placement');
+      _lastPendingCard.style.background = '#1e293b';
+      _lastPendingCard.style.borderColor = '#334155';
+      _lastPendingCard.style.outline = '';
     }
 
     if (AppState.pendingType === type || !type) {
@@ -721,7 +709,6 @@
       AppState.pendingType = null;
       _lastPendingCard = null;
       _updateCanvasCursor(false);
-      _updateCanvasPointerEvents(false);
       if (banner) banner.classList.add('hidden');
       if (type) showToast('Colocación cancelada.', 'info');
       return;
@@ -732,10 +719,11 @@
     _lastPendingColor = color;
 
     if (card) {
-      card.classList.add('active-placement');
+      card.style.background = '#1e3a5f';
+      card.style.borderColor = color || '#c9a96e';
+      card.style.outline = '2px solid ' + (color || '#c9a96e');
     }
     _updateCanvasCursor(true);
-    _updateCanvasPointerEvents(true);
 
     var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
     var name = cat ? cat.name : type;
@@ -755,17 +743,6 @@
     if (c3d) c3d.style.cursor = crosshair ? 'crosshair' : '';
   }
 
-  function _updateCanvasPointerEvents(active) {
-    var svgEl = document.getElementById('svg-canvas');
-    if (svgEl) {
-      if (active) {
-        svgEl.classList.add('placement-active');
-      } else {
-        svgEl.classList.remove('placement-active');
-      }
-    }
-  }
-
   // ══════════════════════════════════════════════════════════
   // SEARCH / FILTER TOOLBOX
   // ══════════════════════════════════════════════════════════
@@ -774,7 +751,7 @@
     if (!inp) return;
     inp.addEventListener('input', function () {
       var q = inp.value.toLowerCase().trim();
-      var cards = $$('.toolbox-item-btn');
+      var cards = $$('.toolbox-card');
       cards.forEach(function (c) {
         var name = (c.querySelector('span') || {}).textContent || '';
         var type = c.dataset.type || '';
@@ -783,7 +760,7 @@
       });
       // Show/hide sections based on visible cards
       $$('.toolbox-section').forEach(function (sec) {
-        var visible = sec.querySelectorAll('.toolbox-item-btn:not([style*="display: none"])').length > 0;
+        var visible = sec.querySelectorAll('.toolbox-card:not([style*="display: none"])').length > 0;
         sec.style.display = visible ? '' : 'none';
       });
     });
@@ -810,13 +787,7 @@
         if (container3d) container3d.style.display = 'block';
         if (btn3d) { btn3d.classList.add('active'); }
         if (btn2d) { btn2d.classList.remove('active'); }
-        if (window.Visualizer3D) {
-          window.Visualizer3D.sync(AppState.elements);
-          window.Visualizer3D.resize();
-          setTimeout(function () {
-            if (window.Visualizer3D) window.Visualizer3D.resize();
-          }, 50);
-        }
+        if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
       }
     }
 
@@ -915,23 +886,7 @@
         return;
       }
       AppState.terrain = { w: w, h: h };
-      
-      // Auto-adjust existing streets to the new terrain size
-      AppState.elements.forEach(function (elem) {
-        if (elem.type === 'street') {
-          if (elem.w >= elem.h) {
-            elem.w = w;
-            elem.x = w / 2;
-          } else {
-            elem.h = h;
-            elem.y = h / 2;
-          }
-        }
-      });
-
       if (window.Editor2D) window.Editor2D.setTerrain(w, h);
-      if (window.Visualizer3D) window.Visualizer3D.setTerrain(w, h);
-      _refresh();
       showToast('Terreno actualizado: ' + w + 'm × ' + h + 'm.', 'success');
     };
 
@@ -1531,9 +1486,8 @@
       onMove: function (id, x, y) {
         var elem = AppState.elements.find(function (e) { return e.id === id; });
         if (!elem) return;
-        var margin = 40;
-        elem.x = Math.max(-margin, Math.min(x, AppState.terrain.w + margin));
-        elem.y = Math.max(-margin, Math.min(y, AppState.terrain.h + margin));
+        elem.x = Math.max(0, Math.min(x, AppState.terrain.w));
+        elem.y = Math.max(0, Math.min(y, AppState.terrain.h));
         if (window.Editor2D) window.Editor2D.update(AppState.elements);
         if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
         // Live-update inspector position fields
@@ -1549,7 +1503,6 @@
           _lastPendingCard = null;
         }
         _updateCanvasCursor(false);
-        _updateCanvasPointerEvents(false);
         var banner = document.getElementById('placement-banner');
         if (banner) banner.classList.add('hidden');
         addElement(type, x, y);

@@ -216,111 +216,106 @@
     </div>
 
     <!-- Layer Toggles -->
-    <details class="layers-section">
-      <summary class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; cursor: pointer; outline: none; user-select: none;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-layer-group"></i>
-          <span>Capas y Flujos</span>
-        </div>
-        <i class="fa-solid fa-chevron-down layers-chevron" style="font-size: 10px; color: var(--text-secondary); transition: transform 0.2s;"></i>
-      </summary>
-
-      <div class="layers-content" style="margin-top: 15px; cursor: default;">
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-building layer-icon icon-estructuras"></i> Estructuras
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-estructuras" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-door-open layer-icon icon-accesos"></i> Accesos
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-accesos" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-chair layer-icon icon-mobiliario"></i> Mobiliario
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-mobiliario" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-music layer-icon icon-entretenimiento"></i> Entretenimiento
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-entretenimiento" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-spa layer-icon icon-decoracion"></i> Decoracion
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-decoracion" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-truck layer-icon icon-proveedores"></i> Proveedores
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-proveedores" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <!-- Flujos de Circulación -->
-        <div class="divider-xs" style="margin: 10px 0 6px;"></div>
-        <div class="layers-section-subtitle">Flujos de circulación</div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-person-walking layer-icon icon-flujo-invitados"></i> Invitados
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-flujo_invitados" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-dolly layer-icon icon-flujo-proveedores"></i> Proveedores
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-flujo_proveedores" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-user-tie layer-icon icon-flujo-staff"></i> Staff
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-flujo_staff" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+    <div class="layers-section">
+      <div class="section-header">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Capas</span>
       </div>
-    </details>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-building layer-icon icon-estructuras"></i> Estructuras
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-estructuras" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-door-open layer-icon icon-accesos"></i> Accesos
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-accesos" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-chair layer-icon icon-mobiliario"></i> Mobiliario
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-mobiliario" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-music layer-icon icon-entretenimiento"></i> Entretenimiento
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-entretenimiento" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-spa layer-icon icon-decoracion"></i> Decoracion
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-decoracion" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-truck layer-icon icon-proveedores"></i> Proveedores
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-proveedores" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Flujos de Circulación -->
+      <div class="divider-xs" style="margin: 10px 0 6px;"></div>
+      <div class="layers-section-subtitle">Flujos de circulación</div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-person-walking layer-icon icon-flujo-invitados"></i> Invitados
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_invitados" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-dolly layer-icon icon-flujo-proveedores"></i> Proveedores
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_proveedores" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-user-tie layer-icon icon-flujo-staff"></i> Staff
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_staff" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
 
   </aside><!-- /#sidebar-left -->
 
@@ -582,14 +577,16 @@
             <label class="form-label" for="mesa-mantel-color">Mantel</label>
             <select id="mesa-mantel-color" class="form-input">
               <option value="blanco">Blanco</option>
-              <option value="marfil">Marfil</option>
               <option value="negro">Negro</option>
-              <option value="rosa">Rosa</option>
-              <option value="oro">Oro / Champagne</option>
-              <option value="azul">Azul</option>
-              <option value="verde">Verde</option>
-              <option value="bordo">Bordo / Vino</option>
-              <option value="personalizado">Personalizado...</option>
+              <option value="caqui">Caqui</option>
+              <option value="azul_marino">Azul Marino</option>
+              <option value="arena">Arena</option>
+              <option value="chocolate">Chocolate</option>
+              <option value="dorado">Dorado (Cubre)</option>
+              <option value="palo_de_rosa">Palo de Rosa (Cubre)</option>
+              <option value="rojo">Rojo (Cubre)</option>
+              <option value="verde">Verde (Cubre)</option>
+              <option value="amarillo">Amarillo (Cubre)</option>
             </select>
           </div>
 
@@ -597,58 +594,136 @@
             <label class="form-label" for="mesa-camino-color">Camino de Mesa</label>
             <select id="mesa-camino-color" class="form-input">
               <option value="ninguno">Sin camino</option>
-              <option value="blanco">Blanco</option>
+              <option value="champagne">Champagne</option>
               <option value="dorado">Dorado</option>
-              <option value="rosa">Rosa</option>
-              <option value="plateado">Plateado</option>
-              <option value="yute">Yute Natural</option>
+              <option value="verde_olivo">Verde Olivo</option>
+              <option value="azul_rey">Azul Rey</option>
+              <option value="azul_marino">Azul Marino</option>
+              <option value="azul_cielo">Azul Cielo</option>
+              <option value="azul_turquesa">Azul Turquesa</option>
+              <option value="palo_de_rosa">Palo de Rosa</option>
+              <option value="rosa_baby">Rosa Baby</option>
+              <option value="rosa_blush">Rosa Blush</option>
+              <option value="rosa_brillante">Rosa Brillante</option>
+              <option value="fuchsia">Fucsia</option>
+              <option value="corrugado_ivory">Corrugado Ivory</option>
+              <option value="corrugado_verde_olivo">Corrugado Verde Olivo</option>
+              <option value="verde_bandera">Verde Bandera</option>
+              <option value="verde_navidad">Verde Navidad</option>
+              <option value="shedron">Shedron / Teja</option>
+              <option value="beige">Beige</option>
+              <option value="rojo">Rojo</option>
               <option value="negro">Negro</option>
+              <option value="caqui">Caqui</option>
+              <option value="chocolate">Chocolate</option>
+              <option value="arena">Arena</option>
+              <option value="durazno">Durazno</option>
+              <option value="lila">Lila</option>
+              <option value="morado">Morado</option>
+              <option value="salmon">Salmón</option>
+              <option value="rosa_mexicano">Rosa Mexicano</option>
+              <option value="hueso">Hueso / Ivory</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="mesa-servilleta-color">Servilletas</label>
+            <label class="form-label" for="mesa-servilleta-color">Color Servilletas</label>
             <select id="mesa-servilleta-color" class="form-input">
               <option value="blanco">Blanco</option>
-              <option value="marfil">Marfil</option>
               <option value="negro">Negro</option>
-              <option value="rosa">Rosa</option>
-              <option value="oro">Dorado</option>
+              <option value="caqui">Caqui</option>
+              <option value="azul_marino">Azul Marino</option>
+              <option value="arena">Arena</option>
+              <option value="chocolate">Chocolate</option>
+              <option value="dorado">Dorado</option>
+              <option value="palo_de_rosa">Palo de Rosa</option>
+              <option value="rojo">Rojo</option>
+              <option value="verde_olivo">Verde Olivo</option>
+              <option value="azul_rey">Azul Rey</option>
+              <option value="rosa_mexicano">Rosa Mexicano</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-servilleta-doblez">Doblez Servilletas</label>
+            <select id="mesa-servilleta-doblez" class="form-input">
+              <option value="loto">Flor de Loto</option>
+              <option value="carta">Sobre / Carta</option>
+              <option value="abanico">Abanico Clásico</option>
+              <option value="piramide">Pirámide</option>
+              <option value="bolsillo">Bolsillo para Cubiertos</option>
+              <option value="capullo">Capullo de Rosa</option>
             </select>
           </div>
 
           <div class="divider-xs"></div>
           <p class="config-section-label">
-            <i class="fa-solid fa-utensils"></i> Servicio
+            <i class="fa-solid fa-utensils"></i> Vajilla y Cubertería
           </p>
 
           <div class="form-group">
-            <label class="form-label" for="mesa-cubiertos">Cubiertos</label>
-            <select id="mesa-cubiertos" class="form-input">
-              <option value="acero">Acero Inoxidable</option>
-              <option value="dorado">Dorado</option>
+            <label class="form-label" for="mesa-plato-base">Plato Base (Decorativo)</label>
+            <select id="mesa-plato-base" class="form-input">
+              <option value="ninguno">Sin Plato Base</option>
+              <option value="romano">Romano</option>
+              <option value="vintage">Vintage</option>
+              <option value="concha_dorado">Concha Dorado</option>
+              <option value="chocolate">Chocolate</option>
+              <option value="gotico">Gótico</option>
               <option value="plateado">Plateado</option>
-              <option value="negro">Negro Mate</option>
+              <option value="espiral">Espiral</option>
+              <option value="cristal_aperlado">Cristal Aperlado</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="mesa-vajilla">Vajilla</label>
-            <select id="mesa-vajilla" class="form-input">
-              <option value="blanca">Blanca Clasica</option>
-              <option value="dorada">Con ribete dorado</option>
-              <option value="negra">Negra</option>
-              <option value="rustica">Rustica / Ceramica</option>
+            <label class="form-label" for="mesa-plato-trinche">Plato Trinche (Principal)</label>
+            <select id="mesa-plato-trinche" class="form-input">
+              <option value="redondo_blanco">Redondo Blanco</option>
+              <option value="cuadrado_blanco">Cuadrado Blanco</option>
+              <option value="negro">Sopero Negro / Oscuro</option>
+              <option value="entremes_blanco">Entremés Blanco</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="mesa-cristal">Cristaleria</label>
+            <label class="form-label" for="mesa-cubiertos">Color Cubiertos</label>
+            <select id="mesa-cubiertos" class="form-input">
+              <option value="plateado">Plateado</option>
+              <option value="dorado">Dorado</option>
+              <option value="gold_rose">Gold Rose</option>
+              <option value="negro">Negro</option>
+            </select>
+          </div>
+
+          <div class="divider-xs"></div>
+          <p class="config-section-label">
+            <i class="fa-solid fa-wine-glass"></i> Cristalería
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-cristal">Estilo Cristalería</label>
             <select id="mesa-cristal" class="form-input">
-              <option value="standard">Estandar</option>
-              <option value="premium">Premium</option>
-              <option value="bohemia">Bohemia / Cristal</option>
-              <option value="copas-altas">Copas Altas</option>
+              <option value="standard">Estándar</option>
+              <option value="flauta">Copa Flauta</option>
+              <option value="vino">Copa Vino</option>
+              <option value="romana">Copa Romana (Agua)</option>
+              <option value="martinera">Copa Martinera</option>
+              <option value="cubero">Vaso Cubero</option>
+              <option value="old_fashion">Old Fashion</option>
+              <option value="tequilero">Tequilero</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-copas-color">Color de Cristalería</label>
+            <select id="mesa-copas-color" class="form-input">
+              <option value="transparente">Transparente</option>
+              <option value="rojo">Rojo</option>
+              <option value="ambar">Ámbar / Miel</option>
+              <option value="uva">Uva / Morado</option>
+              <option value="verde_olivo">Verde Olivo</option>
+              <option value="azul">Azul</option>
             </select>
           </div>
 
@@ -660,12 +735,12 @@
           <div class="form-group">
             <label class="form-label" for="mesa-silla-tipo">Tipo de Silla</label>
             <select id="mesa-silla-tipo" class="form-input">
-              <option value="tiffany">Tiffany (Blanca/Dorada)</option>
-              <option value="crossback">Crossback de Madera</option>
-              <option value="lotus">Lotus Moderna</option>
-              <option value="boss">Silla Boss Exclusiva</option>
+              <option value="tiffany">Tiffany Blanca</option>
+              <option value="napoleon">Napoleon Dorada</option>
               <option value="banquete">Banquete Tapizada</option>
-              <option value="avant_garde">Avant Garde (Jardín)</option>
+              <option value="ghost">Ghost Acrilica</option>
+              <option value="crossback">Cross Back Madera</option>
+              <option value="metalica">Metalica</option>
             </select>
           </div>
 
