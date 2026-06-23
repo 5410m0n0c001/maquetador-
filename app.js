@@ -616,7 +616,7 @@
       section.dataset.category = cat;
 
       var header = document.createElement('div');
-      header.className = 'toolbox-cat-header';
+      header.className = 'toolbox-category-header';
       header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;user-select:none;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:4px;';
       header.innerHTML = '<i class="fas ' + catMeta.icon + '" style="color:' + catMeta.color + ';width:16px;text-align:center"></i>' +
                          '<span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em">' + catMeta.label + '</span>' +
@@ -624,33 +624,21 @@
                          '<i class="fas fa-chevron-down cat-chevron" style="font-size:10px;color:#64748b;margin-left:4px;transition:transform 0.2s"></i>';
 
       var grid = document.createElement('div');
-      grid.className = 'toolbox-grid';
-      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:2px 0 8px;';
+      grid.className = 'toolbox-category-grid';
 
       items.forEach(function (item) {
         var card = document.createElement('div');
-        card.className = 'toolbox-card';
+        card.className = 'toolbox-item-btn';
         card.dataset.type = item.type;
-        card.style.cssText = [
-          'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
-          'gap:4px', 'padding:10px 6px', 'background:#1e293b', 'border:1px solid #334155',
-          'border-radius:8px', 'cursor:pointer', 'transition:all 0.15s', 'text-align:center',
-          'user-select:none'
-        ].join(';');
 
-        card.innerHTML = '<i class="fas ' + item.icon + '" style="font-size:18px;color:' + item.color + '"></i>' +
-                         '<span style="font-size:10px;color:#cbd5e1;line-height:1.3;max-width:72px">' + item.name + '</span>';
+        // active class if currently pending placement
+        if (AppState.pendingType === item.type) {
+          card.classList.add('active-placement');
+        }
 
-        card.addEventListener('mouseenter', function () {
-          card.style.background = '#2d3f54';
-          card.style.borderColor = item.color;
-          card.style.transform = 'scale(1.03)';
-        });
-        card.addEventListener('mouseleave', function () {
-          card.style.background = AppState.pendingType === item.type ? '#1e3a5f' : '#1e293b';
-          card.style.borderColor = AppState.pendingType === item.type ? item.color : '#334155';
-          card.style.transform = '';
-        });
+        card.innerHTML = '<i class="fas ' + item.icon + ' item-icon" style="color:' + item.color + '"></i>' +
+                         '<span class="item-title">' + item.name + '</span>';
+
         card.addEventListener('click', function () {
           _setPendingType(item.type, item.color, card);
         });
@@ -687,9 +675,7 @@
 
     // Deselect previous card
     if (_lastPendingCard) {
-      _lastPendingCard.style.background = '#1e293b';
-      _lastPendingCard.style.borderColor = '#334155';
-      _lastPendingCard.style.outline = '';
+      _lastPendingCard.classList.remove('active-placement');
     }
 
     if (AppState.pendingType === type || !type) {
@@ -707,9 +693,7 @@
     _lastPendingColor = color;
 
     if (card) {
-      card.style.background = '#1e3a5f';
-      card.style.borderColor = color || '#c9a96e';
-      card.style.outline = '2px solid ' + (color || '#c9a96e');
+      card.classList.add('active-placement');
     }
     _updateCanvasCursor(true);
 
@@ -739,7 +723,7 @@
     if (!inp) return;
     inp.addEventListener('input', function () {
       var q = inp.value.toLowerCase().trim();
-      var cards = $$('.toolbox-card');
+      var cards = $$('.toolbox-item-btn');
       cards.forEach(function (c) {
         var name = (c.querySelector('span') || {}).textContent || '';
         var type = c.dataset.type || '';
@@ -748,7 +732,7 @@
       });
       // Show/hide sections based on visible cards
       $$('.toolbox-section').forEach(function (sec) {
-        var visible = sec.querySelectorAll('.toolbox-card:not([style*="display: none"])').length > 0;
+        var visible = sec.querySelectorAll('.toolbox-item-btn:not([style*="display: none"])').length > 0;
         sec.style.display = visible ? '' : 'none';
       });
     });
