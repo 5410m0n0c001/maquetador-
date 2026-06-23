@@ -26,7 +26,7 @@
   --info: #3b82f6;
 
   /* Layout */
-  --sidebar-width: 360px;
+  --sidebar-width: 320px;
   --topbar-height: 60px;
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -592,12 +592,6 @@ button, input, select, textarea {
   box-shadow: 0 4px 12px rgba(240, 90, 126, 0.1);
 }
 
-.toolbox-item-btn.active-placement {
-  background-color: #1e3a5f !important;
-  border-color: var(--accent) !important;
-  outline: 2px solid var(--accent);
-}
-
 .item-icon {
   width: 38px;
   height: 38px;
@@ -654,30 +648,23 @@ button, input, select, textarea {
   font-size: 13px;
 }
 
-/* LAYERS & FLOWS SECTIONS */
-.layers-section, .flows-section {
+/* LAYERS SECTION */
+.layers-section {
+  padding: 15px 20px;
   border-top: 1px solid var(--border-color);
   background-color: rgba(2, 21, 38, 0.2);
 }
 
-.layers-section[open] .layers-chevron,
-.flows-section[open] .flows-chevron {
-  transform: rotate(180deg);
-}
-
-.layers-section summary::-webkit-details-marker,
-.flows-section summary::-webkit-details-marker {
-  display: none;
-}
-.layers-section summary,
-.flows-section summary {
-  list-style: none;
-  padding: 15px 20px;
-}
-
-.layers-content,
-.flows-content {
-  padding: 0 20px 15px;
+.layers-section .section-header {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .layers-section-subtitle {
@@ -709,6 +696,7 @@ button, input, select, textarea {
 }
 
 .icon-estructuras { color: #e2e8f0; }
+.icon-techos { color: #38bdf8; }
 .icon-accesos { color: var(--success); }
 .icon-mobiliario { color: var(--warning); }
 .icon-entretenimiento { color: #a855f7; }
@@ -876,12 +864,6 @@ button, input, select, textarea {
   height: 100%;
   user-select: none;
 }
-
-/* Disable pointer events on all elements when in placement mode */
-#svg-canvas.placement-active .elem-group {
-  pointer-events: none;
-}
-
 
 .canvas-hint {
   position: absolute;

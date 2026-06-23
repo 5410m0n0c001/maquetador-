@@ -215,121 +215,117 @@
       </details>
     </div>
 
-    <!-- Capas Toggle Panel -->
-    <details class="layers-section">
-      <summary class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; cursor: pointer; outline: none; user-select: none;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-layer-group"></i>
-          <span>Capas</span>
-        </div>
-        <i class="fa-solid fa-chevron-down layers-chevron" style="font-size: 10px; color: var(--text-secondary); transition: transform 0.2s;"></i>
-      </summary>
-
-      <div class="layers-content" style="margin-top: 15px; cursor: default;">
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-building layer-icon icon-estructuras"></i> Estructuras
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-estructuras" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-door-open layer-icon icon-accesos"></i> Accesos
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-accesos" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-chair layer-icon icon-mobiliario"></i> Mobiliario
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-mobiliario" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-music layer-icon icon-entretenimiento"></i> Entretenimiento
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-entretenimiento" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-spa layer-icon icon-decoracion"></i> Decoracion
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-decoracion" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-truck layer-icon icon-proveedores"></i> Proveedores
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-proveedores" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+    <!-- Layer Toggles -->
+    <div class="layers-section">
+      <div class="section-header">
+        <i class="fa-solid fa-layer-group"></i>
+        <span>Capas</span>
       </div>
-    </details>
 
-    <!-- Flujos de Circulación Toggle Panel -->
-    <details class="flows-section">
-      <summary class="section-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; cursor: pointer; outline: none; user-select: none;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-route"></i>
-          <span>Flujos de Circulación</span>
-        </div>
-        <i class="fa-solid fa-chevron-down flows-chevron" style="font-size: 10px; color: var(--text-secondary); transition: transform 0.2s;"></i>
-      </summary>
-
-      <div class="flows-content" style="margin-top: 15px; cursor: default;">
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-person-walking layer-icon icon-flujo-invitados"></i> Invitados
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-flujo_invitados" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-dolly layer-icon icon-flujo-proveedores"></i> Proveedores
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-flujo_proveedores" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="layer-row">
-          <span class="layer-label">
-            <i class="fa-solid fa-user-tie layer-icon icon-flujo-staff"></i> Staff
-          </span>
-          <label class="toggle-switch sm">
-            <input type="checkbox" id="layer-toggle-flujo_staff" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-building layer-icon icon-estructuras"></i> Estructuras
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-estructuras" checked />
+          <span class="toggle-slider"></span>
+        </label>
       </div>
-    </details>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-house-chimney layer-icon icon-techos"></i> Techos
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-techos" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-door-open layer-icon icon-accesos"></i> Accesos
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-accesos" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-chair layer-icon icon-mobiliario"></i> Mobiliario
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-mobiliario" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-music layer-icon icon-entretenimiento"></i> Entretenimiento
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-entretenimiento" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-spa layer-icon icon-decoracion"></i> Decoracion
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-decoracion" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-truck layer-icon icon-proveedores"></i> Proveedores
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-proveedores" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Flujos de Circulación -->
+      <div class="divider-xs" style="margin: 10px 0 6px;"></div>
+      <div class="layers-section-subtitle">Flujos de circulación</div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-person-walking layer-icon icon-flujo-invitados"></i> Invitados
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_invitados" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-dolly layer-icon icon-flujo-proveedores"></i> Proveedores
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_proveedores" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="layer-row">
+        <span class="layer-label">
+          <i class="fa-solid fa-user-tie layer-icon icon-flujo-staff"></i> Staff
+        </span>
+        <label class="toggle-switch sm">
+          <input type="checkbox" id="layer-toggle-flujo_staff" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
 
   </aside><!-- /#sidebar-left -->
 
@@ -358,6 +354,13 @@
           <button id="btn-light-gala" class="view-btn lighting-btn" title="Ambiente de Gala">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Gala
           </button>
+        </div>
+        <!-- Brightness Slider -->
+        <div class="view-toggle" id="topbar-brightness-group" style="margin-left: 12px; border-color: rgba(255,255,255,0.05); display: none; align-items: center; gap: 8px; padding: 0 10px;">
+          <i class="fa-solid fa-lightbulb" style="color: #fbbf24; font-size: 13px;"></i>
+          <span style="font-size: 11px; color: var(--text-secondary); white-space: nowrap;">Brillo:</span>
+          <input type="range" id="light-intensity-slider" min="0.2" max="2.5" step="0.05" value="1.0" style="width: 70px; height: 4px; accent-color: #fbbf24; cursor: pointer; margin: 0;" />
+          <span id="light-intensity-val" style="font-size: 11px; font-weight: 600; color: var(--text-primary); min-width: 18px; text-align: right;">1.0</span>
         </div>
       </div>
 
@@ -559,13 +562,22 @@
           <input type="number" id="inspector-chairs" class="form-input" min="0" step="1" placeholder="0" />
         </div>
 
-        <div class="form-group hidden" id="inspector-salon-walls-group">
-          <label class="form-label" for="inspector-salon-walls">
-            <i class="fa-solid fa-warehouse"></i> Tipo de Salón
+        <!-- Elevación / Desnivel -->
+        <div class="form-group">
+          <label class="form-label" for="inspector-elevation">
+            <i class="fa-solid fa-up-down"></i> Elevación / Desnivel (m)
           </label>
-          <select id="inspector-salon-walls" class="form-input">
-            <option value="muros">Salón Techado con Muros</option>
-            <option value="sin_muros">Salón Techado sin Muros (Carpa)</option>
+          <input type="number" id="inspector-elevation" class="form-input" min="0" max="10" step="0.05" placeholder="0.0" />
+        </div>
+
+        <!-- Salon Specific Settings -->
+        <div id="inspector-salon-settings" class="form-group hidden">
+          <label class="form-label" for="inspector-salon-type">
+            <i class="fa-solid fa-hotel"></i> Tipo de Salón
+          </label>
+          <select id="inspector-salon-type" class="form-input">
+            <option value="muros">Techado con Muros</option>
+            <option value="sin_muros">Techado sin Muros (Carpa)</option>
           </select>
         </div>
 

@@ -21,6 +21,7 @@
     pendingType: null,
     layers: {
       estructuras:      true,
+      techos:           true,
       accesos:          true,
       mobiliario:       true,
       entretenimiento:  true,
@@ -446,6 +447,18 @@
     if (disp) disp.textContent = (elem.color || '#888888').toUpperCase();
 
     setVal('inspector-chairs', elem.chairs || 0);
+    setVal('inspector-elevation', elem.elevation || 0.0);
+
+    // Salon specific settings
+    var salonSettings = document.getElementById('inspector-salon-settings');
+    if (salonSettings) {
+      if (elem.type === 'salon') {
+        salonSettings.classList.remove('hidden');
+        setVal('inspector-salon-type', elem.salonType || 'muros');
+      } else {
+        salonSettings.classList.add('hidden');
+      }
+    }
 
     // Imperial tablones row (hidden unless imperial table)
     var tablonRow = document.getElementById('mesa-tablones-row');
@@ -482,17 +495,6 @@
       setVal('mesa-copas-color', elem.mesaConfig.copasColor || 'transparente');
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
-    }
-
-    // Show/hide salon walls configuration
-    var salonWallsGroup = document.getElementById('inspector-salon-walls-group');
-    if (salonWallsGroup) {
-      if (elem.type === 'salon') {
-        salonWallsGroup.classList.remove('hidden');
-        setVal('inspector-salon-walls', elem.salonType || 'muros');
-      } else {
-        salonWallsGroup.classList.add('hidden');
-      }
     }
 
     // Type badge
@@ -567,10 +569,13 @@
       var v = parseInt(el.value, 10);
       if (!isNaN(v) && v >= 0) { saveHistory(); updateElement(id, { chairs: v }); updateCounters(); }
     });
-    onInpChange('inspector-salon-walls', function (id, el) {
+    onInpChange('inspector-elevation', function (id, el) {
+      var v = parseFloat(el.value);
+      if (!isNaN(v)) { saveHistory(); updateElement(id, { elevation: v }); }
+    });
+    onInpChange('inspector-salon-type', function (id, el) {
       saveHistory();
       updateElement(id, { salonType: el.value });
-      showToast('Tipo de salón actualizado.', 'info');
     });
 
     // Imperial tablones
@@ -644,7 +649,7 @@
       section.dataset.category = cat;
 
       var header = document.createElement('div');
-      header.className = 'toolbox-category-header';
+      header.className = 'toolbox-cat-header';
       header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;user-select:none;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:4px;';
       header.innerHTML = '<i class="fas ' + catMeta.icon + '" style="color:' + catMeta.color + ';width:16px;text-align:center"></i>' +
                          '<span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em">' + catMeta.label + '</span>' +
@@ -652,21 +657,33 @@
                          '<i class="fas fa-chevron-down cat-chevron" style="font-size:10px;color:#64748b;margin-left:4px;transition:transform 0.2s"></i>';
 
       var grid = document.createElement('div');
-      grid.className = 'toolbox-category-grid';
+      grid.className = 'toolbox-grid';
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:2px 0 8px;';
 
       items.forEach(function (item) {
         var card = document.createElement('div');
-        card.className = 'toolbox-item-btn';
+        card.className = 'toolbox-card';
         card.dataset.type = item.type;
+        card.style.cssText = [
+          'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
+          'gap:4px', 'padding:10px 6px', 'background:#1e293b', 'border:1px solid #334155',
+          'border-radius:8px', 'cursor:pointer', 'transition:all 0.15s', 'text-align:center',
+          'user-select:none'
+        ].join(';');
 
-        // active class if currently pending placement
-        if (AppState.pendingType === item.type) {
-          card.classList.add('active-placement');
-        }
+        card.innerHTML = '<i class="fas ' + item.icon + '" style="font-size:18px;color:' + item.color + '"></i>' +
+                         '<span style="font-size:10px;color:#cbd5e1;line-height:1.3;max-width:72px">' + item.name + '</span>';
 
-        card.innerHTML = '<i class="fas ' + item.icon + ' item-icon" style="color:' + item.color + '"></i>' +
-                         '<span class="item-title">' + item.name + '</span>';
-
+        card.addEventListener('mouseenter', function () {
+          card.style.background = '#2d3f54';
+          card.style.borderColor = item.color;
+          card.style.transform = 'scale(1.03)';
+        });
+        card.addEventListener('mouseleave', function () {
+          card.style.background = AppState.pendingType === item.type ? '#1e3a5f' : '#1e293b';
+          card.style.borderColor = AppState.pendingType === item.type ? item.color : '#334155';
+          card.style.transform = '';
+        });
         card.addEventListener('click', function () {
           _setPendingType(item.type, item.color, card);
         });
@@ -703,7 +720,9 @@
 
     // Deselect previous card
     if (_lastPendingCard) {
-      _lastPendingCard.classList.remove('active-placement');
+      _lastPendingCard.style.background = '#1e293b';
+      _lastPendingCard.style.borderColor = '#334155';
+      _lastPendingCard.style.outline = '';
     }
 
     if (AppState.pendingType === type || !type) {
@@ -711,7 +730,6 @@
       AppState.pendingType = null;
       _lastPendingCard = null;
       _updateCanvasCursor(false);
-      _updateCanvasPointerEvents(false);
       if (banner) banner.classList.add('hidden');
       if (type) showToast('Colocación cancelada.', 'info');
       return;
@@ -722,10 +740,11 @@
     _lastPendingColor = color;
 
     if (card) {
-      card.classList.add('active-placement');
+      card.style.background = '#1e3a5f';
+      card.style.borderColor = color || '#c9a96e';
+      card.style.outline = '2px solid ' + (color || '#c9a96e');
     }
     _updateCanvasCursor(true);
-    _updateCanvasPointerEvents(true);
 
     var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
     var name = cat ? cat.name : type;
@@ -745,17 +764,6 @@
     if (c3d) c3d.style.cursor = crosshair ? 'crosshair' : '';
   }
 
-  function _updateCanvasPointerEvents(active) {
-    var svgEl = document.getElementById('svg-canvas');
-    if (svgEl) {
-      if (active) {
-        svgEl.classList.add('placement-active');
-      } else {
-        svgEl.classList.remove('placement-active');
-      }
-    }
-  }
-
   // ══════════════════════════════════════════════════════════
   // SEARCH / FILTER TOOLBOX
   // ══════════════════════════════════════════════════════════
@@ -764,7 +772,7 @@
     if (!inp) return;
     inp.addEventListener('input', function () {
       var q = inp.value.toLowerCase().trim();
-      var cards = $$('.toolbox-item-btn');
+      var cards = $$('.toolbox-card');
       cards.forEach(function (c) {
         var name = (c.querySelector('span') || {}).textContent || '';
         var type = c.dataset.type || '';
@@ -773,7 +781,7 @@
       });
       // Show/hide sections based on visible cards
       $$('.toolbox-section').forEach(function (sec) {
-        var visible = sec.querySelectorAll('.toolbox-item-btn:not([style*="display: none"])').length > 0;
+        var visible = sec.querySelectorAll('.toolbox-card:not([style*="display: none"])').length > 0;
         sec.style.display = visible ? '' : 'none';
       });
     });
@@ -790,23 +798,20 @@
 
     function setView(view) {
       AppState.activeView = view;
+      var brightnessGroup = document.getElementById('topbar-brightness-group');
       if (view === '2d') {
         if (container2d) container2d.style.display = 'block';
         if (container3d) container3d.style.display = 'none';
         if (btn2d) { btn2d.classList.add('active'); }
         if (btn3d) { btn3d.classList.remove('active'); }
+        if (brightnessGroup) brightnessGroup.style.display = 'none';
       } else {
         if (container2d) container2d.style.display = 'none';
         if (container3d) container3d.style.display = 'block';
         if (btn3d) { btn3d.classList.add('active'); }
         if (btn2d) { btn2d.classList.remove('active'); }
-        if (window.Visualizer3D) {
-          window.Visualizer3D.sync(AppState.elements);
-          window.Visualizer3D.resize();
-          setTimeout(function () {
-            if (window.Visualizer3D) window.Visualizer3D.resize();
-          }, 50);
-        }
+        if (brightnessGroup) brightnessGroup.style.display = 'flex';
+        if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
       }
     }
 
@@ -837,12 +842,25 @@
     });
   }
 
+  function _wireBrightnessSlider() {
+    var slider = document.getElementById('light-intensity-slider');
+    var valDisp = document.getElementById('light-intensity-val');
+    if (!slider) return;
+    slider.addEventListener('input', function () {
+      var v = parseFloat(slider.value);
+      if (valDisp) valDisp.textContent = v.toFixed(2);
+      if (window.Visualizer3D) {
+        window.Visualizer3D.setExposure(v);
+      }
+    });
+  }
+
   // ══════════════════════════════════════════════════════════
   // LAYER TOGGLES
   // ══════════════════════════════════════════════════════════
   function _wireLayerToggles() {
     var cats = [
-      'estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores',
+      'estructuras', 'techos', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores',
       'flujo_invitados', 'flujo_proveedores', 'flujo_staff'
     ];
     cats.forEach(function (cat) {
@@ -905,23 +923,7 @@
         return;
       }
       AppState.terrain = { w: w, h: h };
-      
-      // Auto-adjust existing streets to the new terrain size
-      AppState.elements.forEach(function (elem) {
-        if (elem.type === 'street') {
-          if (elem.w >= elem.h) {
-            elem.w = w;
-            elem.x = w / 2;
-          } else {
-            elem.h = h;
-            elem.y = h / 2;
-          }
-        }
-      });
-
       if (window.Editor2D) window.Editor2D.setTerrain(w, h);
-      if (window.Visualizer3D) window.Visualizer3D.setTerrain(w, h);
-      _refresh();
       showToast('Terreno actualizado: ' + w + 'm × ' + h + 'm.', 'success');
     };
 
@@ -1521,9 +1523,8 @@
       onMove: function (id, x, y) {
         var elem = AppState.elements.find(function (e) { return e.id === id; });
         if (!elem) return;
-        var margin = 40;
-        elem.x = Math.max(-margin, Math.min(x, AppState.terrain.w + margin));
-        elem.y = Math.max(-margin, Math.min(y, AppState.terrain.h + margin));
+        elem.x = Math.max(0, Math.min(x, AppState.terrain.w));
+        elem.y = Math.max(0, Math.min(y, AppState.terrain.h));
         if (window.Editor2D) window.Editor2D.update(AppState.elements);
         if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
         // Live-update inspector position fields
@@ -1533,11 +1534,12 @@
       onPlaceElement: function (type, x, y) {
         AppState.pendingType = null;
         if (_lastPendingCard) {
-          _lastPendingCard.classList.remove('active-placement');
+          _lastPendingCard.style.background = '#1e293b';
+          _lastPendingCard.style.borderColor = '#334155';
+          _lastPendingCard.style.outline = '';
           _lastPendingCard = null;
         }
         _updateCanvasCursor(false);
-        _updateCanvasPointerEvents(false);
         var banner = document.getElementById('placement-banner');
         if (banner) banner.classList.add('hidden');
         addElement(type, x, y);
@@ -1685,6 +1687,7 @@
     // Wire UI Views & Buttons
     _wireViewSwitcher();
     _wireLighting();
+    _wireBrightnessSlider();
     _wireLayerToggles();
     _wireZoomButtons();
     _wireGridToggle();
