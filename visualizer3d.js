@@ -489,7 +489,7 @@ window.Visualizer3D = (function () {
     _renderer.shadowMap.enabled = true;
     _renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     _renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    _renderer.toneMappingExposure = 1.0;
+    _renderer.toneMappingExposure = 1.25;
     _container.appendChild(_renderer.domElement);
 
     // 4. Orbit Controls
@@ -579,11 +579,11 @@ window.Visualizer3D = (function () {
   // ─── Setup Lighting ───────────────────────────────────────
   function _setupLighting() {
     // Ambient fill
-    _ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+    _ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
     _scene.add(_ambientLight);
 
     // Sun / directional light (golden hour glow)
-    _sunLight = new THREE.DirectionalLight(0xfff4e0, 0.75);
+    _sunLight = new THREE.DirectionalLight(0xfff4e0, 1.15);
     _sunLight.position.set(_terrain.w * 0.5, 45, -_terrain.h * 0.3);
     _sunLight.castShadow = true;
     _sunLight.shadow.mapSize.width = 2048;
@@ -614,28 +614,28 @@ window.Visualizer3D = (function () {
     if (!_ambientLight || !_sunLight || !_partyLight1 || !_partyLight2) return;
     if (mode === 'day') {
       _ambientLight.color.setHex(0xffffff);
-      _ambientLight.intensity = 0.6;
+      _ambientLight.intensity = 0.85;
       _sunLight.color.setHex(0xfff4e0);
-      _sunLight.intensity = 0.75;
+      _sunLight.intensity = 1.2;
       _partyLight1.intensity = 0;
       _partyLight2.intensity = 0;
     } else if (mode === 'night') {
       _ambientLight.color.setHex(0x1e1e38);
-      _ambientLight.intensity = 0.15;
-      _sunLight.intensity = 0.05;
+      _ambientLight.intensity = 0.3;
+      _sunLight.intensity = 0.15;
       _partyLight1.color.setHex(0x3b82f6); // blue
-      _partyLight1.intensity = 0.8;
+      _partyLight1.intensity = 0.9;
       _partyLight2.color.setHex(0xec4899); // magenta
-      _partyLight2.intensity = 0.8;
+      _partyLight2.intensity = 0.9;
     } else if (mode === 'gala') {
       _ambientLight.color.setHex(0xffedd5); // warm amber
-      _ambientLight.intensity = 0.35;
+      _ambientLight.intensity = 0.55;
       _sunLight.color.setHex(0xfcd34d); // warm golden
-      _sunLight.intensity = 0.3;
+      _sunLight.intensity = 0.55;
       _partyLight1.color.setHex(0xf59e0b); // warm yellow
-      _partyLight1.intensity = 0.8;
+      _partyLight1.intensity = 0.95;
       _partyLight2.color.setHex(0xf97316); // warm orange
-      _partyLight2.intensity = 0.8;
+      _partyLight2.intensity = 0.95;
     }
   }
 
