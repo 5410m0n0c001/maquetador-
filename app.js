@@ -189,15 +189,53 @@
 
     _tableCounter++;
     var isMesa = cat.defaultChairs > 0 || type.startsWith('table_') || type === 'lounge_set';
+    
+    var elemW = cat.defaultW;
+    var elemH = cat.defaultH;
+    var elemX = x;
+    var elemY = y;
+    
+    if (type === 'street') {
+      var tw = AppState.terrain.w;
+      var th = AppState.terrain.h;
+      var distTop = Math.abs(y);
+      var distBottom = Math.abs(th - y);
+      var distLeft = Math.abs(x);
+      var distRight = Math.abs(tw - x);
+      var minDist = Math.min(distTop, distBottom, distLeft, distRight);
+      
+      if (minDist === distTop) {
+        elemX = tw / 2;
+        elemY = -3;
+        elemW = tw;
+        elemH = 6;
+      } else if (minDist === distBottom) {
+        elemX = tw / 2;
+        elemY = th + 3;
+        elemW = tw;
+        elemH = 6;
+      } else if (minDist === distLeft) {
+        elemX = -3;
+        elemY = th / 2;
+        elemW = 6;
+        elemH = th;
+      } else {
+        elemX = tw + 3;
+        elemY = th / 2;
+        elemW = 6;
+        elemH = th;
+      }
+    }
+
     var elem = {
       id: uid(),
       type: type,
       category: cat.category,
       name: cat.name,
-      x: x,
-      y: y,
-      w: cat.defaultW,
-      h: cat.defaultH,
+      x: elemX,
+      y: elemY,
+      w: elemW,
+      h: elemH,
       rotation: 0,
       color: cat.color,
       chairs: cat.defaultChairs,
@@ -877,7 +915,23 @@
         return;
       }
       AppState.terrain = { w: w, h: h };
+      
+      // Auto-adjust existing streets to the new terrain size
+      AppState.elements.forEach(function (elem) {
+        if (elem.type === 'street') {
+          if (elem.w >= elem.h) {
+            elem.w = w;
+            elem.x = w / 2;
+          } else {
+            elem.h = h;
+            elem.y = h / 2;
+          }
+        }
+      });
+
       if (window.Editor2D) window.Editor2D.setTerrain(w, h);
+      if (window.Visualizer3D) window.Visualizer3D.setTerrain(w, h);
+      _refresh();
       showToast('Terreno actualizado: ' + w + 'm × ' + h + 'm.', 'success');
     };
 
@@ -1477,8 +1531,9 @@
       onMove: function (id, x, y) {
         var elem = AppState.elements.find(function (e) { return e.id === id; });
         if (!elem) return;
-        elem.x = Math.max(0, Math.min(x, AppState.terrain.w));
-        elem.y = Math.max(0, Math.min(y, AppState.terrain.h));
+        var margin = 40;
+        elem.x = Math.max(-margin, Math.min(x, AppState.terrain.w + margin));
+        elem.y = Math.max(-margin, Math.min(y, AppState.terrain.h + margin));
         if (window.Editor2D) window.Editor2D.update(AppState.elements);
         if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
         // Live-update inspector position fields

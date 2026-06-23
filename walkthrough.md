@@ -86,3 +86,10 @@ El repositorio local está 100% al día y sincronizado con tu GitHub remoto.
 4. **Variables de Sillas Indefinidas**:
    - **Solución**: Definimos las propiedades de color `chairSeat` y `chairWood` dentro del objeto `COLORS` en [visualizer3d.js](file:///C:/Users/Lenovo/Documents/maquetador/visualizer3d.js) para evitar que los materiales utilicen referencias nulas en el render procedural de las sillas.
 
+5. **Colocación y Ajuste Automático de Calles/Avenidas**:
+   - **Alineación Inteligente al Borde Exterior**: Al seleccionar y colocar el elemento "Calle/Avenida", la aplicación calcula el borde del terreno más cercano al punto de clic (Norte, Sur, Este u Oeste). Automáticamente coloca la calle **fuera del terreno** en esa dirección, adaptando su ancho o largo para que **abarque el 100% de ese lado del terreno** (calzada estándar de 6 metros).
+   - **Ajuste Dinámico al Redimensionar Terreno**: Al cambiar el tamaño del terreno en las configuraciones del paso 1, cualquier calle colocada se reajustará de forma automática en tamaño y posición de centrado para seguir cubriendo todo el lateral del terreno de manera sincronizada.
+   - **Límites de Arrastre Expandidos**: Flexibilizamos las restricciones de coordenadas en `onMove` para permitir el arrastre de elementos hasta **40 metros fuera del límite del terreno**, permitiendo colocar de manera realista calles, entradas y otros elementos urbanos externos.
+   - **Estética de Vía en 2D y 3D**: Implementamos una línea central discontinua amarilla para simular el divisor de carril. En 2D se genera dinámicamente como una línea discontinua SVG en la orientación correcta (horizontal o vertical). En 3D, el modelo se ajusta según la relación de aspecto del elemento para alinear la línea de forma longitudinal.
+
+

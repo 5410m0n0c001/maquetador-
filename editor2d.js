@@ -508,6 +508,28 @@ window.Editor2D = (function () {
           });
           g.appendChild(sLine);
         }
+      } else if (elem.type === 'street') {
+        // Center yellow road lines
+        var isHoriz = pw >= ph;
+        var lineAttrs = {
+          stroke: '#eab308',
+          'stroke-width': 1.5,
+          'stroke-dasharray': '6 4',
+          'pointer-events': 'none'
+        };
+        if (isHoriz) {
+          lineAttrs.x1 = px - pw / 2;
+          lineAttrs.y1 = py;
+          lineAttrs.x2 = px + pw / 2;
+          lineAttrs.y2 = py;
+        } else {
+          lineAttrs.x1 = px;
+          lineAttrs.y1 = py - ph / 2;
+          lineAttrs.x2 = px;
+          lineAttrs.y2 = py + ph / 2;
+        }
+        var roadLine = svgEl('line', lineAttrs);
+        g.appendChild(roadLine);
       } else if (elem.type === 'dancefloor' || elem.type === 'dancefloor_pixel' || elem.type === 'dancefloor_marble') {
         // already handled above
       }

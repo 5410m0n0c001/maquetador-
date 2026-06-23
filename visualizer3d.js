@@ -675,9 +675,11 @@ window.Visualizer3D = (function () {
       street.receiveShadow = true;
       group.add(street);
 
-      // Yellow lines
+      // Yellow lines (drawn dynamically based on road orientation)
+      var lineW = (w >= h) ? w : 0.1;
+      var lineH = (w >= h) ? 0.1 : h;
       var yellowLine = new THREE.Mesh(
-        new THREE.BoxGeometry(w, 0.03, 0.1),
+        new THREE.BoxGeometry(lineW, 0.03, lineH),
         new THREE.MeshBasicMaterial({ color: 0xeab308 })
       );
       yellowLine.position.set(0, 0.021, 0);
