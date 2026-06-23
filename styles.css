@@ -654,25 +654,29 @@ button, input, select, textarea {
   font-size: 13px;
 }
 
-/* LAYERS SECTION */
-.layers-section {
+/* LAYERS & FLOWS SECTIONS */
+.layers-section, .flows-section {
   border-top: 1px solid var(--border-color);
   background-color: rgba(2, 21, 38, 0.2);
 }
 
-.layers-section[open] .layers-chevron {
+.layers-section[open] .layers-chevron,
+.flows-section[open] .flows-chevron {
   transform: rotate(180deg);
 }
 
-.layers-section summary::-webkit-details-marker {
+.layers-section summary::-webkit-details-marker,
+.flows-section summary::-webkit-details-marker {
   display: none;
 }
-.layers-section summary {
+.layers-section summary,
+.flows-section summary {
   list-style: none;
   padding: 15px 20px;
 }
 
-.layers-content {
+.layers-content,
+.flows-content {
   padding: 0 20px 15px;
 }
 

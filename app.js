@@ -628,7 +628,7 @@
       section.dataset.category = cat;
 
       var header = document.createElement('div');
-      header.className = 'toolbox-cat-header';
+      header.className = 'toolbox-category-header';
       header.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;user-select:none;background:rgba(255,255,255,0.04);border-radius:6px;margin-bottom:4px;';
       header.innerHTML = '<i class="fas ' + catMeta.icon + '" style="color:' + catMeta.color + ';width:16px;text-align:center"></i>' +
                          '<span style="font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em">' + catMeta.label + '</span>' +
@@ -636,33 +636,21 @@
                          '<i class="fas fa-chevron-down cat-chevron" style="font-size:10px;color:#64748b;margin-left:4px;transition:transform 0.2s"></i>';
 
       var grid = document.createElement('div');
-      grid.className = 'toolbox-grid';
-      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:2px 0 8px;';
+      grid.className = 'toolbox-category-grid';
 
       items.forEach(function (item) {
         var card = document.createElement('div');
-        card.className = 'toolbox-card';
+        card.className = 'toolbox-item-btn';
         card.dataset.type = item.type;
-        card.style.cssText = [
-          'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
-          'gap:4px', 'padding:10px 6px', 'background:#1e293b', 'border:1px solid #334155',
-          'border-radius:8px', 'cursor:pointer', 'transition:all 0.15s', 'text-align:center',
-          'user-select:none'
-        ].join(';');
 
-        card.innerHTML = '<i class="fas ' + item.icon + '" style="font-size:18px;color:' + item.color + '"></i>' +
-                         '<span style="font-size:10px;color:#cbd5e1;line-height:1.3;max-width:72px">' + item.name + '</span>';
+        // active class if currently pending placement
+        if (AppState.pendingType === item.type) {
+          card.classList.add('active-placement');
+        }
 
-        card.addEventListener('mouseenter', function () {
-          card.style.background = '#2d3f54';
-          card.style.borderColor = item.color;
-          card.style.transform = 'scale(1.03)';
-        });
-        card.addEventListener('mouseleave', function () {
-          card.style.background = AppState.pendingType === item.type ? '#1e3a5f' : '#1e293b';
-          card.style.borderColor = AppState.pendingType === item.type ? item.color : '#334155';
-          card.style.transform = '';
-        });
+        card.innerHTML = '<i class="fas ' + item.icon + ' item-icon" style="color:' + item.color + '"></i>' +
+                         '<span class="item-title">' + item.name + '</span>';
+
         card.addEventListener('click', function () {
           _setPendingType(item.type, item.color, card);
         });
@@ -699,9 +687,7 @@
 
     // Deselect previous card
     if (_lastPendingCard) {
-      _lastPendingCard.style.background = '#1e293b';
-      _lastPendingCard.style.borderColor = '#334155';
-      _lastPendingCard.style.outline = '';
+      _lastPendingCard.classList.remove('active-placement');
     }
 
     if (AppState.pendingType === type || !type) {
@@ -709,6 +695,7 @@
       AppState.pendingType = null;
       _lastPendingCard = null;
       _updateCanvasCursor(false);
+      _updateCanvasPointerEvents(false);
       if (banner) banner.classList.add('hidden');
       if (type) showToast('Colocación cancelada.', 'info');
       return;
@@ -719,11 +706,10 @@
     _lastPendingColor = color;
 
     if (card) {
-      card.style.background = '#1e3a5f';
-      card.style.borderColor = color || '#c9a96e';
-      card.style.outline = '2px solid ' + (color || '#c9a96e');
+      card.classList.add('active-placement');
     }
     _updateCanvasCursor(true);
+    _updateCanvasPointerEvents(true);
 
     var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
     var name = cat ? cat.name : type;
@@ -743,6 +729,17 @@
     if (c3d) c3d.style.cursor = crosshair ? 'crosshair' : '';
   }
 
+  function _updateCanvasPointerEvents(active) {
+    var svgEl = document.getElementById('svg-canvas');
+    if (svgEl) {
+      if (active) {
+        svgEl.classList.add('placement-active');
+      } else {
+        svgEl.classList.remove('placement-active');
+      }
+    }
+  }
+
   // ══════════════════════════════════════════════════════════
   // SEARCH / FILTER TOOLBOX
   // ══════════════════════════════════════════════════════════
@@ -751,7 +748,7 @@
     if (!inp) return;
     inp.addEventListener('input', function () {
       var q = inp.value.toLowerCase().trim();
-      var cards = $$('.toolbox-card');
+      var cards = $$('.toolbox-item-btn');
       cards.forEach(function (c) {
         var name = (c.querySelector('span') || {}).textContent || '';
         var type = c.dataset.type || '';
@@ -760,7 +757,7 @@
       });
       // Show/hide sections based on visible cards
       $$('.toolbox-section').forEach(function (sec) {
-        var visible = sec.querySelectorAll('.toolbox-card:not([style*="display: none"])').length > 0;
+        var visible = sec.querySelectorAll('.toolbox-item-btn:not([style*="display: none"])').length > 0;
         sec.style.display = visible ? '' : 'none';
       });
     });
@@ -787,7 +784,13 @@
         if (container3d) container3d.style.display = 'block';
         if (btn3d) { btn3d.classList.add('active'); }
         if (btn2d) { btn2d.classList.remove('active'); }
-        if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
+        if (window.Visualizer3D) {
+          window.Visualizer3D.sync(AppState.elements);
+          window.Visualizer3D.resize();
+          setTimeout(function () {
+            if (window.Visualizer3D) window.Visualizer3D.resize();
+          }, 50);
+        }
       }
     }
 
@@ -886,7 +889,23 @@
         return;
       }
       AppState.terrain = { w: w, h: h };
+      
+      // Auto-adjust existing streets to the new terrain size
+      AppState.elements.forEach(function (elem) {
+        if (elem.type === 'street') {
+          if (elem.w >= elem.h) {
+            elem.w = w;
+            elem.x = w / 2;
+          } else {
+            elem.h = h;
+            elem.y = h / 2;
+          }
+        }
+      });
+
       if (window.Editor2D) window.Editor2D.setTerrain(w, h);
+      if (window.Visualizer3D) window.Visualizer3D.setTerrain(w, h);
+      _refresh();
       showToast('Terreno actualizado: ' + w + 'm × ' + h + 'm.', 'success');
     };
 
@@ -1486,8 +1505,9 @@
       onMove: function (id, x, y) {
         var elem = AppState.elements.find(function (e) { return e.id === id; });
         if (!elem) return;
-        elem.x = Math.max(0, Math.min(x, AppState.terrain.w));
-        elem.y = Math.max(0, Math.min(y, AppState.terrain.h));
+        var margin = 40;
+        elem.x = Math.max(-margin, Math.min(x, AppState.terrain.w + margin));
+        elem.y = Math.max(-margin, Math.min(y, AppState.terrain.h + margin));
         if (window.Editor2D) window.Editor2D.update(AppState.elements);
         if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
         // Live-update inspector position fields
@@ -1497,12 +1517,11 @@
       onPlaceElement: function (type, x, y) {
         AppState.pendingType = null;
         if (_lastPendingCard) {
-          _lastPendingCard.style.background = '#1e293b';
-          _lastPendingCard.style.borderColor = '#334155';
-          _lastPendingCard.style.outline = '';
+          _lastPendingCard.classList.remove('active-placement');
           _lastPendingCard = null;
         }
         _updateCanvasCursor(false);
+        _updateCanvasPointerEvents(false);
         var banner = document.getElementById('placement-banner');
         if (banner) banner.classList.add('hidden');
         addElement(type, x, y);
