@@ -1919,6 +1919,7 @@ window.Visualizer3D = (function () {
     setTerrain: setTerrain,
     setLighting: setLighting,
     setExposure: setExposure,
+    resize: _onResize,
     destroy: destroy
   };
 })();

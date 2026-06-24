@@ -833,20 +833,19 @@
         if (btn3d) { btn3d.classList.add('active'); }
         if (btn2d) { btn2d.classList.remove('active'); }
         if (brightnessGroup) brightnessGroup.style.display = 'flex';
-        // Init lazily NOW that the container has real dimensions
-        _lazyInit3D();
-        if (window.Visualizer3D && _3dInitialized) {
-          window.Visualizer3D.sync(AppState.elements);
-          // Give the browser one frame to paint before resize
-          requestAnimationFrame(function () {
-            if (window.Visualizer3D) {
-              window.Visualizer3D.resize();
-              setTimeout(function () {
-                if (window.Visualizer3D) window.Visualizer3D.resize();
-              }, 50);
-            }
-          });
-        }
+        // Esperar un frame para que el browser calcule el layout
+        // y el canvas tenga dimensiones reales antes de inicializar Three.js
+        requestAnimationFrame(function () {
+          _lazyInit3D();
+          if (window.Visualizer3D && _3dInitialized) {
+            window.Visualizer3D.sync(AppState.elements);
+            window.Visualizer3D.resize();
+            // Segundo resize por si hay layout tardío
+            setTimeout(function () {
+              if (window.Visualizer3D) window.Visualizer3D.resize();
+            }, 100);
+          }
+        });
       }
     }
 
