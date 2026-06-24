@@ -442,6 +442,7 @@
     setVal('inspector-h', parseFloat(elem.h).toFixed(2));
     setVal('inspector-rotation', elem.rotation || 0);
     setVal('inspector-color', elem.color || '#888888');
+    setVal('inspector-elevation', elem.elevation || 0);
     
     var disp = document.getElementById('color-hex-display');
     if (disp) disp.textContent = (elem.color || '#888888').toUpperCase();
@@ -571,9 +572,12 @@
     });
     onInpChange('inspector-elevation', function (id, el) {
       var v = parseFloat(el.value);
-      if (!isNaN(v)) { saveHistory(); updateElement(id, { elevation: v }); }
+      if (!isNaN(v)) {
+        saveHistory();
+        updateElement(id, { elevation: v });
+      }
     });
-    onInpChange('inspector-salon-type', function (id, el) {
+    onInpChange('inspector-salon-walls', function (id, el) {
       saveHistory();
       updateElement(id, { salonType: el.value });
     });
@@ -795,6 +799,24 @@
     var btn3d = document.getElementById('btn-view-3d');
     var container2d = document.getElementById('container-2d');
     var container3d = document.getElementById('container-3d');
+    var _3dInitialized = false;
+
+    function _lazyInit3D() {
+      if (_3dInitialized) return;
+      var canvas3d = document.getElementById('canvas-3d');
+      if (canvas3d && window.Visualizer3D && typeof THREE !== 'undefined') {
+        window.Visualizer3D.init(
+          canvas3d,
+          function () { return AppState.elements; },
+          function () { return AppState; }
+        );
+        _3dInitialized = true;
+      } else if (!window.Visualizer3D) {
+        console.warn('[App] Visualizer3D not loaded.');
+      } else if (typeof THREE === 'undefined') {
+        console.warn('[App] THREE.js not loaded — 3D view unavailable.');
+      }
+    }
 
     function setView(view) {
       AppState.activeView = view;
@@ -811,7 +833,20 @@
         if (btn3d) { btn3d.classList.add('active'); }
         if (btn2d) { btn2d.classList.remove('active'); }
         if (brightnessGroup) brightnessGroup.style.display = 'flex';
-        if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
+        // Init lazily NOW that the container has real dimensions
+        _lazyInit3D();
+        if (window.Visualizer3D && _3dInitialized) {
+          window.Visualizer3D.sync(AppState.elements);
+          // Give the browser one frame to paint before resize
+          requestAnimationFrame(function () {
+            if (window.Visualizer3D) {
+              window.Visualizer3D.resize();
+              setTimeout(function () {
+                if (window.Visualizer3D) window.Visualizer3D.resize();
+              }, 50);
+            }
+          });
+        }
       }
     }
 
@@ -1665,19 +1700,9 @@
       );
     }
 
-    // Init 3D Visualizer
-    var container3d = document.getElementById('canvas-3d');
-    if (container3d && window.Visualizer3D && typeof THREE !== 'undefined') {
-      window.Visualizer3D.init(
-        container3d,
-        function () { return AppState.elements; },
-        function () { return AppState; }
-      );
-    } else if (!window.Visualizer3D) {
-      console.warn('[App] Visualizer3D not loaded.');
-    } else if (typeof THREE === 'undefined') {
-      console.warn('[App] THREE.js not loaded — 3D view unavailable.');
-    }
+    // 3D Visualizer is initialized lazily on first view switch to avoid
+    // rendering into a hidden container (clientWidth/Height = 0).
+    // See _wireViewSwitcher > _lazyInit3D().
 
     // Wire UI Navigation & Actions
     _wireWizardSteps();

@@ -238,7 +238,7 @@
 
         <div class="layer-row">
           <span class="layer-label">
-            <i class="fa-solid fa-house-chimney layer-icon icon-techos"></i> Techos
+            <i class="fa-solid fa-umbrella layer-icon" style="color: #60a5fa; width: 16px; text-align: center;"></i> Techos
           </span>
           <label class="toggle-switch sm">
             <input type="checkbox" id="layer-toggle-techos" checked />
@@ -567,6 +567,13 @@
             <input type="color" id="inspector-color" class="color-picker" value="#C9A96E" />
             <span class="color-hex-display" id="color-hex-display">#C9A96E</span>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inspector-elevation">
+            <i class="fa-solid fa-arrows-up-to-line"></i> Elevación / Desnivel (m)
+          </label>
+          <input type="number" id="inspector-elevation" class="form-input" step="0.1" min="-5" max="30" placeholder="0.0" />
         </div>
 
         <div class="form-group">
