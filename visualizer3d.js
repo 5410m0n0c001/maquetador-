@@ -490,14 +490,17 @@ window.Visualizer3D = (function () {
     _scene.background = new THREE.Color(0x0a0f1d); // Midnight dark theme
     _scene.fog = new THREE.FogExp2(0x0a0f1d, 0.015);
 
-    // 2. Camera
-    var aspect = _container.clientWidth / _container.clientHeight;
+    // 2. Camera — defensive: guarantee non-zero dimensions
+    var cw = _container.clientWidth || _container.parentElement.clientWidth || window.innerWidth;
+    var ch = _container.clientHeight || _container.parentElement.clientHeight || window.innerHeight;
+    console.log('[Visualizer3D] Init container size:', cw, 'x', ch);
+    var aspect = cw / (ch || 1);
     _camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
     _camera.position.set(_terrain.w / 2, Math.max(_terrain.w, _terrain.h) * 0.75, _terrain.h * 1.1);
 
     // 3. Renderer
     _renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    _renderer.setSize(_container.clientWidth, _container.clientHeight);
+    _renderer.setSize(cw, ch);
     _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     _renderer.shadowMap.enabled = true;
     _renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -553,8 +556,9 @@ window.Visualizer3D = (function () {
 
   function _onResize() {
     if (!_container || !_camera || !_renderer) return;
-    var width = _container.clientWidth;
-    var height = _container.clientHeight;
+    var width = _container.clientWidth || _container.parentElement.clientWidth || window.innerWidth;
+    var height = _container.clientHeight || _container.parentElement.clientHeight || window.innerHeight;
+    if (width === 0 || height === 0) return;
     _camera.aspect = width / height;
     _camera.updateProjectionMatrix();
     _renderer.setSize(width, height);
