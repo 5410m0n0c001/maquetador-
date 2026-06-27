@@ -1375,19 +1375,24 @@
     }
   }
 
+  function _loadLayoutData(data) {
+    if (!data) return;
+    if (data.elements) AppState.elements = data.elements;
+    if (data.terrain) AppState.terrain = data.terrain;
+    if (data.layers) Object.assign(AppState.layers, data.layers);
+    AppState.elements.forEach(function (e) {
+      var n = parseInt((e.id || '').replace('el_', ''), 10);
+      if (!isNaN(n) && n >= _idCounter) _idCounter = n + 1;
+      if (e.mesaConfig && e.mesaConfig.mesaNum > _tableCounter) _tableCounter = e.mesaConfig.mesaNum;
+    });
+  }
+
   function loadFromLocalStorage() {
     try {
       var raw = localStorage.getItem(LS_KEY);
       if (!raw) return false;
       var data = JSON.parse(raw);
-      if (data.elements) AppState.elements = data.elements;
-      if (data.terrain) AppState.terrain = data.terrain;
-      if (data.layers) Object.assign(AppState.layers, data.layers);
-      AppState.elements.forEach(function (e) {
-        var n = parseInt((e.id || '').replace('el_', ''), 10);
-        if (!isNaN(n) && n >= _idCounter) _idCounter = n + 1;
-        if (e.mesaConfig && e.mesaConfig.mesaNum > _tableCounter) _tableCounter = e.mesaConfig.mesaNum;
-      });
+      _loadLayoutData(data);
       return true;
     } catch (e) {
       console.warn('[app] Failed to load from localStorage:', e);
@@ -1683,6 +1688,10 @@
 
     // Load saved state
     var hadSaved = loadFromLocalStorage();
+    if (!hadSaved && window.DEFAULT_LAYOUT) {
+      console.log('[App] Loading default layout...');
+      _loadLayoutData(window.DEFAULT_LAYOUT);
+    }
 
     // Build toolbox
     _buildToolbox();
