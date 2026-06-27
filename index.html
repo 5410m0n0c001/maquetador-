@@ -32,13 +32,15 @@
   <!-- LEFT SIDEBAR -->
   <aside id="sidebar-left">
 
-    <!-- Logo -->
     <div class="sidebar-logo">
       <div class="logo-icon">🌸</div>
       <div class="logo-text">
         <span class="logo-brand">Primavera</span>
         <span class="logo-sub">Maquetador de Planos</span>
       </div>
+      <button id="btn-close-menu" class="view-btn" style="display: none; margin-left: auto; border: none; background: transparent; padding: 4px 8px; color: white;" title="Cerrar Menú">
+        <i class="fa-solid fa-xmark" style="font-size: 16px;"></i>
+      </button>
     </div>
 
     <!-- Sidebar Navigation Tabs -->
@@ -350,6 +352,9 @@
     <!-- Top Bar -->
     <header class="topbar">
       <div class="topbar-left">
+        <button id="btn-toggle-menu" class="view-btn" style="display: none; margin-right: 8px; padding: 6px 12px; border-radius: 6px; font-weight: 500;" title="Abrir Menú">
+          <i class="fa-solid fa-bars"></i> Menú
+        </button>
         <div class="view-toggle">
           <button id="btn-view-3d" class="view-btn" title="Vista 3D">
             <i class="fa-solid fa-cube"></i> 3D
@@ -480,9 +485,12 @@
   <!-- RIGHT SIDEBAR - INSPECTOR -->
   <aside id="sidebar-right">
 
-    <div class="inspector-header">
+    <div class="inspector-header" style="display: flex; align-items: center;">
       <i class="fa-solid fa-sliders"></i>
       <span>Inspector de Elementos</span>
+      <button id="btn-close-inspector" class="view-btn" style="display: none; margin-left: auto; border: none; background: transparent; padding: 4px 8px; color: white;" title="Cerrar Inspector">
+        <i class="fa-solid fa-xmark" style="font-size: 16px;"></i>
+      </button>
     </div>
 
     <!-- Inspector Tabs -->
@@ -776,6 +784,33 @@
           <div class="form-group">
             <label class="form-label" for="mesa-copas-color">Color de Cristalería</label>
             <select id="mesa-copas-color" class="form-input">
+              <option value="transparente">Transparente</option>
+              <option value="rojo">Rojo</option>
+              <option value="ambar">Ámbar / Miel</option>
+              <option value="uva">Uva / Morado</option>
+              <option value="verde_olivo">Verde Olivo</option>
+              <option value="azul">Azul</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-cristal2">Copa / Vaso 2 (Opcional)</label>
+            <select id="mesa-cristal2" class="form-input">
+              <option value="ninguno">Ninguno</option>
+              <option value="standard">Estándar</option>
+              <option value="flauta">Copa Flauta</option>
+              <option value="vino">Copa Vino</option>
+              <option value="romana">Copa Romana (Agua)</option>
+              <option value="martinera">Copa Martinera</option>
+              <option value="cubero">Vaso Cubero</option>
+              <option value="old_fashion">Old Fashion</option>
+              <option value="tequilero">Tequilero</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-copas-color2">Color Copa / Vaso 2</label>
+            <select id="mesa-copas-color2" class="form-input">
               <option value="transparente">Transparente</option>
               <option value="rojo">Rojo</option>
               <option value="ambar">Ámbar / Miel</option>

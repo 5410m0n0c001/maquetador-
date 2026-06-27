@@ -21,7 +21,7 @@
     pendingType: null,
     layers: {
       estructuras:      true,
-      techos:           true,
+      techos:           false,
       accesos:          true,
       mobiliario:       true,
       entretenimiento:  true,
@@ -216,6 +216,8 @@
         platoTrinche: 'redondo_blanco',
         cristal: 'standard',
         copasColor: 'transparente',
+        cristal2: 'ninguno',
+        copasColor2: 'transparente',
         tipoSilla: 'tiffany',
         menu: ''
       }
@@ -412,8 +414,11 @@
     var tableEl = document.getElementById('counter-tables');
     if (tableEl) {
       var tableTotal = 0;
+      var excludedTables = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet'];
       Object.keys(tableCounts).forEach(function (k) {
-        if (k.startsWith('table_') || k === 'lounge_set') tableTotal += tableCounts[k];
+        if ((k.startsWith('table_') || k === 'lounge_set') && excludedTables.indexOf(k) === -1) {
+          tableTotal += tableCounts[k];
+        }
       });
       tableEl.textContent = tableTotal;
     }
@@ -494,6 +499,8 @@
       setVal('mesa-plato-trinche', elem.mesaConfig.platoTrinche || 'redondo_blanco');
       setVal('mesa-cristal', elem.mesaConfig.cristal || 'standard');
       setVal('mesa-copas-color', elem.mesaConfig.copasColor || 'transparente');
+      setVal('mesa-cristal2', elem.mesaConfig.cristal2 || 'ninguno');
+      setVal('mesa-copas-color2', elem.mesaConfig.copasColor2 || 'transparente');
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
     }
@@ -511,6 +518,13 @@
     var content = document.getElementById('inspector-panel');
     if (panel) panel.style.display = hasElem ? 'none' : '';
     if (content) content.style.display = hasElem ? '' : 'none';
+
+    // Mobile slide-in
+    var sidebarRight = document.getElementById('sidebar-right');
+    if (sidebarRight && window.innerWidth < 768) {
+      if (hasElem) sidebarRight.classList.add('open');
+      else sidebarRight.classList.remove('open');
+    }
   }
 
   function updateInspectorField(id, value) {
@@ -551,7 +565,20 @@
     });
     onInpChange('inspector-w', function (id, el) {
       var v = parseFloat(el.value);
-      if (!isNaN(v) && v > 0) { saveHistory(); updateElement(id, { w: v }); }
+      if (!isNaN(v) && v > 0) {
+        saveHistory();
+        var elem = AppState.elements.find(function (e) { return e.id === id; });
+        if (elem && elem.type === 'table_imperial') {
+          var n = Math.max(2, Math.round(v / 2.4));
+          var chairsCount = n * 10;
+          updateElement(id, { w: v, tablones: n, chairs: chairsCount });
+          updateInspectorField('mesa-num-tablones', n);
+          updateInspectorField('inspector-chairs', chairsCount);
+          updateCounters();
+        } else {
+          updateElement(id, { w: v });
+        }
+      }
     });
     onInpChange('inspector-h', function (id, el) {
       var v = parseFloat(el.value);
@@ -612,6 +639,8 @@
     mesaInp('mesa-plato-trinche', 'platoTrinche');
     mesaInp('mesa-cristal', 'cristal');
     mesaInp('mesa-copas-color', 'copasColor');
+    mesaInp('mesa-cristal2', 'cristal2');
+    mesaInp('mesa-copas-color2', 'copasColor2');
     mesaInp('mesa-silla-tipo', 'tipoSilla');
     mesaInp('mesa-menu', 'menu');
 
@@ -1686,6 +1715,11 @@
   function init() {
     console.log('[App] Initializing Universal Venue Planner...');
 
+    // If on mobile, default view is 3D
+    if (window.innerWidth < 768) {
+      AppState.activeView = '3d';
+    }
+
     // Load saved state
     var hadSaved = loadFromLocalStorage();
     if (!hadSaved && window.DEFAULT_LAYOUT) {
@@ -1753,6 +1787,63 @@
     updateCounters();
     _updateInspectorVisibility(false);
     _startAutoSave();
+
+    // Wire Mobile Menu & Inspector Toggles
+    var btnToggleMenu = document.getElementById('btn-toggle-menu');
+    var btnCloseMenu = document.getElementById('btn-close-menu');
+    var btnCloseInspector = document.getElementById('btn-close-inspector');
+    var sidebarLeft = document.getElementById('sidebar-left');
+    var sidebarRight = document.getElementById('sidebar-right');
+    
+    if (btnToggleMenu && sidebarLeft) {
+      btnToggleMenu.onclick = function (e) {
+        e.stopPropagation();
+        sidebarLeft.classList.toggle('open');
+      };
+    }
+    
+    if (btnCloseMenu && sidebarLeft) {
+      btnCloseMenu.onclick = function (e) {
+        e.stopPropagation();
+        sidebarLeft.classList.remove('open');
+      };
+    }
+
+    if (btnCloseInspector && sidebarRight) {
+      btnCloseInspector.onclick = function (e) {
+        e.stopPropagation();
+        deselectAll();
+      };
+    }
+
+    // Swipe gestures to close sidebars
+    var touchstartX = 0;
+    var touchendX = 0;
+    if (sidebarLeft) {
+      sidebarLeft.addEventListener('touchstart', function(e) {
+        touchstartX = e.changedTouches[0].screenX;
+      }, {passive: true});
+      sidebarLeft.addEventListener('touchend', function(e) {
+        touchendX = e.changedTouches[0].screenX;
+        if (touchstartX - touchendX > 50) { // Swiped left
+          sidebarLeft.classList.remove('open');
+        }
+      }, {passive: true});
+    }
+
+    var touchstartRightX = 0;
+    var touchendRightX = 0;
+    if (sidebarRight) {
+      sidebarRight.addEventListener('touchstart', function(e) {
+        touchstartRightX = e.changedTouches[0].screenX;
+      }, {passive: true});
+      sidebarRight.addEventListener('touchend', function(e) {
+        touchendRightX = e.changedTouches[0].screenX;
+        if (touchendRightX - touchstartRightX > 50) { // Swiped right
+          deselectAll();
+        }
+      }, {passive: true});
+    }
 
     if (hadSaved) {
       showToast('Plano restaurado desde guardado anterior.', 'success');

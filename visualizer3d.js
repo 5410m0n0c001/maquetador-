@@ -301,6 +301,9 @@ window.Visualizer3D = (function () {
     var trincheMat = _getPlatoTrincheMaterial(config.platoTrinche);
     var cutleryMat = _getCutleryMaterial(config.cubiertos);
     var glassMat = _getGlasswareMaterial(config.cristal, config.copasColor);
+    var glassMat2 = (config.cristal2 && config.cristal2 !== 'ninguno')
+      ? _getGlasswareMaterial(config.cristal2, config.copasColor2 || 'transparente')
+      : null;
     var napkinMat = _getNapkinMaterial(config.servilletaColor);
 
     var plateRadius = tableRadius - 0.12;
@@ -381,6 +384,12 @@ window.Visualizer3D = (function () {
       glassGroup.position.set(0.12, 0, -0.12);
       tablewareGroup.add(glassGroup);
 
+      if (glassMat2) {
+        var glassGroup2 = _create3DGlassware(config.cristal2, glassMat2);
+        glassGroup2.position.set(0.17, 0, -0.07);
+        tablewareGroup.add(glassGroup2);
+      }
+
       group.add(tablewareGroup);
     }
   }
@@ -392,6 +401,9 @@ window.Visualizer3D = (function () {
     var trincheMat = _getPlatoTrincheMaterial(config.platoTrinche);
     var cutleryMat = _getCutleryMaterial(config.cubiertos);
     var glassMat = _getGlasswareMaterial(config.cristal, config.copasColor);
+    var glassMat2 = (config.cristal2 && config.cristal2 !== 'ninguno')
+      ? _getGlasswareMaterial(config.cristal2, config.copasColor2 || 'transparente')
+      : null;
     var napkinMat = _getNapkinMaterial(config.servilletaColor);
 
     var tableSurfaceY = 0.775;
@@ -469,6 +481,12 @@ window.Visualizer3D = (function () {
       var glassGroup = _create3DGlassware(config.cristal, glassMat);
       glassGroup.position.set(0.12, 0, -0.12);
       tablewareGroup.add(glassGroup);
+
+      if (glassMat2) {
+        var glassGroup2 = _create3DGlassware(config.cristal2, glassMat2);
+        glassGroup2.position.set(0.17, 0, -0.07);
+        tablewareGroup.add(glassGroup2);
+      }
 
       group.add(tablewareGroup);
     }
@@ -1639,19 +1657,19 @@ window.Visualizer3D = (function () {
 
       // Sweetheart or honor table special chairs & tableware
       if (elem.type === 'table_honor_bride' || elem.type === 'table_honor_xv') {
-        _addChairsLine(group, -h/2 - 0.18, w, numChairs, 0.75, 0); // facing North
+        _addChairsLine(group, -h/2 - 0.18, w, numChairs, 0.75, Math.PI); // facing South/table center
         if (elem.mesaConfig) {
-          _addTablewareLine(group, -h/2 + 0.12, w, numChairs, elem.mesaConfig, 0);
+          _addTablewareLine(group, -h/2 + 0.12, w, numChairs, elem.mesaConfig, Math.PI);
         }
       } else {
         // Standard rectangular table chairs & tableware on long edges
         var chairsPerSide = Math.floor(numChairs / 2);
         if (chairsPerSide > 0) {
-          _addChairsLine(group, -h/2 - 0.18, w, chairsPerSide, 0.75, 0); // Side 1
-          _addChairsLine(group, h/2 + 0.18, w, chairsPerSide, 0.75, Math.PI); // Side 2
+          _addChairsLine(group, -h/2 - 0.18, w, chairsPerSide, 0.75, Math.PI); // Side 1 (facing South/table center)
+          _addChairsLine(group, h/2 + 0.18, w, chairsPerSide, 0.75, 0); // Side 2 (facing North/table center)
           if (elem.mesaConfig) {
-            _addTablewareLine(group, -h/2 + 0.12, w, chairsPerSide, elem.mesaConfig, 0);
-            _addTablewareLine(group, h/2 - 0.12, w, chairsPerSide, elem.mesaConfig, Math.PI);
+            _addTablewareLine(group, -h/2 + 0.12, w, chairsPerSide, elem.mesaConfig, Math.PI);
+            _addTablewareLine(group, h/2 - 0.12, w, chairsPerSide, elem.mesaConfig, 0);
           }
         }
       }
@@ -1690,11 +1708,11 @@ window.Visualizer3D = (function () {
 
       // Chairs and tableware on both long edges
       var sideChairs = Math.floor(numChairs / 2);
-      _addChairsLine(group, -h/2 - 0.18, w, sideChairs, 0.75, 0); // Top side
-      _addChairsLine(group, h/2 + 0.18, w, sideChairs, 0.75, Math.PI); // Bottom side
+      _addChairsLine(group, -h/2 - 0.18, w, sideChairs, 0.75, Math.PI); // Top side (facing South/table center)
+      _addChairsLine(group, h/2 + 0.18, w, sideChairs, 0.75, 0); // Bottom side (facing North/table center)
       if (elem.mesaConfig) {
-        _addTablewareLine(group, -h/2 + 0.12, w, sideChairs, elem.mesaConfig, 0);
-        _addTablewareLine(group, h/2 - 0.12, w, sideChairs, elem.mesaConfig, Math.PI);
+        _addTablewareLine(group, -h/2 + 0.12, w, sideChairs, elem.mesaConfig, Math.PI);
+        _addTablewareLine(group, h/2 - 0.12, w, sideChairs, elem.mesaConfig, 0);
       }
 
     } else if (elem.type === 'table_umbrella') {
@@ -3001,7 +3019,7 @@ window.Visualizer3D = (function () {
       );
 
       // Rotate chair to face table center
-      cg.rotation.y = angle + Math.PI;
+      cg.rotation.y = angle;
 
       // Seat cushion
       var seat = new THREE.Mesh(seatGeom, seatMat);
