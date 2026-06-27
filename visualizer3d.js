@@ -1192,6 +1192,209 @@ window.Visualizer3D = (function () {
       );
       top.position.y = 0.93;
       group.add(top);
+
+    } else if (elem.type === 'terrain') {
+      // Base Terrain element placed in the scene (flat 0.005m slab)
+      var terrainMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.005, h),
+        new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.9 })
+      );
+      terrainMesh.position.y = 0.0025;
+      terrainMesh.receiveShadow = true;
+      group.add(terrainMesh);
+
+    } else if (elem.type === 'stage') {
+      // Stage platform elevated 40cm
+      var stagePlatform = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.4, h),
+        new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.8 })
+      );
+      stagePlatform.position.y = 0.2;
+      stagePlatform.castShadow = true;
+      stagePlatform.receiveShadow = true;
+      group.add(stagePlatform);
+
+      // Truss structure at the back of the stage
+      var trussMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+      var trussRadius = 0.05;
+      
+      // Left vertical truss pillar
+      var trussL = new THREE.Mesh(
+        new THREE.CylinderGeometry(trussRadius, trussRadius, 3.0, 8),
+        trussMat
+      );
+      trussL.position.set(-w / 2 + 0.15, 1.9, -h / 2 + 0.15);
+      trussL.castShadow = true;
+      group.add(trussL);
+
+      // Right vertical truss pillar
+      var trussR = new THREE.Mesh(
+        new THREE.CylinderGeometry(trussRadius, trussRadius, 3.0, 8),
+        trussMat
+      );
+      trussR.position.set(w / 2 - 0.15, 1.9, -h / 2 + 0.15);
+      trussR.castShadow = true;
+      group.add(trussR);
+
+      // Horizontal cross truss beam
+      var trussBeam = new THREE.Mesh(
+        new THREE.CylinderGeometry(trussRadius, trussRadius, w - 0.3, 8),
+        trussMat
+      );
+      trussBeam.rotation.z = Math.PI / 2;
+      trussBeam.position.set(0, 3.4, -h / 2 + 0.15);
+      trussBeam.castShadow = true;
+      group.add(trussBeam);
+
+    } else if (elem.type === 'kids_area') {
+      // Colourful foam rubber play mat floor
+      var playMat = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.02, h),
+        new THREE.MeshStandardMaterial({ color: 0xec4899, roughness: 0.9 })
+      );
+      playMat.position.y = 0.01;
+      playMat.receiveShadow = true;
+      group.add(playMat);
+
+      // Simple colourful toy blocks scattered
+      var blockMat1 = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.8 }); // blue
+      var blockMat2 = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.8 }); // yellow
+      
+      var block1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 0.8), blockMat1);
+      block1.position.set(-w * 0.2, 0.31, -h * 0.1);
+      block1.castShadow = true;
+      group.add(block1);
+
+      var block2 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.8, 12), blockMat2);
+      block2.position.set(w * 0.2, 0.41, h * 0.15);
+      block2.castShadow = true;
+      group.add(block2);
+
+    } else if (elem.type === 'lobby_reception') {
+      // Lobby ground floor
+      var lobbyFloor = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.02, h),
+        new THREE.MeshStandardMaterial({ color: 0xe4e4e7, roughness: 0.5 })
+      );
+      lobbyFloor.position.y = 0.01;
+      lobbyFloor.receiveShadow = true;
+      group.add(lobbyFloor);
+
+      // Reception counter desk in the middle
+      var deskMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+      var desk = new THREE.Mesh(
+        new THREE.BoxGeometry(w * 0.5, 1.0, 0.6),
+        deskMat
+      );
+      desk.position.set(0, 0.51, -h * 0.1);
+      desk.castShadow = true;
+      group.add(desk);
+
+      // Glass divider panel on desk
+      var glassMat = new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.5, roughness: 0.1 });
+      var divider = new THREE.Mesh(
+        new THREE.BoxGeometry(w * 0.5 - 0.1, 0.4, 0.02),
+        glassMat
+      );
+      divider.position.set(0, 1.21, -h * 0.1);
+      group.add(divider);
+
+    } else if (elem.type === 'parking') {
+      // Asphalt floor
+      var asphalt = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.02, h),
+        new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.9 })
+      );
+      asphalt.position.y = 0.01;
+      asphalt.receiveShadow = true;
+      group.add(asphalt);
+
+      // White parking lines
+      var whiteLineMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9 });
+      var numSpaces = Math.max(2, Math.floor(w / 2.5));
+      var spaceW = w / numSpaces;
+      for (var pi = 1; pi < numSpaces; pi++) {
+        var px = -w / 2 + pi * spaceW;
+        var pLine = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 0.002, h * 0.8),
+          whiteLineMat
+        );
+        pLine.position.set(px, 0.021, 0);
+        group.add(pLine);
+      }
+
+    } else if (elem.type === 'terrace') {
+      // Wooden deck floor
+      var deck = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.04, h),
+        new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.7 })
+      );
+      deck.position.y = 0.02;
+      deck.receiveShadow = true;
+      group.add(deck);
+
+      // Perimeter wooden railing (simple bars)
+      var railMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
+      // Back railing
+      var railB = new THREE.Mesh(new THREE.BoxGeometry(w, 0.9, 0.06), railMat);
+      railB.position.set(0, 0.49, -h/2 + 0.03);
+      railB.castShadow = true;
+      group.add(railB);
+
+      // Left railing
+      var railL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, h), railMat);
+      railL.position.set(-w/2 + 0.03, 0.49, 0);
+      railL.castShadow = true;
+      group.add(railL);
+
+      // Right railing
+      var railR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, h), railMat);
+      railR.position.set(w/2 - 0.03, 0.49, 0);
+      railR.castShadow = true;
+      group.add(railR);
+
+    } else if (elem.type === 'waterfall') {
+      // Stone back wall
+      var stoneWallMat = new THREE.MeshStandardMaterial({ color: 0x57534e, roughness: 0.9 });
+      var backWall = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, 0.3),
+        stoneWallMat
+      );
+      backWall.position.set(0, h/2, -0.15);
+      backWall.castShadow = true;
+      group.add(backWall);
+
+      // Blue translucent water flow sheet in front of the wall
+      var waterMat = new THREE.MeshStandardMaterial({
+        color: 0x0ea5e9,
+        roughness: 0.1,
+        metalness: 0.8,
+        transparent: true,
+        opacity: 0.7
+      });
+      var waterSheet = new THREE.Mesh(
+        new THREE.BoxGeometry(w - 0.1, h, 0.05),
+        waterMat
+      );
+      waterSheet.position.set(0, h/2, 0.035);
+      group.add(waterSheet);
+
+      // Splash bottom basin
+      var basin = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.2, 0.6),
+        stoneWallMat
+      );
+      basin.position.set(0, 0.1, 0.2);
+      basin.castShadow = true;
+      group.add(basin);
+
+      var basinWater = new THREE.Mesh(
+        new THREE.BoxGeometry(w - 0.1, 0.05, 0.5),
+        waterMat
+      );
+      basinWater.position.set(0, 0.175, 0.2);
+      group.add(basinWater);
+
     } else {
       _buildGenericBox(group, elem, colorNum, 1.2);
     }
@@ -1202,6 +1405,7 @@ window.Visualizer3D = (function () {
     var w = elem.w;
     var h = elem.h;
     var colorNum = parseColor(elem.color);
+    var showTechos = _getLayerVisibility('techos');
 
     if (elem.type.indexOf('door') === 0) {
       // Simple gate pillars
@@ -1293,6 +1497,44 @@ window.Visualizer3D = (function () {
       );
       yellowLine.position.set(0, 0.021, 0);
       group.add(yellowLine);
+
+    } else if (elem.type === 'gate_large') {
+      // Large vehicle gate with pillars and horizontal bars
+      var gatePillarMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4, metalness: 0.7 });
+      var gatePillarGeom = new THREE.BoxGeometry(0.5, 2.5, 0.5);
+
+      var gatePilL = new THREE.Mesh(gatePillarGeom, gatePillarMat);
+      gatePilL.position.set(-w / 2 + 0.25, 1.25, 0);
+      gatePilL.castShadow = true;
+      group.add(gatePilL);
+
+      var gatePilR = new THREE.Mesh(gatePillarGeom, gatePillarMat);
+      gatePilR.position.set(w / 2 - 0.25, 1.25, 0);
+      gatePilR.castShadow = true;
+      group.add(gatePilR);
+
+      // Horizontal bars
+      var gateBarMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4, metalness: 0.7 });
+      var gateSpan = w - 0.5;
+      for (var gb = 0; gb < 5; gb++) {
+        var gateBar = new THREE.Mesh(
+          new THREE.BoxGeometry(gateSpan, 0.06, 0.06),
+          gateBarMat
+        );
+        gateBar.position.set(0, 0.3 + gb * 0.5, 0);
+        gateBar.castShadow = true;
+        group.add(gateBar);
+      }
+
+      // Ground rail strip
+      var gateRail = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.03, 0.15),
+        new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6, metalness: 0.5 })
+      );
+      gateRail.position.set(0, 0.015, 0);
+      gateRail.receiveShadow = true;
+      group.add(gateRail);
+
     } else {
       _buildGenericBox(group, elem, colorNum, 0.8);
     }
@@ -1306,13 +1548,31 @@ window.Visualizer3D = (function () {
     var isCircle = elem.shape === 'circle';
     var numChairs = elem.chairs || 0;
 
-    // A) Table top (rendered with tablecloth)
+    // A) Table top (rendered with tablecloth or custom natural material)
     var tableTop;
-    var mantelHex = (elem.mesaConfig && elem.mesaConfig.mantelColor)
-      ? getHexColor(elem.mesaConfig.mantelColor, colorNum)
-      : colorNum;
-    var clothMat = new THREE.MeshStandardMaterial({ color: mantelHex, roughness: 0.4 });
+    var clothMat;
     var legMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.7, roughness: 0.3 });
+    
+    var isSinMantel = elem.mesaConfig && elem.mesaConfig.mantelColor === 'sin_mantel';
+    if (isSinMantel) {
+      if (elem.type.indexOf('campirana') > -1 || elem.type.indexOf('rectangular') > -1) {
+        // Wood texture/color (rough wooden board)
+        clothMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7, metalness: 0.05 });
+        // Wood legs instead of metal legs for campirana/rustic table
+        legMat = new THREE.MeshStandardMaterial({ color: 0x5c2c06, roughness: 0.8 });
+      } else if (elem.type.indexOf('marble') > -1) {
+        // Marble white/gray
+        clothMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.15, metalness: 0.05 });
+      } else {
+        // Fallback to table natural color (plastic/fiberglass)
+        clothMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.5 });
+      }
+    } else {
+      var mantelHex = (elem.mesaConfig && elem.mesaConfig.mantelColor)
+        ? getHexColor(elem.mesaConfig.mantelColor, colorNum)
+        : colorNum;
+      clothMat = new THREE.MeshStandardMaterial({ color: mantelHex, roughness: 0.4 });
+    }
 
     if (isCircle) {
       tableTop = new THREE.Mesh(new THREE.CylinderGeometry(w/2, w/2, 0.05, 24), clothMat);
@@ -1500,6 +1760,432 @@ window.Visualizer3D = (function () {
       coffeeTable.castShadow = true;
       group.add(coffeeTable);
 
+    } else if (elem.type === 'table_periquera') {
+      // High bar table with cylindrical pedestal
+      var perMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8, roughness: 0.2 });
+
+      // Circular foot base
+      var perBase = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.04, 16), perMat);
+      perBase.position.y = 0.02;
+      perBase.castShadow = true;
+      perBase.receiveShadow = true;
+      group.add(perBase);
+
+      // Thin cylindrical pedestal
+      var perPedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 1.06, 8), perMat);
+      perPedestal.position.y = 0.57;
+      perPedestal.castShadow = true;
+      group.add(perPedestal);
+
+      // Small round top
+      var perTopMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+      var perTop = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, 0.04, 24), perTopMat);
+      perTop.position.y = 1.12;
+      perTop.castShadow = true;
+      group.add(perTop);
+
+    } else if (elem.type === 'table_buffet') {
+      // Buffet table with chafing dishes
+      var bufTableMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+      var bufLegMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.7, roughness: 0.3 });
+
+      // Table top
+      var bufTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, h), bufTableMat);
+      bufTop.position.y = 0.8;
+      bufTop.castShadow = true;
+      bufTop.receiveShadow = true;
+      group.add(bufTop);
+
+      // 4 legs at corners
+      var bufLegGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.77, 8);
+      var bufOffsets = [
+        { x: -w / 2 + 0.1, z: -h / 2 + 0.1 },
+        { x: w / 2 - 0.1, z: -h / 2 + 0.1 },
+        { x: -w / 2 + 0.1, z: h / 2 - 0.1 },
+        { x: w / 2 - 0.1, z: h / 2 - 0.1 }
+      ];
+      bufOffsets.forEach(function(off) {
+        var bLeg = new THREE.Mesh(bufLegGeom, bufLegMat);
+        bLeg.position.set(off.x, 0.385, off.z);
+        bLeg.castShadow = true;
+        group.add(bLeg);
+      });
+
+      // 3 chafing dishes on top (stainless steel)
+      var chaferMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.85, roughness: 0.15 });
+      var chaferSpacing = w / 4;
+      for (var ci = -1; ci <= 1; ci++) {
+        // Tray base
+        var chaferBase = new THREE.Mesh(new THREE.BoxGeometry(w * 0.22, 0.04, h * 0.5), chaferMat);
+        chaferBase.position.set(ci * chaferSpacing, 0.845, 0);
+        chaferBase.castShadow = true;
+        group.add(chaferBase);
+
+        // Lid (half cylinder approximation using a flattened box with rounded top)
+        var chaferLid = new THREE.Mesh(new THREE.BoxGeometry(w * 0.20, 0.08, h * 0.45), chaferMat);
+        chaferLid.position.set(ci * chaferSpacing, 0.905, 0);
+        chaferLid.castShadow = true;
+        group.add(chaferLid);
+
+        // Handle knob on lid
+        var knob = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), chaferMat);
+        knob.position.set(ci * chaferSpacing, 0.955, 0);
+        knob.castShadow = true;
+        group.add(knob);
+      }
+
+    } else if (elem.type === 'table_cake') {
+      // Cake table with 3-tier wedding cake
+      var cakeTableMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+      var cakeLegMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.7, roughness: 0.3 });
+
+      // Table top
+      var cakeTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, h), cakeTableMat);
+      cakeTop.position.y = 0.75;
+      cakeTop.castShadow = true;
+      cakeTop.receiveShadow = true;
+      group.add(cakeTop);
+
+      // 4 legs
+      var cakeLegGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.72, 8);
+      var cakeLegOffs = [
+        { x: -w / 2 + 0.1, z: -h / 2 + 0.1 },
+        { x: w / 2 - 0.1, z: -h / 2 + 0.1 },
+        { x: -w / 2 + 0.1, z: h / 2 - 0.1 },
+        { x: w / 2 - 0.1, z: h / 2 - 0.1 }
+      ];
+      cakeLegOffs.forEach(function(off) {
+        var ckLeg = new THREE.Mesh(cakeLegGeom, cakeLegMat);
+        ckLeg.position.set(off.x, 0.36, off.z);
+        ckLeg.castShadow = true;
+        group.add(ckLeg);
+      });
+
+      // 3-tier wedding cake
+      var cakeWhite = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+      var cakeGold = new THREE.MeshStandardMaterial({ color: COLORS.gold, metalness: 0.6, roughness: 0.3 });
+
+      // Bottom tier
+      var tier1 = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.14, 24), cakeWhite);
+      tier1.position.set(0, 0.845, 0);
+      tier1.castShadow = true;
+      group.add(tier1);
+      // Gold band
+      var band1 = new THREE.Mesh(new THREE.CylinderGeometry(0.225, 0.225, 0.015, 24), cakeGold);
+      band1.position.set(0, 0.78, 0);
+      group.add(band1);
+
+      // Middle tier
+      var tier2 = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.12, 24), cakeWhite);
+      tier2.position.set(0, 0.975, 0);
+      tier2.castShadow = true;
+      group.add(tier2);
+      // Gold band
+      var band2 = new THREE.Mesh(new THREE.CylinderGeometry(0.165, 0.165, 0.015, 24), cakeGold);
+      band2.position.set(0, 0.92, 0);
+      group.add(band2);
+
+      // Top tier
+      var tier3 = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.10, 0.10, 24), cakeWhite);
+      tier3.position.set(0, 1.085, 0);
+      tier3.castShadow = true;
+      group.add(tier3);
+      // Gold band
+      var band3 = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.015, 24), cakeGold);
+      band3.position.set(0, 1.04, 0);
+      group.add(band3);
+
+      // Topper sphere
+      var topper = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), cakeGold);
+      topper.position.set(0, 1.165, 0);
+      topper.castShadow = true;
+      group.add(topper);
+
+    } else if (elem.type === 'table_gifts') {
+      // Gift table with gift boxes
+      var giftTableMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+      var giftLegMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.7, roughness: 0.3 });
+
+      // Table top
+      var giftTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, h), giftTableMat);
+      giftTop.position.y = 0.75;
+      giftTop.castShadow = true;
+      giftTop.receiveShadow = true;
+      group.add(giftTop);
+
+      // 4 legs
+      var giftLegGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.72, 8);
+      var giftLegOffs = [
+        { x: -w / 2 + 0.1, z: -h / 2 + 0.1 },
+        { x: w / 2 - 0.1, z: -h / 2 + 0.1 },
+        { x: -w / 2 + 0.1, z: h / 2 - 0.1 },
+        { x: w / 2 - 0.1, z: h / 2 - 0.1 }
+      ];
+      giftLegOffs.forEach(function(off) {
+        var gLeg = new THREE.Mesh(giftLegGeom, giftLegMat);
+        gLeg.position.set(off.x, 0.36, off.z);
+        gLeg.castShadow = true;
+        group.add(gLeg);
+      });
+
+      // Gift boxes with different sizes and colors
+      var giftColors = [
+        { color: COLORS.gold, w: 0.18, h: 0.16, d: 0.18, x: -0.25, z: -0.08 },
+        { color: COLORS.pink, w: 0.14, h: 0.12, d: 0.14, x: 0.10, z: 0.10 },
+        { color: 0x7c3aed, w: 0.16, h: 0.20, d: 0.16, x: 0.30, z: -0.05 },
+        { color: COLORS.gold, w: 0.12, h: 0.10, d: 0.12, x: -0.05, z: 0.12 }
+      ];
+      giftColors.forEach(function(g) {
+        var gMat = new THREE.MeshStandardMaterial({ color: g.color, roughness: 0.4 });
+        var gBox = new THREE.Mesh(new THREE.BoxGeometry(g.w, g.h, g.d), gMat);
+        gBox.position.set(g.x, 0.775 + g.h / 2, g.z);
+        gBox.castShadow = true;
+        group.add(gBox);
+
+        // Ribbon on top
+        var ribbonMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+        var ribbon = new THREE.Mesh(new THREE.BoxGeometry(g.w + 0.01, 0.015, 0.025), ribbonMat);
+        ribbon.position.set(g.x, 0.775 + g.h + 0.007, g.z);
+        group.add(ribbon);
+      });
+
+    } else if (elem.type === 'table_candy') {
+      // Candy bar table with glass jars
+      var candyTableMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+      var candyLegMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.7, roughness: 0.3 });
+
+      // Table top
+      var candyTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, h), candyTableMat);
+      candyTop.position.y = 0.75;
+      candyTop.castShadow = true;
+      candyTop.receiveShadow = true;
+      group.add(candyTop);
+
+      // 4 legs
+      var candyLegGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.72, 8);
+      var candyLegOffs = [
+        { x: -w / 2 + 0.1, z: -h / 2 + 0.1 },
+        { x: w / 2 - 0.1, z: -h / 2 + 0.1 },
+        { x: -w / 2 + 0.1, z: h / 2 - 0.1 },
+        { x: w / 2 - 0.1, z: h / 2 - 0.1 }
+      ];
+      candyLegOffs.forEach(function(off) {
+        var cLeg = new THREE.Mesh(candyLegGeom, candyLegMat);
+        cLeg.position.set(off.x, 0.36, off.z);
+        cLeg.castShadow = true;
+        group.add(cLeg);
+      });
+
+      // Glass jars (transparent look)
+      var glassMat = new THREE.MeshStandardMaterial({
+        color: 0xe0f2fe,
+        roughness: 0.1,
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.45
+      });
+      var jarPositions = [
+        { x: -0.30, z: 0, r: 0.07, jarH: 0.20 },
+        { x: -0.05, z: 0.05, r: 0.08, jarH: 0.24 },
+        { x: 0.20, z: -0.03, r: 0.06, jarH: 0.18 },
+        { x: 0.40, z: 0.04, r: 0.07, jarH: 0.22 }
+      ];
+      jarPositions.forEach(function(jp) {
+        // Jar body (open cylinder)
+        var jar = new THREE.Mesh(
+          new THREE.CylinderGeometry(jp.r, jp.r, jp.jarH, 16, 1, true),
+          glassMat
+        );
+        jar.position.set(jp.x, 0.775 + jp.jarH / 2, jp.z);
+        jar.castShadow = true;
+        group.add(jar);
+
+        // Jar bottom disc
+        var jarBottom = new THREE.Mesh(
+          new THREE.CylinderGeometry(jp.r, jp.r, 0.005, 16),
+          glassMat
+        );
+        jarBottom.position.set(jp.x, 0.7775, jp.z);
+        group.add(jarBottom);
+
+        // Candy fill inside (opaque colored cylinder)
+        var candyFillMat = new THREE.MeshStandardMaterial({
+          color: [0xf472b6, 0x60a5fa, 0xfbbf24, 0xa78bfa][Math.floor(Math.random() * 4)],
+          roughness: 0.6
+        });
+        var fill = new THREE.Mesh(
+          new THREE.CylinderGeometry(jp.r - 0.01, jp.r - 0.01, jp.jarH * 0.6, 16),
+          candyFillMat
+        );
+        fill.position.set(jp.x, 0.775 + jp.jarH * 0.3, jp.z);
+        group.add(fill);
+      });
+
+    } else if (elem.type === 'table_kids') {
+      // Kids table — small, low, colorful
+      var kidsTopMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+      var kidsLegMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.7, roughness: 0.3 });
+
+      // Short table top at 0.55m
+      var kidsTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, h), kidsTopMat);
+      kidsTop.position.y = 0.55;
+      kidsTop.castShadow = true;
+      kidsTop.receiveShadow = true;
+      group.add(kidsTop);
+
+      // 4 short legs
+      var kidsLegGeom = new THREE.CylinderGeometry(0.025, 0.025, 0.53, 8);
+      var kidsLegOffs = [
+        { x: -w / 2 + 0.08, z: -h / 2 + 0.08 },
+        { x: w / 2 - 0.08, z: -h / 2 + 0.08 },
+        { x: -w / 2 + 0.08, z: h / 2 - 0.08 },
+        { x: w / 2 - 0.08, z: h / 2 - 0.08 }
+      ];
+      kidsLegOffs.forEach(function(off) {
+        var kLeg = new THREE.Mesh(kidsLegGeom, kidsLegMat);
+        kLeg.position.set(off.x, 0.265, off.z);
+        kLeg.castShadow = true;
+        group.add(kLeg);
+      });
+
+    } else if (elem.type === 'table_honor_king') {
+      // Two ornate imperial thrones side by side (no table)
+      var throneMat = new THREE.MeshStandardMaterial({ color: COLORS.gold, metalness: 0.6, roughness: 0.3 });
+      var throneVelvet = new THREE.MeshStandardMaterial({ color: 0x7c2d12, roughness: 0.8 });
+
+      for (var ti = -1; ti <= 1; ti += 2) {
+        var throneX = ti * 0.4;
+
+        // Seat
+        var tSeat = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.06, 0.50), throneVelvet);
+        tSeat.position.set(throneX, 0.42, 0);
+        tSeat.castShadow = true;
+        group.add(tSeat);
+
+        // Seat base / frame
+        var tBase = new THREE.Mesh(new THREE.BoxGeometry(0.60, 0.39, 0.55), throneMat);
+        tBase.position.set(throneX, 0.195, 0);
+        tBase.castShadow = true;
+        group.add(tBase);
+
+        // High backrest
+        var tBack = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.95, 0.06), throneMat);
+        tBack.position.set(throneX, 0.925, 0.25);
+        tBack.castShadow = true;
+        group.add(tBack);
+
+        // Backrest velvet padding
+        var tBackPad = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.85, 0.03), throneVelvet);
+        tBackPad.position.set(throneX, 0.895, 0.22);
+        group.add(tBackPad);
+
+        // Backrest crown / arch top
+        var tCrown = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.06, 16, 1, false, 0, Math.PI), throneMat);
+        tCrown.rotation.z = Math.PI / 2;
+        tCrown.rotation.y = Math.PI / 2;
+        tCrown.position.set(throneX, 1.40, 0.25);
+        tCrown.castShadow = true;
+        group.add(tCrown);
+
+        // Left armrest
+        var tArmL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.25, 0.45), throneMat);
+        tArmL.position.set(throneX - 0.28, 0.575, 0.02);
+        tArmL.castShadow = true;
+        group.add(tArmL);
+
+        // Right armrest
+        var tArmR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.25, 0.45), throneMat);
+        tArmR.position.set(throneX + 0.28, 0.575, 0.02);
+        tArmR.castShadow = true;
+        group.add(tArmR);
+
+        // Armrest top pads
+        var armTopGeom = new THREE.BoxGeometry(0.08, 0.04, 0.48);
+        var tArmTopL = new THREE.Mesh(armTopGeom, throneMat);
+        tArmTopL.position.set(throneX - 0.28, 0.70, 0.02);
+        group.add(tArmTopL);
+        var tArmTopR = new THREE.Mesh(armTopGeom, throneMat);
+        tArmTopR.position.set(throneX + 0.28, 0.70, 0.02);
+        group.add(tArmTopR);
+      }
+
+    } else if (elem.type === 'table_shots') {
+      // Shots cart with wheels, handle, and bottles
+      var cartMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.4 });
+      var cartMetalMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8, roughness: 0.2 });
+
+      // Cart surface
+      var cartTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, h), cartMat);
+      cartTop.position.y = 0.90;
+      cartTop.castShadow = true;
+      cartTop.receiveShadow = true;
+      group.add(cartTop);
+
+      // Lower shelf
+      var cartShelf = new THREE.Mesh(new THREE.BoxGeometry(w - 0.06, 0.03, h - 0.06), cartMat);
+      cartShelf.position.y = 0.45;
+      cartShelf.castShadow = true;
+      group.add(cartShelf);
+
+      // 4 legs connecting shelves
+      var cartLegGeom = new THREE.CylinderGeometry(0.02, 0.02, 0.86, 8);
+      var cartLegOffs = [
+        { x: -w / 2 + 0.06, z: -h / 2 + 0.06 },
+        { x: w / 2 - 0.06, z: -h / 2 + 0.06 },
+        { x: -w / 2 + 0.06, z: h / 2 - 0.06 },
+        { x: w / 2 - 0.06, z: h / 2 - 0.06 }
+      ];
+      cartLegOffs.forEach(function(off) {
+        var crtLeg = new THREE.Mesh(cartLegGeom, cartMetalMat);
+        crtLeg.position.set(off.x, 0.47, off.z);
+        crtLeg.castShadow = true;
+        group.add(crtLeg);
+      });
+
+      // 4 small wheels at corners
+      var wheelGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.03, 12);
+      cartLegOffs.forEach(function(off) {
+        var wheel = new THREE.Mesh(wheelGeom, cartMetalMat);
+        wheel.rotation.x = Math.PI / 2;
+        wheel.position.set(off.x, 0.04, off.z);
+        wheel.castShadow = true;
+        group.add(wheel);
+      });
+
+      // Handle bar on one end (along -z side)
+      var handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, w - 0.10, 8), cartMetalMat);
+      handleBar.rotation.z = Math.PI / 2;
+      handleBar.position.set(0, 1.10, -h / 2 + 0.04);
+      handleBar.castShadow = true;
+      group.add(handleBar);
+
+      // Handle uprights
+      var handleUpGeom = new THREE.CylinderGeometry(0.015, 0.015, 0.20, 8);
+      var hUpL = new THREE.Mesh(handleUpGeom, cartMetalMat);
+      hUpL.position.set(-w / 2 + 0.10, 1.0, -h / 2 + 0.04);
+      group.add(hUpL);
+      var hUpR = new THREE.Mesh(handleUpGeom, cartMetalMat);
+      hUpR.position.set(w / 2 - 0.10, 1.0, -h / 2 + 0.04);
+      group.add(hUpR);
+
+      // Small bottles on top (row of thin cylinders)
+      var bottleMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.3, metalness: 0.2 });
+      var numBottles = Math.max(3, Math.floor(w / 0.08));
+      var bottleSpacing = (w - 0.16) / (numBottles - 1);
+      for (var bi = 0; bi < numBottles; bi++) {
+        var bx = -w / 2 + 0.08 + bi * bottleSpacing;
+        var bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.14, 8), bottleMat);
+        bottle.position.set(bx, 0.99, 0);
+        bottle.castShadow = true;
+        group.add(bottle);
+
+        // Bottle cap
+        var capMat = new THREE.MeshStandardMaterial({ color: COLORS.metal, metalness: 0.8, roughness: 0.2 });
+        var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.02, 8), capMat);
+        cap.position.set(bx, 1.07, 0);
+        group.add(cap);
+      }
+
     } else {
       _buildGenericBox(group, elem, colorNum, 0.85);
     }
@@ -1642,7 +2328,283 @@ window.Visualizer3D = (function () {
         wh.castShadow = true;
         group.add(wh);
       });
-      
+
+    } else if (elem.type === 'photobooth_360') {
+      // 360 photo platform
+      var pb360Disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(w / 2, w / 2, 0.08, 24),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 })
+      );
+      pb360Disc.position.y = 0.04;
+      pb360Disc.receiveShadow = true;
+      group.add(pb360Disc);
+
+      // Central vertical pole
+      var pb360Pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 2.5, 8),
+        new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.2, metalness: 0.8 })
+      );
+      pb360Pole.position.y = 1.33;
+      pb360Pole.castShadow = true;
+      group.add(pb360Pole);
+
+      // Camera arm (horizontal bar)
+      var pb360Arm = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 0.05, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.2, metalness: 0.8 })
+      );
+      pb360Arm.position.set(0.6, 2.55, 0);
+      pb360Arm.castShadow = true;
+      group.add(pb360Arm);
+
+      // Camera box at end of arm
+      var pb360Cam = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 0.1, 0.08),
+        new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.5 })
+      );
+      pb360Cam.position.set(1.2, 2.52, 0);
+      pb360Cam.castShadow = true;
+      group.add(pb360Cam);
+
+    } else if (elem.type === 'photobooth_mirror') {
+      // Selfie mirror – black border frame
+      var mirrorFrame = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, 1.8, 0.1),
+        new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.5 })
+      );
+      mirrorFrame.position.y = 0.9;
+      mirrorFrame.castShadow = true;
+      group.add(mirrorFrame);
+
+      // Reflective white front surface
+      var mirrorFace = new THREE.Mesh(
+        new THREE.BoxGeometry(1.0, 1.6, 0.02),
+        new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.05, metalness: 0.9 })
+      );
+      mirrorFace.position.set(0, 0.9, 0.06);
+      group.add(mirrorFace);
+
+    } else if (elem.type === 'photobooth_inflatable') {
+      // Inflatable booth – box structure
+      var infColor = colorNum || 0x8b5cf6;
+      var infMat = new THREE.MeshStandardMaterial({ color: infColor, roughness: 0.7 });
+
+      var infBody = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 2.2, h),
+        infMat
+      );
+      infBody.position.y = 1.1;
+      infBody.castShadow = true;
+      group.add(infBody);
+
+      // Rounded top half-sphere
+      var infTop = new THREE.Mesh(
+        new THREE.SphereGeometry(Math.min(w, h) / 2, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+        infMat
+      );
+      infTop.position.y = 2.2;
+      infTop.castShadow = true;
+      group.add(infTop);
+
+    } else if (elem.type === 'heart_illuminated') {
+      // LED heart – two lobes + cone pointing down
+      var heartMat = new THREE.MeshStandardMaterial({
+        color: 0xff0000, roughness: 0.4,
+        emissive: 0xff0000, emissiveIntensity: 0.5
+      });
+
+      var heartLobeL = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 12, 12),
+        heartMat
+      );
+      heartLobeL.position.set(-0.22, 1.3, 0);
+      heartLobeL.castShadow = true;
+      group.add(heartLobeL);
+
+      var heartLobeR = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 12, 12),
+        heartMat
+      );
+      heartLobeR.position.set(0.22, 1.3, 0);
+      heartLobeR.castShadow = true;
+      group.add(heartLobeR);
+
+      var heartCone = new THREE.Mesh(
+        new THREE.ConeGeometry(0.42, 0.8, 12),
+        heartMat
+      );
+      heartCone.position.set(0, 0.7, 0);
+      heartCone.rotation.z = Math.PI; // point down
+      heartCone.castShadow = true;
+      group.add(heartCone);
+
+      // Red point light inside
+      var heartLight = new THREE.PointLight(0xff0000, 0.6, 4);
+      heartLight.position.set(0, 1.0, 0);
+      group.add(heartLight);
+
+    } else if (elem.type === 'red_carpet') {
+      // Flat red carpet
+      var carpet = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.02, h),
+        new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.8 })
+      );
+      carpet.position.y = 0.01;
+      carpet.receiveShadow = true;
+      group.add(carpet);
+
+      // Gold border strips on long edges
+      var carpetBorderMat = new THREE.MeshStandardMaterial({ color: COLORS.gold, metalness: 0.7 });
+      var carpetBorderL = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.025, h),
+        carpetBorderMat
+      );
+      carpetBorderL.position.set(-w / 2, 0.012, 0);
+      group.add(carpetBorderL);
+
+      var carpetBorderR = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.025, h),
+        carpetBorderMat
+      );
+      carpetBorderR.position.set(w / 2, 0.012, 0);
+      group.add(carpetBorderR);
+
+    } else if (elem.type === 'robot_led') {
+      // LED robot – cylindrical body
+      var robotMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.1, metalness: 0.9 });
+
+      var robotBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 1.5, 12),
+        robotMat
+      );
+      robotBody.position.y = 0.75;
+      robotBody.castShadow = true;
+      group.add(robotBody);
+
+      // Sphere head
+      var robotHead = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 12, 12),
+        robotMat
+      );
+      robotHead.position.y = 1.68;
+      robotHead.castShadow = true;
+      group.add(robotHead);
+
+      // Small colored point light inside
+      var robotLight = new THREE.PointLight(0x00ffff, 0.5, 3);
+      robotLight.position.set(0, 1.0, 0);
+      group.add(robotLight);
+
+    } else if (elem.type === 'projector_screen') {
+      // Thin white rectangular screen panel
+      var screenPanel = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 2.0, 0.04),
+        new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 })
+      );
+      screenPanel.position.y = 1.2;
+      screenPanel.castShadow = true;
+      group.add(screenPanel);
+
+      // Black border frame around screen
+      var screenBorderMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.7 });
+      // Top border
+      var scrBorderTop = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.06, 0.06), screenBorderMat);
+      scrBorderTop.position.set(0, 2.23, 0);
+      group.add(scrBorderTop);
+      // Bottom border
+      var scrBorderBot = new THREE.Mesh(new THREE.BoxGeometry(w + 0.08, 0.06, 0.06), screenBorderMat);
+      scrBorderBot.position.set(0, 0.17, 0);
+      group.add(scrBorderBot);
+      // Left border
+      var scrBorderL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.12, 0.06), screenBorderMat);
+      scrBorderL.position.set(-w / 2 - 0.01, 1.2, 0);
+      group.add(scrBorderL);
+      // Right border
+      var scrBorderR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.12, 0.06), screenBorderMat);
+      scrBorderR.position.set(w / 2 + 0.01, 1.2, 0);
+      group.add(scrBorderR);
+
+      // Two tripod legs angled behind
+      var tripodMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
+      var tripodLegGeom = new THREE.CylinderGeometry(0.025, 0.025, 2.0, 6);
+
+      var tripodL = new THREE.Mesh(tripodLegGeom, tripodMat);
+      tripodL.position.set(-w / 3, 0.9, -0.4);
+      tripodL.rotation.x = 0.2;
+      tripodL.castShadow = true;
+      group.add(tripodL);
+
+      var tripodR = new THREE.Mesh(tripodLegGeom, tripodMat);
+      tripodR.position.set(w / 3, 0.9, -0.4);
+      tripodR.rotation.x = 0.2;
+      tripodR.castShadow = true;
+      group.add(tripodR);
+
+    } else if (elem.type === 'photo_firma') {
+      // Easel with photo – two angled legs
+      var easelMat = new THREE.MeshStandardMaterial({ color: COLORS.woodDark || 0x78350f, roughness: 0.8 });
+      var easelLegGeom = new THREE.CylinderGeometry(0.025, 0.025, 1.6, 6);
+
+      var easelLegL = new THREE.Mesh(easelLegGeom, easelMat);
+      easelLegL.position.set(-0.25, 0.8, 0.1);
+      easelLegL.rotation.z = 0.12;
+      easelLegL.castShadow = true;
+      group.add(easelLegL);
+
+      var easelLegR = new THREE.Mesh(easelLegGeom, easelMat);
+      easelLegR.position.set(0.25, 0.8, 0.1);
+      easelLegR.rotation.z = -0.12;
+      easelLegR.castShadow = true;
+      group.add(easelLegR);
+
+      // Rear support leg
+      var easelBack = new THREE.Mesh(easelLegGeom, easelMat);
+      easelBack.position.set(0, 0.7, -0.25);
+      easelBack.rotation.x = -0.3;
+      easelBack.castShadow = true;
+      group.add(easelBack);
+
+      // Canvas / photo panel
+      var canvasPanel = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 1.0, 0.03),
+        new THREE.MeshStandardMaterial({ color: colorNum || 0xf8fafc, roughness: 0.4 })
+      );
+      canvasPanel.position.set(0, 1.1, 0.08);
+      canvasPanel.castShadow = true;
+      group.add(canvasPanel);
+
+    } else if (elem.type === 'showmen_inflatables') {
+      // Inflatable showman – tall tapered body
+      var showmanColor = colorNum || 0xf97316;
+      var showmanMat = new THREE.MeshStandardMaterial({ color: showmanColor, roughness: 0.7 });
+
+      var showmanBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.45, 2.5, 12),
+        showmanMat
+      );
+      showmanBody.position.y = 1.25;
+      showmanBody.castShadow = true;
+      group.add(showmanBody);
+
+      // Sphere head
+      var showmanHead = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 12, 12),
+        showmanMat
+      );
+      showmanHead.position.y = 2.75;
+      showmanHead.castShadow = true;
+      group.add(showmanHead);
+
+      // Waving arm
+      var showmanArm = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.06, 0.8, 6),
+        showmanMat
+      );
+      showmanArm.position.set(0.4, 2.3, 0);
+      showmanArm.rotation.z = -Math.PI / 4;
+      showmanArm.castShadow = true;
+      group.add(showmanArm);
+
     } else {
       _buildGenericBox(group, elem, colorNum, 0.8);
     }
@@ -1671,7 +2633,7 @@ window.Visualizer3D = (function () {
       flowers.position.set(0, 1.2, 0);
       group.add(flowers);
 
-    } else if (elem.type.indexOf('arch') > 0) {
+    } else if (elem.type.indexOf('arch') > -1) {
       // Flower arch archway
       var archMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.8 });
       var archWidth = w;
@@ -1702,6 +2664,54 @@ window.Visualizer3D = (function () {
       shrubMesh.position.y = w/2;
       shrubMesh.castShadow = true;
       group.add(shrubMesh);
+
+    } else if (elem.type === 'tree_decor') {
+      // Procedural decorative tree
+      var trunkH = h * 0.6;
+      var trunkR = w * 0.08;
+      var trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(trunkR * 0.8, trunkR, trunkH, 8),
+        new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 })
+      );
+      trunk.position.y = trunkH / 2;
+      trunk.castShadow = true;
+      group.add(trunk);
+
+      var folR = w * 0.45;
+      var foliage = new THREE.Mesh(
+        new THREE.SphereGeometry(folR, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.8 })
+      );
+      foliage.position.y = trunkH + folR * 0.7;
+      foliage.castShadow = true;
+      group.add(foliage);
+
+    } else if (elem.type === 'backdrop') {
+      // Photo backdrop – tall vertical panel
+      var bdColor = colorNum || 0xd1d5db;
+      var bdPanel = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, 0.05),
+        new THREE.MeshStandardMaterial({ color: bdColor, roughness: 0.6 })
+      );
+      bdPanel.position.y = h / 2;
+      bdPanel.castShadow = true;
+      group.add(bdPanel);
+
+      // Two support legs angled behind
+      var bdLegMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
+      var bdLegGeom = new THREE.CylinderGeometry(0.03, 0.03, h * 0.9, 6);
+
+      var bdLegL = new THREE.Mesh(bdLegGeom, bdLegMat);
+      bdLegL.position.set(-w / 3, h * 0.4, -0.35);
+      bdLegL.rotation.x = -0.25;
+      bdLegL.castShadow = true;
+      group.add(bdLegL);
+
+      var bdLegR = new THREE.Mesh(bdLegGeom, bdLegMat);
+      bdLegR.position.set(w / 3, h * 0.4, -0.35);
+      bdLegR.rotation.x = -0.25;
+      bdLegR.castShadow = true;
+      group.add(bdLegR);
 
     } else {
       _buildGenericBox(group, elem, colorNum, 1.5);
@@ -1769,6 +2779,170 @@ window.Visualizer3D = (function () {
         pan.position.set(-w * 0.3 + w * 0.3 * pIdx, 0.94, 0);
         group.add(pan);
       }
+
+    } else if (elem.type === 'vendor_mariachi') {
+      // Mariachi space – semi-circular arrangement of standing figures
+      var mariFigMat = new THREE.MeshStandardMaterial({ color: 0xc9a96e, roughness: 0.6 });
+      var mariCount = 5;
+      for (var mi = 0; mi < mariCount; mi++) {
+        var mariAngle = Math.PI * (mi / (mariCount - 1)) - Math.PI / 2;
+        var mariRadius = w / 3;
+        var mariX = Math.cos(mariAngle) * mariRadius;
+        var mariZ = Math.sin(mariAngle) * mariRadius;
+
+        // Body cylinder
+        var mariBody = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.1, 1.6, 8),
+          mariFigMat
+        );
+        mariBody.position.set(mariX, 0.8, mariZ);
+        mariBody.castShadow = true;
+        group.add(mariBody);
+
+        // Head sphere
+        var mariHead = new THREE.Mesh(
+          new THREE.SphereGeometry(0.15, 8, 8),
+          mariFigMat
+        );
+        mariHead.position.set(mariX, 1.75, mariZ);
+        mariHead.castShadow = true;
+        group.add(mariHead);
+      }
+
+    } else if (elem.type === 'vendor_banda') {
+      // Live band – raised platform
+      var bandaPlatform = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.15, h),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 })
+      );
+      bandaPlatform.position.y = 0.075;
+      bandaPlatform.receiveShadow = true;
+      group.add(bandaPlatform);
+
+      // Standing figures
+      var bandaFigMat = new THREE.MeshStandardMaterial({ color: 0xc9a96e, roughness: 0.6 });
+      var bandaPositions = [
+        { x: -w * 0.3, z: 0 }, { x: -w * 0.1, z: 0 },
+        { x: w * 0.1, z: 0 }, { x: w * 0.3, z: -h * 0.15 }
+      ];
+      for (var bi = 0; bi < bandaPositions.length; bi++) {
+        var bBody = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.1, 0.1, 1.6, 8),
+          bandaFigMat
+        );
+        bBody.position.set(bandaPositions[bi].x, 0.95, bandaPositions[bi].z);
+        bBody.castShadow = true;
+        group.add(bBody);
+
+        var bHead = new THREE.Mesh(
+          new THREE.SphereGeometry(0.15, 8, 8),
+          bandaFigMat
+        );
+        bHead.position.set(bandaPositions[bi].x, 1.9, bandaPositions[bi].z);
+        bHead.castShadow = true;
+        group.add(bHead);
+      }
+
+      // Drum set on the right side
+      var drumMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.4 });
+      var drumBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25, 0.25, 0.5, 12),
+        drumMat
+      );
+      drumBase.position.set(w * 0.35, 0.4, h * 0.2);
+      drumBase.castShadow = true;
+      group.add(drumBase);
+
+      var drumSmall = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.12, 0.3, 10),
+        drumMat
+      );
+      drumSmall.position.set(w * 0.4, 0.65, h * 0.3);
+      drumSmall.castShadow = true;
+      group.add(drumSmall);
+
+      // Speaker boxes on edges
+      var speakerMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.8 });
+      var speakerL = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.5, 0.35),
+        speakerMat
+      );
+      speakerL.position.set(-w / 2 + 0.25, 0.4, -h / 2 + 0.2);
+      speakerL.castShadow = true;
+      group.add(speakerL);
+
+      var speakerR = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.5, 0.35),
+        speakerMat
+      );
+      speakerR.position.set(w / 2 - 0.25, 0.4, -h / 2 + 0.2);
+      speakerR.castShadow = true;
+      group.add(speakerR);
+
+    } else if (elem.type === 'vendor_saxo') {
+      // Saxophonist – single standing figure
+      var saxoFigMat = new THREE.MeshStandardMaterial({ color: 0xc9a96e, roughness: 0.6 });
+
+      var saxoBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.1, 1.6, 8),
+        saxoFigMat
+      );
+      saxoBody.position.y = 0.8;
+      saxoBody.castShadow = true;
+      group.add(saxoBody);
+
+      var saxoHead = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 8, 8),
+        saxoFigMat
+      );
+      saxoHead.position.y = 1.75;
+      saxoHead.castShadow = true;
+      group.add(saxoHead);
+
+      // Spotlight above
+      var saxoLight = new THREE.PointLight(0xffedd5, 0.6, 4);
+      saxoLight.position.set(0, 2.5, 0);
+      group.add(saxoLight);
+
+    } else if (elem.type === 'vendor_generic') {
+      // Generic vendor booth / stall
+      // Back wall panel
+      var vendorWallMat = new THREE.MeshStandardMaterial({ color: colorNum || 0x475569, roughness: 0.7 });
+      var vendorWall = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 2.0, 0.08),
+        vendorWallMat
+      );
+      vendorWall.position.set(0, 1.0, -h / 2 + 0.04);
+      vendorWall.castShadow = true;
+      group.add(vendorWall);
+
+      // Counter at 0.9m height
+      var vendorCounter = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.08, h),
+        new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 })
+      );
+      vendorCounter.position.set(0, 0.9, 0);
+      vendorCounter.castShadow = true;
+      vendorCounter.receiveShadow = true;
+      group.add(vendorCounter);
+
+      // Counter front panel
+      var vendorFront = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.9, 0.05),
+        new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 })
+      );
+      vendorFront.position.set(0, 0.45, h / 2 - 0.025);
+      vendorFront.castShadow = true;
+      group.add(vendorFront);
+
+      // Small canopy / awning on top
+      var vendorCanopy = new THREE.Mesh(
+        new THREE.BoxGeometry(w + 0.2, 0.05, h + 0.3),
+        new THREE.MeshStandardMaterial({ color: colorNum || 0x475569, roughness: 0.5 })
+      );
+      vendorCanopy.position.set(0, 2.1, 0.1);
+      vendorCanopy.castShadow = true;
+      group.add(vendorCanopy);
 
     } else {
       _buildGenericBox(group, elem, colorNum, 1.0);

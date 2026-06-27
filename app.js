@@ -207,7 +207,7 @@
       layer: cat.layer || cat.category,
       mesaConfig: {
         mesaNum: isMesa ? _tableCounter : 0,
-        mantelColor: 'blanco',
+        mantelColor: (type.indexOf('campirana') > -1 || type.indexOf('marble') > -1) ? 'sin_mantel' : 'blanco',
         caminoColor: 'ninguno',
         servilletaColor: 'blanco',
         servilletaDoblez: 'loto',
@@ -577,7 +577,7 @@
         updateElement(id, { elevation: v });
       }
     });
-    onInpChange('inspector-salon-walls', function (id, el) {
+    onInpChange('inspector-salon-type', function (id, el) {
       saveHistory();
       updateElement(id, { salonType: el.value });
     });
