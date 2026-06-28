@@ -1512,6 +1512,302 @@
     img.src = url;
   }
 
+  function exportPDF() {
+    var svgEl = document.getElementById('svg-canvas');
+    if (!svgEl) {
+      showToast('Error: No se encontró el lienzo 2D.', 'error');
+      return;
+    }
+
+    // Clone the SVG so we can clean up selection borders before printing
+    var clonedSvg = svgEl.cloneNode(true);
+    var activeSel = clonedSvg.querySelector('.active-selection');
+    if (activeSel) activeSel.remove();
+    var resizeHandles = clonedSvg.querySelectorAll('.resize-handle');
+    resizeHandles.forEach(function (h) { h.remove(); });
+
+    var svgString = new XMLSerializer().serializeToString(clonedSvg);
+
+    // Get event data
+    var totalGuests = 0;
+    var tableCounts = {};
+    var tablesList = [];
+    var otherElementsList = [];
+
+    AppState.elements.forEach(function (elem) {
+      if (elem.chairs) totalGuests += elem.chairs;
+      var t = elem.type;
+      tableCounts[t] = (tableCounts[t] || 0) + 1;
+
+      var isTable = t.startsWith('table_') || t === 'lounge_set';
+      if (isTable) {
+        tablesList.push(elem);
+      } else {
+        otherElementsList.push(elem);
+      }
+    });
+
+    // Sort tables by number
+    tablesList.sort(function (a, b) {
+      var numA = (a.mesaConfig && a.mesaConfig.mesaNum) ? parseInt(a.mesaConfig.mesaNum, 10) : 999;
+      var numB = (b.mesaConfig && b.mesaConfig.mesaNum) ? parseInt(b.mesaConfig.mesaNum, 10) : 999;
+      return numA - numB;
+    });
+
+    var layoutName = localStorage.getItem(LS_KEY + '_name') || 'Mi Plano';
+
+    // Build the print HTML
+    var printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast('Error: El navegador bloqueó la ventana emergente. Por favor permite las ventanas emergentes en este sitio.', 'error');
+      return;
+    }
+
+    var typeLabels = {
+      'table_round': 'Mesa Redonda',
+      'table_square': 'Mesa Cuadrada',
+      'table_rectangular': 'Mesa Rectangular',
+      'table_imperial': 'Mesa Imperial',
+      'table_honor_bride': 'Mesa de Honor Novios',
+      'table_honor_xv': 'Mesa de Honor XV Años',
+      'table_honor_king': 'Mesa de Honor Imperial',
+      'table_periquera': 'Periquera Alta',
+      'table_kids': 'Mesa Infantil',
+      'table_campirana': 'Mesa Campirana',
+      'table_marble_round': 'Mesa Mármol Redonda',
+      'table_marble_square': 'Mesa Mármol Cuadrada',
+      'table_umbrella': 'Mesa con Sombrilla',
+      'table_cake': 'Mesa de Pastel',
+      'table_gifts': 'Mesa de Regalos',
+      'table_candy': 'Mesa de Dulces',
+      'table_shots': 'Carrito de Shots',
+      'table_buffet': 'Mesa de Buffet',
+      'lounge_set': 'Sala Lounge'
+    };
+
+    var glassLabels = {
+      'standard': 'Estándar',
+      'flauta': 'Copa Flauta',
+      'vino': 'Copa Vino',
+      'romana': 'Copa Romana',
+      'martinera': 'Copa Martinera',
+      'cubero': 'Vaso Cubero',
+      'old_fashion': 'Vaso Old Fashion',
+      'tequilero': 'Copa Tequilera',
+      'ninguno': 'Ninguno'
+    };
+
+    var plateBaseLabels = {
+      'gold_ring': 'Plato Base Oro',
+      'silver_ring': 'Plato Base Plata',
+      'glass_gold': 'Plato Base Vidrio Oro',
+      'wood': 'Plato Base Madera',
+      'ninguno': 'Ninguno'
+    };
+
+    var html = '<!DOCTYPE html>\n<html>\n<head>\n';
+    html += '<title>Ficha Técnica - ' + layoutName + '</title>\n';
+    html += '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">\n';
+    html += '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">\n';
+    html += '<style>\n';
+    html += '  body { font-family: "Outfit", sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 40px; line-height: 1.5; }\n';
+    html += '  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }\n';
+    html += '  .brand-title { font-size: 24px; font-weight: 700; color: #f43f5e; display: flex; align-items: center; gap: 8px; }\n';
+    html += '  .brand-sub { font-size: 14px; color: #64748b; font-weight: 400; }\n';
+    html += '  .doc-title { font-size: 20px; font-weight: 600; text-align: right; color: #0f172a; }\n';
+    html += '  .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }\n';
+    html += '  .meta-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; }\n';
+    html += '  .meta-val { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 5px; }\n';
+    html += '  .meta-lbl { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; }\n';
+    html += '  .section-title { font-size: 18px; font-weight: 600; color: #0f172a; border-left: 4px solid #f43f5e; padding-left: 10px; margin: 30px 0 15px 0; }\n';
+    html += '  .map-container { border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px; background: #f8fafc; display: flex; justify-content: center; align-items: center; margin-bottom: 40px; page-break-inside: avoid; }\n';
+    html += '  .map-container svg { width: 100%; height: auto; max-height: 480px; }\n';
+    html += '  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; page-break-inside: auto; }\n';
+    html += '  tr { page-break-inside: avoid; page-break-after: auto; }\n';
+    html += '  th { background: #0f172a; color: #fff; font-weight: 600; text-align: left; padding: 10px; border: 1px solid #1e293b; }\n';
+    html += '  td { padding: 10px; border: 1px solid #e2e8f0; vertical-align: top; }\n';
+    html += '  tr:nth-child(even) td { background: #f8fafc; }\n';
+    html += '  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }\n';
+    html += '  .badge-primary { background: #ffe4e6; color: #f43f5e; }\n';
+    html += '  .menu-text { font-style: italic; color: #475569; white-space: pre-wrap; font-size: 12px; border-left: 2px solid #cbd5e1; padding-left: 8px; margin-top: 4px; }\n';
+    html += '  .footer { border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 50px; font-size: 12px; color: #64748b; text-align: center; page-break-before: auto; }\n';
+    html += '  @media print {\n';
+    html += '    body { padding: 20px; }\n';
+    html += '    .no-print { display: none; }\n';
+    html += '    .page-break { page-break-before: always; }\n';
+    html += '  }\n';
+    html += '</style>\n</head>\n<body>\n';
+
+    // Toolbar inside print window to trigger print
+    html += '<div class="no-print" style="background: #0f172a; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 30px;">\n';
+    html += '  <span style="color: #fff; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-file-pdf" style="color: #f43f5e; margin-right: 6px;"></i> Vista Previa de Ficha Técnica</span>\n';
+    html += '  <button onclick="window.print();" style="background: #f43f5e; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-print"></i> Guardar como PDF / Imprimir</button>\n';
+    html += '</div>\n';
+
+    // Document Header
+    html += '<div class="header">\n';
+    html += '  <div class="brand-title">\n';
+    html += '    🌸 Primavera <span class="brand-sub">| Planeador de Eventos</span>\n';
+    html += '  </div>\n';
+    html += '  <div class="doc-title">\n';
+    html += '    <div>FICHA TÉCNICA</div>\n';
+    html += '    <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + '</div>\n';
+    html += '  </div>\n';
+    html += '</div>\n';
+
+    // Meta Grid
+    var numTablesTotal = tablesList.length;
+    var formattedDate = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    html += '<div class="meta-grid">\n';
+    html += '  <div class="meta-card"><div class="meta-val">' + totalGuests + '</div><div class="meta-lbl">Invitados</div></div>\n';
+    html += '  <div class="meta-card"><div class="meta-val">' + numTablesTotal + '</div><div class="meta-lbl">Total Mesas</div></div>\n';
+    html += '  <div class="meta-card"><div class="meta-val">' + (AppState.terrain.w + 'x' + AppState.terrain.h + 'm') + '</div><div class="meta-lbl">Terreno</div></div>\n';
+    html += '  <div class="meta-card"><div class="meta-val" style="font-size: 13px; font-weight: 600; padding: 6px 0;">' + formattedDate + '</div><div class="meta-lbl">Fecha Reporte</div></div>\n';
+    html += '</div>\n';
+
+    // Section 1: Plano Map
+    html += '<div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento (Croquis)</div>\n';
+    html += '<div class="map-container">\n' + svgString + '\n</div>\n';
+
+    // Page break before tables list if needed
+    html += '<div class="page-break"></div>\n';
+
+    // Section 2: Tables Specifications
+    html += '<div class="section-title"><i class="fa-solid fa-circle-dot" style="margin-right: 6px; color:#f43f5e;"></i> Especificaciones de Mobiliario y Montaje</div>\n';
+    html += '<table>\n';
+    html += '  <thead>\n';
+    html += '    <tr>\n';
+    html += '      <th style="width: 12%;">Mesa</th>\n';
+    html += '      <th style="width: 15%;">Tipo</th>\n';
+    html += '      <th style="width: 12%;">Capacidad</th>\n';
+    html += '      <th style="width: 25%;">Configuración Montaje</th>\n';
+    html += '      <th style="width: 18%;">Cristalería y Copas</th>\n';
+    html += '      <th style="width: 18%;">Menú / Comentarios</th>\n';
+    html += '    </tr>\n';
+    html += '  </thead>\n';
+    html += '  <tbody>\n';
+
+    tablesList.forEach(function (t) {
+      var config = t.mesaConfig || {};
+      var typeName = typeLabels[t.type] || (window.getCatalogEntry ? window.getCatalogEntry(t.type).name : t.type);
+      
+      var mesaLabel = config.mesaNum ? 'Mesa ' + config.mesaNum : 'Sin Número';
+      if (t.type === 'table_honor_xv' || t.type === 'table_honor_king' || t.type === 'table_honor_bride') {
+        mesaLabel = '<strong>' + mesaLabel + ' (Honor)</strong>';
+      } else if (t.type === 'table_cake') {
+        mesaLabel = '<strong>Mesa de Pastel</strong>';
+      }
+
+      var capacityText = t.chairs ? t.chairs + ' Sillas' : '0 Sillas';
+      if (t.type === 'table_imperial' && t.tablones) {
+        capacityText += '<br><span style="font-size: 11px; color:#64748b;">(' + t.tablones + ' Tablones)</span>';
+      }
+
+      // Montage details
+      var montageItems = [];
+      if (config.mantelColor) {
+        var mantelText = config.mantelColor === 'sin_mantel' ? 'Sin Mantel' : config.mantelColor.charAt(0).toUpperCase() + config.mantelColor.slice(1);
+        montageItems.push('<strong>Mantel:</strong> ' + mantelText);
+      }
+      if (config.caminoColor && config.caminoColor !== 'ninguno') {
+        montageItems.push('<strong>Camino:</strong> ' + config.caminoColor.charAt(0).toUpperCase() + config.caminoColor.slice(1));
+      }
+      if (config.servilletaColor && config.servilletaDoblez) {
+        montageItems.push('<strong>Servilleta:</strong> ' + config.servilletaColor.charAt(0).toUpperCase() + config.servilletaColor.slice(1) + ' (' + config.servilletaDoblez + ')');
+      }
+      if (config.platoBase && config.platoBase !== 'ninguno') {
+        var pbText = plateBaseLabels[config.platoBase] || config.platoBase.replace('_', ' ');
+        montageItems.push('<strong>P. Base:</strong> ' + pbText);
+      }
+      if (config.platoTrinche && config.platoTrinche !== 'ninguno') {
+        montageItems.push('<strong>P. Trinche:</strong> ' + config.platoTrinche.replace('_', ' '));
+      }
+      if (config.cubiertos) {
+        montageItems.push('<strong>Cubiertos:</strong> ' + config.cubiertos);
+      }
+      var montageText = montageItems.join('<br>');
+
+      // Glassware details
+      var glassItems = [];
+      if (config.cristal) {
+        var c1 = glassLabels[config.cristal] || config.cristal.charAt(0).toUpperCase() + config.cristal.slice(1);
+        var col1 = config.copasColor ? config.copasColor : 'transparente';
+        glassItems.push('1: ' + c1 + ' (' + col1 + ')');
+      }
+      if (config.cristal2 && config.cristal2 !== 'ninguno') {
+        var c2 = glassLabels[config.cristal2] || config.cristal2.charAt(0).toUpperCase() + config.cristal2.slice(1);
+        var col2 = config.copasColor2 ? config.copasColor2 : 'transparente';
+        glassItems.push('2: ' + c2 + ' (' + col2 + ')');
+      }
+      var glassText = glassItems.join('<br>');
+
+      // Menu / Comments
+      var menuText = config.menu ? '<div class="menu-text">' + config.menu + '</div>' : '-';
+
+      html += '    <tr>\n';
+      html += '      <td>' + mesaLabel + '</td>\n';
+      html += '      <td>' + typeName + '</td>\n';
+      html += '      <td>' + capacityText + '</td>\n';
+      html += '      <td>' + montageText + '</td>\n';
+      html += '      <td>' + glassText + '</td>\n';
+      html += '      <td>' + menuText + '</td>\n';
+      html += '    </tr>\n';
+    });
+
+    html += '  </tbody>\n';
+    html += '</table>\n';
+
+    // Section 3: Other Elements
+    if (otherElementsList.length > 0) {
+      html += '<div class="section-title"><i class="fa-solid fa-shapes" style="margin-right: 6px; color:#f43f5e;"></i> Distribución de Áreas y Equipamiento</div>\n';
+      html += '<table>\n';
+      html += '  <thead>\n';
+      html += '    <tr>\n';
+      html += '      <th style="width: 25%;">Nombre Elemento</th>\n';
+      html += '      <th style="width: 25%;">Categoría</th>\n';
+      html += '      <th style="width: 20%;">Dimensiones</th>\n';
+      html += '      <th style="width: 30%;">Configuración / Ubicación</th>\n';
+      html += '    </tr>\n';
+      html += '  </thead>\n';
+      html += '  <tbody>\n';
+
+      otherElementsList.forEach(function (e) {
+        var cat = window.getCatalogEntry ? window.getCatalogEntry(e.type) : null;
+        var typeName = cat ? cat.name : e.type;
+        var categoryName = cat ? cat.category.charAt(0).toUpperCase() + cat.category.slice(1) : '-';
+        var nameLabel = e.name || typeName;
+        
+        var dimText = (e.w && e.h) ? e.w + ' x ' + e.h + ' m' : '-';
+        var configItems = [];
+        configItems.push('<strong>Posición:</strong> X: ' + parseFloat(e.x).toFixed(1) + 'm, Y: ' + parseFloat(e.y).toFixed(1) + 'm');
+        if (e.elevation) configItems.push('<strong>Elevación:</strong> ' + e.elevation + ' m');
+        if (e.color) configItems.push('<strong>Color:</strong> <span style="display:inline-block; width:10px; height:10px; border-radius:20%; background:' + e.color + '; border:1px solid #ccc; vertical-align:middle; margin-right:3px;"></span>' + e.color);
+        if (e.salonType) configItems.push('<strong>Estilo:</strong> ' + e.salonType);
+        
+        html += '    <tr>\n';
+        html += '      <td><strong>' + nameLabel + '</strong></td>\n';
+        html += '      <td>' + categoryName + '</td>\n';
+        html += '      <td>' + dimText + '</td>\n';
+        html += '      <td>' + configItems.join('<br>') + '</td>\n';
+        html += '    </tr>\n';
+      });
+
+      html += '  </tbody>\n';
+      html += '</table>\n';
+    }
+
+    // Document Footer
+    html += '<div class="footer">\n';
+    html += '  Primavera Events Planner &copy; 2026. Documento generado digitalmente desde el navegador. Ficha técnica de montaje para personal de banquete y proveedores.\n';
+    html += '</div>\n';
+
+    html += '</body>\n</html>';
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
+
   function _wireExportButtons() {
     var btnSave = document.getElementById('btn-save');
     if (btnSave) btnSave.onclick = saveToLocalStorage;
@@ -1521,6 +1817,9 @@
 
     var btnExportPNG = document.getElementById('btn-export-png');
     if (btnExportPNG) btnExportPNG.onclick = exportPNG;
+
+    var btnExportPDF = document.getElementById('btn-export-pdf');
+    if (btnExportPDF) btnExportPDF.onclick = exportPDF;
 
     var btnImport = document.getElementById('btn-import-json');
     var fileInput = document.getElementById('import-file-input');
