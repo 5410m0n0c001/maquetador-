@@ -915,6 +915,21 @@ window.Visualizer3D = (function () {
     }
 
     if (_renderer && _scene && _camera) {
+      // Dynamic scaling of labels based on camera distance
+      _scene.traverse(function (object) {
+        if (object.is3DLabel) {
+          var worldPos = new THREE.Vector3();
+          object.getWorldPosition(worldPos);
+          var dist = _camera.position.distanceTo(worldPos);
+          // Scale factor: grows as camera gets further, clamped between 0.6 and 4.5
+          var scaleFactor = Math.max(0.6, Math.min(4.5, dist / 30.0));
+          
+          var baseScaleX = object.userData.baseScaleX || 6.0;
+          var baseScaleY = object.userData.baseScaleY || 0.75;
+          object.scale.set(baseScaleX * scaleFactor, baseScaleY * scaleFactor, 1);
+        }
+      });
+
       _renderer.render(_scene, _camera);
     }
   }
@@ -3141,7 +3156,10 @@ window.Visualizer3D = (function () {
       if (elem.mesaConfig && elem.mesaConfig.mesaNum) {
         title = 'Mesa ' + elem.mesaConfig.mesaNum;
       }
-      if (elem.chairs) {
+      if (type === 'table_imperial') {
+        var numTablones = elem.tablones || Math.max(2, Math.round(elem.w / 2.4));
+        subtitle = numTablones + ' Tablones - ' + (elem.chairs || (numTablones * 10)) + ' Invitados';
+      } else if (elem.chairs) {
         subtitle = elem.chairs + ' Invitados';
       } else {
         subtitle = 'Mesa Auxiliar';

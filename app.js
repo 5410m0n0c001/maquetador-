@@ -414,7 +414,7 @@
     var tableEl = document.getElementById('counter-tables');
     if (tableEl) {
       var tableTotal = 0;
-      var excludedTables = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet'];
+      var excludedTables = ['table_gifts', 'table_candy', 'table_shots', 'table_buffet'];
       Object.keys(tableCounts).forEach(function (k) {
         if ((k.startsWith('table_') || k === 'lounge_set') && excludedTables.indexOf(k) === -1) {
           tableTotal += tableCounts[k];
