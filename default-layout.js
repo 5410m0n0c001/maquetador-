@@ -383,7 +383,7 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mesaNum": 14,
+        "mesaNum": 1,
         "mantelColor": "blanco",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
@@ -575,7 +575,7 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 20
+        "mesaNum": 2
       }
     },
     {
@@ -606,7 +606,7 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 21
+        "mesaNum": 4
       }
     },
     {
@@ -637,7 +637,7 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 22
+        "mesaNum": 5
       }
     },
     {
@@ -668,7 +668,7 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 23
+        "mesaNum": 3
       }
     },
     {
@@ -687,7 +687,7 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mesaNum": 24,
+        "mesaNum": 0,
         "mantelColor": "blanco",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",

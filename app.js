@@ -1385,6 +1385,7 @@
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(payload));
       localStorage.setItem(LS_KEY + '_name', name);
+      localStorage.setItem(LS_KEY + '_version', CURRENT_LAYOUT_VERSION);
     } catch (e) {
       console.warn('[app] LocalStorage save error:', e);
     }
@@ -1416,8 +1417,19 @@
     });
   }
 
+  var CURRENT_LAYOUT_VERSION = '2026-06-28-v2';
+
   function loadFromLocalStorage() {
     try {
+      var savedVersion = localStorage.getItem(LS_KEY + '_version');
+      if (savedVersion !== CURRENT_LAYOUT_VERSION) {
+        console.log('[App] Discarding outdated local storage cache.');
+        localStorage.removeItem(LS_KEY);
+        localStorage.removeItem(LS_KEY + '_name');
+        localStorage.removeItem(LS_KEY + '_auto');
+        localStorage.removeItem(LS_KEY + '_version');
+        return false;
+      }
       var raw = localStorage.getItem(LS_KEY);
       if (!raw) return false;
       var data = JSON.parse(raw);
