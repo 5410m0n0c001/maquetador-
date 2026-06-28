@@ -610,6 +610,48 @@ window.Visualizer3D = (function () {
   var _sunLight = null;
   var _partyLight1 = null;
   var _partyLight2 = null;
+  var _currentLightingMode = 'day';
+  var _brightnessFactor = 1.0;
+
+  function _updateLightIntensities() {
+    if (!_ambientLight || !_sunLight || !_partyLight1 || !_partyLight2) return;
+    
+    var baseAmbient = 0.35;
+    var baseSun = 0.75;
+    var baseParty1 = 0.4;
+    var baseParty2 = 0.4;
+
+    if (_currentLightingMode === 'day') {
+      _ambientLight.color.setHex(0xffffff);
+      baseAmbient = 0.6;
+      _sunLight.color.setHex(0xfff4e0);
+      baseSun = 0.75;
+      baseParty1 = 0;
+      baseParty2 = 0;
+    } else if (_currentLightingMode === 'night') {
+      _ambientLight.color.setHex(0x1e1e38);
+      baseAmbient = 0.15;
+      baseSun = 0.05;
+      _partyLight1.color.setHex(0x3b82f6);
+      baseParty1 = 0.8;
+      _partyLight2.color.setHex(0xec4899);
+      baseParty2 = 0.8;
+    } else if (_currentLightingMode === 'gala') {
+      _ambientLight.color.setHex(0xffedd5);
+      baseAmbient = 0.35;
+      _sunLight.color.setHex(0xfcd34d);
+      baseSun = 0.3;
+      _partyLight1.color.setHex(0xf59e0b);
+      baseParty1 = 0.8;
+      _partyLight2.color.setHex(0xf97316);
+      baseParty2 = 0.8;
+    }
+
+    _ambientLight.intensity = baseAmbient * _brightnessFactor;
+    _sunLight.intensity = baseSun * _brightnessFactor;
+    _partyLight1.intensity = baseParty1 * _brightnessFactor;
+    _partyLight2.intensity = baseParty2 * _brightnessFactor;
+  }
 
   // ─── Setup Lighting ───────────────────────────────────────
   function _setupLighting() {
@@ -643,35 +685,13 @@ window.Visualizer3D = (function () {
     _partyLight2 = new THREE.PointLight(0xec4899, 0.4, 40);
     _partyLight2.position.set(_terrain.w * 0.75, 12, _terrain.h * 0.5);
     _scene.add(_partyLight2);
+
+    _updateLightIntensities();
   }
 
   function setLighting(mode) {
-    if (!_ambientLight || !_sunLight || !_partyLight1 || !_partyLight2) return;
-    if (mode === 'day') {
-      _ambientLight.color.setHex(0xffffff);
-      _ambientLight.intensity = 0.6;
-      _sunLight.color.setHex(0xfff4e0);
-      _sunLight.intensity = 0.75;
-      _partyLight1.intensity = 0;
-      _partyLight2.intensity = 0;
-    } else if (mode === 'night') {
-      _ambientLight.color.setHex(0x1e1e38);
-      _ambientLight.intensity = 0.15;
-      _sunLight.intensity = 0.05;
-      _partyLight1.color.setHex(0x3b82f6); // blue
-      _partyLight1.intensity = 0.8;
-      _partyLight2.color.setHex(0xec4899); // magenta
-      _partyLight2.intensity = 0.8;
-    } else if (mode === 'gala') {
-      _ambientLight.color.setHex(0xffedd5); // warm amber
-      _ambientLight.intensity = 0.35;
-      _sunLight.color.setHex(0xfcd34d); // warm golden
-      _sunLight.intensity = 0.3;
-      _partyLight1.color.setHex(0xf59e0b); // warm yellow
-      _partyLight1.intensity = 0.8;
-      _partyLight2.color.setHex(0xf97316); // warm orange
-      _partyLight2.intensity = 0.8;
-    }
+    _currentLightingMode = mode;
+    _updateLightIntensities();
   }
 
   // ─── Ground & Sizing ──────────────────────────────────────
@@ -857,6 +877,13 @@ window.Visualizer3D = (function () {
         };
 
         _buildProceduralMesh(group, elem);
+
+        // Add 3D Label
+        var labelInfo = _getElementLabelInfo(elem);
+        var label = create3DLabel(labelInfo.title, labelInfo.subtitle, labelInfo.colorHex, "rgba(15, 23, 42, 0.85)", labelInfo.heightOffset);
+        label.name = "label-3d";
+        group.add(label);
+
         _scene.add(group);
         _active3dElements[elem.id] = group;
       }
@@ -3097,7 +3124,193 @@ window.Visualizer3D = (function () {
     }
   }
 
+  function _getElementLabelInfo(elem) {
+    var type = elem.type;
+    var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
+    var name = elem.name || (cat ? cat.name : type);
+    var category = (cat && cat.category) ? cat.category : 'mobiliario';
+    
+    var title = name;
+    var subtitle = '';
+    var heightOffset = 2.0;
+    var colorHex = elem.color || '#d4af37';
+    
+    // Check if it is a table or has chairs
+    var isTable = type.startsWith('table_') || type === 'lounge_set';
+    if (isTable) {
+      if (elem.mesaConfig && elem.mesaConfig.mesaNum) {
+        title = 'Mesa ' + elem.mesaConfig.mesaNum;
+      }
+      if (elem.chairs) {
+        subtitle = elem.chairs + ' Invitados';
+      } else {
+        subtitle = 'Mesa Auxiliar';
+      }
+      heightOffset = 1.6;
+    } else {
+      switch (category) {
+        case 'estructuras':
+          heightOffset = 4.0;
+          if (type === 'salon') heightOffset = 5.2;
+          if (type === 'pool') { heightOffset = 1.5; subtitle = 'Alberca'; }
+          if (type === 'terrace') { heightOffset = 1.5; subtitle = 'Terraza'; }
+          if (elem.w && elem.h) {
+            subtitle = subtitle || (elem.w + 'x' + elem.h + 'm');
+          }
+          break;
+        case 'decoracion':
+          heightOffset = 3.5;
+          if (type === 'tree_decor') { heightOffset = 4.5; subtitle = 'Árbol Decorativo'; }
+          else { subtitle = 'Decoración'; }
+          break;
+        case 'entretenimiento':
+          heightOffset = 2.8;
+          if (type === 'stage') { heightOffset = 3.5; subtitle = 'Escenario'; }
+          else if (type === 'dj_booth') { subtitle = 'Cabina DJ'; }
+          else { subtitle = 'Entretenimiento'; }
+          break;
+        case 'accesos':
+          heightOffset = 2.2;
+          subtitle = 'Acceso';
+          break;
+        case 'proveedores':
+          heightOffset = 2.5;
+          subtitle = 'Servicio';
+          break;
+        default:
+          heightOffset = 2.0;
+          subtitle = 'Elemento';
+          break;
+      }
+    }
+    
+    return {
+      title: title,
+      subtitle: subtitle,
+      colorHex: colorHex,
+      heightOffset: heightOffset
+    };
+  }
+
+  function create3DLabel(text, subtext, colorHex, bgColor, heightOffset) {
+    bgColor = bgColor || "rgba(15, 23, 42, 0.85)";
+    heightOffset = heightOffset || 2.0;
+    
+    var canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = subtext ? 128 : 64;
+    var ctx = canvas.getContext("2d");
+
+    // Round rect background
+    ctx.fillStyle = bgColor;
+    ctx.strokeStyle = colorHex;
+    ctx.lineWidth = 4;
+    
+    var r = 16;
+    var w = 512;
+    var h = canvas.height;
+    ctx.beginPath();
+    ctx.moveTo(r, 2);
+    ctx.lineTo(w - r, 2);
+    ctx.quadraticCurveTo(w - 2, 2, w - 2, r);
+    ctx.lineTo(w - 2, h - r);
+    ctx.quadraticCurveTo(w - 2, h - 2, w - r, h - 2);
+    ctx.lineTo(r, h - 2);
+    ctx.quadraticCurveTo(2, h - 2, 2, h - r);
+    ctx.lineTo(2, r);
+    ctx.quadraticCurveTo(2, 2, r, 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw main text with auto-scaling
+    ctx.fillStyle = "#ffffff";
+    var mainFontSize = 32;
+    ctx.font = "bold " + mainFontSize + "px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    
+    while (ctx.measureText(text).width > 480 && mainFontSize > 16) {
+      mainFontSize -= 2;
+      ctx.font = "bold " + mainFontSize + "px Arial, sans-serif";
+    }
+    
+    if (subtext) {
+      ctx.fillText(text, 256, 42);
+      ctx.fillStyle = colorHex;
+      var subFontSize = 24;
+      ctx.font = "bold " + subFontSize + "px Arial, sans-serif";
+      while (ctx.measureText(subtext).width > 480 && subFontSize > 12) {
+        subFontSize -= 2;
+        ctx.font = "bold " + subFontSize + "px Arial, sans-serif";
+      }
+      ctx.fillText(subtext, 256, 88);
+    } else {
+      ctx.fillText(text, 256, 32);
+    }
+
+    var texture = new THREE.CanvasTexture(canvas);
+    var spriteMaterial = new THREE.SpriteMaterial({ 
+      map: texture, 
+      transparent: true,
+      depthTest: true,
+      depthWrite: false
+    });
+    
+    var sprite = new THREE.Sprite(spriteMaterial);
+    var scaleX = subtext ? 7.5 : 6.0;
+    var scaleY = subtext ? 1.875 : 0.75;
+    sprite.scale.set(scaleX, scaleY, 1);
+    
+    // Tag sprite for dynamic scaling in animate loop
+    sprite.is3DLabel = true;
+    sprite.userData = {
+      baseScaleX: scaleX,
+      baseScaleY: scaleY,
+      baseScaleZ: 1,
+      heightOffset: heightOffset
+    };
+
+    var labelGroup = new THREE.Group();
+    labelGroup.add(sprite);
+
+    // Line pointing down to the ground
+    var colorVal = 0xd4af37;
+    if (typeof colorHex === "string" && colorHex.indexOf("#") === 0) {
+      colorVal = parseInt(colorHex.replace("#", "0x"), 16);
+    }
+
+    var points = [];
+    points.push(new THREE.Vector3(0, 0, 0));
+    points.push(new THREE.Vector3(0, -heightOffset + 0.1, 0));
+    
+    var lineGeom = new THREE.BufferGeometry().setFromPoints(points);
+    var lineMat = new THREE.LineBasicMaterial({
+      color: colorVal,
+      transparent: true,
+      opacity: 0.7
+    });
+    var line = new THREE.Line(lineGeom, lineMat);
+    labelGroup.add(line);
+
+    // Ground dot indicator
+    var dotGeom = new THREE.SphereGeometry(0.12, 8, 8);
+    var dotMat = new THREE.MeshBasicMaterial({
+      color: colorVal,
+      transparent: true,
+      opacity: 0.9
+    });
+    var dot = new THREE.Mesh(dotGeom, dotMat);
+    dot.position.set(0, -heightOffset + 0.1, 0);
+    labelGroup.add(dot);
+
+    labelGroup.position.set(0, heightOffset, 0);
+    return labelGroup;
+  }
+
   function setExposure(val) {
+    _brightnessFactor = val;
+    _updateLightIntensities();
     if (_renderer) {
       _renderer.toneMappingExposure = val;
     }
