@@ -400,16 +400,35 @@
   // ══════════════════════════════════════════════════════════
   function updateCounters() {
     var totalGuests = 0;
+    var totalCapacity = 0;
     var tableCounts = {};
 
     AppState.elements.forEach(function (elem) {
-      if (elem.chairs) totalGuests += elem.chairs;
       var t = elem.type;
+      
+      // Calculate capacity and occupancy
+      var isTable = t.startsWith('table_') || t === 'lounge_set';
+      if (isTable) {
+        if (elem.chairs) totalGuests += elem.chairs;
+        
+        var cap = elem.chairs || 0;
+        if (t === 'table_imperial') {
+          var tablones = elem.tablones || Math.max(2, Math.round(elem.w / 2.4));
+          cap = tablones * 10;
+        }
+        totalCapacity += cap;
+      } else if (elem.chairs) {
+        totalGuests += elem.chairs;
+        totalCapacity += elem.chairs;
+      }
+      
       tableCounts[t] = (tableCounts[t] || 0) + 1;
     });
 
     var guestEl = document.getElementById('counter-guests');
-    if (guestEl) guestEl.textContent = totalGuests;
+    if (guestEl) {
+      guestEl.textContent = totalGuests + ' / ' + totalCapacity;
+    }
 
     var tableEl = document.getElementById('counter-tables');
     if (tableEl) {
