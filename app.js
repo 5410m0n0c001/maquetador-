@@ -1304,16 +1304,9 @@
     if (mode === _currentLayoutMode) return;
     _currentLayoutMode = mode;
 
-    var btnVer = document.getElementById('btn-layout-ver');
-    var btnHor = document.getElementById('btn-layout-hor');
-    if (btnVer && btnHor) {
-      if (mode === 'vertical') {
-        btnVer.classList.add('active');
-        btnHor.classList.remove('active');
-      } else {
-        btnHor.classList.add('active');
-        btnVer.classList.remove('active');
-      }
+    var selectEl = document.getElementById('terrain-layout-mode');
+    if (selectEl) {
+      selectEl.value = mode;
     }
 
     saveHistory();
@@ -1353,18 +1346,9 @@
   }
 
   function _wireLayoutSwitcher() {
-    var btnVer = document.getElementById('btn-layout-ver');
-    var btnHor = document.getElementById('btn-layout-hor');
-    if (btnVer) {
-      btnVer.onclick = function () {
-        setLayoutMode('vertical');
-      };
-    }
-    if (btnHor) {
-      btnHor.onclick = function () {
-        setLayoutMode('horizontal');
-      };
-    }
+    onInpChange('terrain-layout-mode', function (id, el) {
+      setLayoutMode(el.value);
+    });
   }
 
   // ══════════════════════════════════════════════════════════
@@ -1884,6 +1868,18 @@
     }
   }
 
+  function updateLayoutModeFromElements() {
+    var mesa2 = AppState.elements.find(function (e) {
+      return e.type === 'table_imperial' && e.mesaConfig && e.mesaConfig.mesaNum === 2;
+    });
+    if (mesa2) {
+      var mode = (mesa2.rotation === 0) ? 'horizontal' : 'vertical';
+      _currentLayoutMode = mode;
+      var selectEl = document.getElementById('terrain-layout-mode');
+      if (selectEl) selectEl.value = mode;
+    }
+  }
+
   function _loadLayoutData(data) {
     if (!data) return;
     if (data.elements) AppState.elements = data.elements;
@@ -1894,6 +1890,7 @@
       if (!isNaN(n) && n >= _idCounter) _idCounter = n + 1;
       if (e.mesaConfig && e.mesaConfig.mesaNum > _tableCounter) _tableCounter = e.mesaConfig.mesaNum;
     });
+    updateLayoutModeFromElements();
   }
 
   var CURRENT_LAYOUT_VERSION = '2026-06-29-v22';
