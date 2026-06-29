@@ -209,22 +209,23 @@
         mesaNum: isMesa ? _tableCounter : 0,
         capacidadMax: null,
         mantelColor: (type.indexOf('campirana') > -1 || type.indexOf('marble') > -1) ? 'sin_mantel' : 'blanco',
-        caminoColor: 'ninguno',
-        caminoAcomodo: 'centro',
-        servilletaColor: 'blanco',
-        servilletaColor2: 'ninguno',
-        servilletaDoblez: 'loto',
+        caminoColor: 'beige',
+        caminoAcomodo: 'diagonal',
+        servilletaColor: 'dorado',
+        servilletaColor2: 'champagne',
+        servilletaDoblez: ['corazon', 'corbata'],
         cubiertos: 'plateado',
         platoBase: 'ninguno',
         platoTrinche: 'redondo_blanco',
-        cristal: 'standard',
+        cristal: 'cubero',
         copasColor: 'transparente',
         cristal2: 'ninguno',
         copasColor2: 'transparente',
         tipoSilla: 'tiffany',
         menu: '',
-        arregloFloralTipo: 'ninguno',
-        arregloFloralAcomodo: 'ninguno'
+        arregloFloralTipo: 'bajo',
+        arregloFloralAcomodo: 'diagonal',
+        ensambleTipo: 'angosto'
       }
     };
 
@@ -300,22 +301,23 @@
       layer: 'mobiliario',
       mesaConfig: {
         mantelColor: 'blanco',
-        caminoColor: 'ninguno',
-        caminoAcomodo: 'centro',
-        servilletaColor: 'blanco',
-        servilletaColor2: 'ninguno',
-        servilletaDoblez: 'loto',
+        caminoColor: 'beige',
+        caminoAcomodo: 'diagonal',
+        servilletaColor: 'dorado',
+        servilletaColor2: 'champagne',
+        servilletaDoblez: ['corazon', 'corbata'],
         cubiertos: 'plateado',
         platoBase: 'ninguno',
         platoTrinche: 'redondo_blanco',
-        cristal: 'standard',
+        cristal: 'cubero',
         copasColor: 'transparente',
         tipoSilla: 'tiffany',
         menu: '',
         mesaNum: _tableCounter,
         capacidadMax: null,
-        arregloFloralTipo: 'ninguno',
-        arregloFloralAcomodo: 'ninguno'
+        arregloFloralTipo: 'bajo',
+        arregloFloralAcomodo: 'diagonal',
+        ensambleTipo: 'angosto'
       }
     };
     saveHistory();
@@ -605,13 +607,19 @@
 
     // Imperial tablones row (hidden unless imperial table)
     var tablonRow = document.getElementById('mesa-tablones-row');
-    if (tablonRow) {
-      if (elem.type === 'table_imperial') {
+    var ensambleRow = document.getElementById('mesa-ensamble-row');
+    if (elem.type === 'table_imperial') {
+      if (tablonRow) {
         tablonRow.classList.remove('hidden');
         setVal('mesa-num-tablones', elem.tablones || 3);
-      } else {
-        tablonRow.classList.add('hidden');
       }
+      if (ensambleRow) {
+        ensambleRow.classList.remove('hidden');
+        setVal('mesa-ensamble-tipo', (elem.mesaConfig && elem.mesaConfig.ensambleTipo) || 'angosto');
+      }
+    } else {
+      if (tablonRow) tablonRow.classList.add('hidden');
+      if (ensambleRow) ensambleRow.classList.add('hidden');
     }
 
     // Mesa config
@@ -912,6 +920,7 @@
     mesaInp('mesa-menu', 'menu');
     mesaInp('mesa-floral-tipo', 'arregloFloralTipo');
     mesaInp('mesa-floral-acomodo', 'arregloFloralAcomodo');
+    mesaInp('mesa-ensamble-tipo', 'ensambleTipo');
 
     // Action buttons
     var btnRotate = document.getElementById('btn-rotate-90');
@@ -1686,7 +1695,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v17';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v18';
 
   function loadFromLocalStorage() {
     try {
@@ -2065,6 +2074,10 @@
           floralText += ' (' + config.arregloFloralAcomodo.charAt(0).toUpperCase() + config.arregloFloralAcomodo.slice(1) + ')';
         }
         montageItems.push('<strong>Floral:</strong> ' + floralText);
+      }
+      if (t.type === 'table_imperial') {
+        var ensTipo = (config.ensambleTipo === 'ancho') ? 'A lo Ancho (Lado a Lado)' : 'A lo Largo (Extremo a Extremo)';
+        montageItems.push('<strong>Ensamble:</strong> ' + ensTipo);
       }
       var montageText = montageItems.join('<br>');
 

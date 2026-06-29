@@ -910,6 +910,17 @@
             <input type="number" id="mesa-num-tablones" class="form-input" min="1" max="10" step="1" placeholder="2" />
           </div>
 
+          <!-- Imperial assembly row (hidden unless imperial table) -->
+          <div id="mesa-ensamble-row" class="form-group hidden">
+            <label class="form-label" for="mesa-ensamble-tipo">
+              <i class="fa-solid fa-arrows-split-up-and-left"></i> Orientación de Ensamble
+            </label>
+            <select id="mesa-ensamble-tipo" class="form-input">
+              <option value="angosto">Largo (Unión extremo a extremo)</option>
+              <option value="ancho">Ancho (Unión lado a lado)</option>
+            </select>
+          </div>
+
           <div class="divider-xs"></div>
           <p class="config-section-label">
             <i class="fa-solid fa-book-open"></i> Menu
@@ -949,11 +960,11 @@
 
 
 <!-- SCRIPTS (order matters) -->
-<script src="elements-db.js?v=20260629_18"></script>
-<script src="default-layout.js?v=20260629_18"></script>
-<script src="editor2d.js?v=20260629_18"></script>
-<script src="visualizer3d.js?v=20260629_18"></script>
-<script src="app.js?v=20260629_18"></script>
+<script src="elements-db.js?v=20260629_19"></script>
+<script src="default-layout.js?v=20260629_19"></script>
+<script src="editor2d.js?v=20260629_19"></script>
+<script src="visualizer3d.js?v=20260629_19"></script>
+<script src="app.js?v=20260629_19"></script>
 
 </body>
 </html>

@@ -394,15 +394,29 @@ window.Editor2D = (function () {
       });
       g.appendChild(impRect);
       // Tablon dividers
-      var tabW = pw / tablones;
-      for (var t = 1; t < tablones; t++) {
-        var divLine = svgEl('line', {
-          x1: px - pw / 2 + t * tabW, y1: py - ph / 2,
-          x2: px - pw / 2 + t * tabW, y2: py + ph / 2,
-          stroke: colorLight, 'stroke-width': 1, 'stroke-dasharray': '4 2',
-          'pointer-events': 'none'
-        });
-        g.appendChild(divLine);
+      var isAncho = elem.mesaConfig && elem.mesaConfig.ensambleTipo === 'ancho';
+      if (isAncho) {
+        var tabH = ph / tablones;
+        for (var t = 1; t < tablones; t++) {
+          var divLine = svgEl('line', {
+            x1: px - pw / 2, y1: py - ph / 2 + t * tabH,
+            x2: px + pw / 2, y2: py - ph / 2 + t * tabH,
+            stroke: colorLight, 'stroke-width': 1, 'stroke-dasharray': '4 2',
+            'pointer-events': 'none'
+          });
+          g.appendChild(divLine);
+        }
+      } else {
+        var tabW = pw / tablones;
+        for (var t = 1; t < tablones; t++) {
+          var divLine = svgEl('line', {
+            x1: px - pw / 2 + t * tabW, y1: py - ph / 2,
+            x2: px - pw / 2 + t * tabW, y2: py + ph / 2,
+            stroke: colorLight, 'stroke-width': 1, 'stroke-dasharray': '4 2',
+            'pointer-events': 'none'
+          });
+          g.appendChild(divLine);
+        }
       }
       // Chairs along long edges
       var chairs = elem.chairs || 30;

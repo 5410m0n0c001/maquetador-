@@ -386,11 +386,11 @@ var DEFAULT_LAYOUT = {
       "mesaConfig": {
         "mesaNum": 1,
         "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaColor": "blanco",
+        "caminoColor": "beige",
+        "servilletaColor": "dorado",
         "servilletaDoblez": [
-          "corbata",
-          "corazon"
+          "corazon",
+          "corbata"
         ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
@@ -401,10 +401,11 @@ var DEFAULT_LAYOUT = {
         "menu": "",
         "capacidadMax": 10,
         "caminoAcomodo": "diagonal",
-        "servilletaColor2": "beige",
+        "servilletaColor2": "champagne",
         "cristal2": "ninguno",
         "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal"
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto"
       }
     },
     {
@@ -544,12 +545,12 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "sin_mantel",
-        "caminoColor": "ninguno",
-        "servilletaColor": "blanco",
+        "mantelColor": "blanco",
+        "caminoColor": "beige",
+        "servilletaColor": "dorado",
         "servilletaDoblez": [
-          "corbata",
-          "corazon"
+          "corazon",
+          "corbata"
         ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
@@ -635,10 +636,11 @@ var DEFAULT_LAYOUT = {
         ],
         "capacidadMax": 40,
         "caminoAcomodo": "diagonal",
-        "servilletaColor2": "beige",
+        "servilletaColor2": "champagne",
         "cristal2": "ninguno",
         "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal"
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto"
       }
     },
     {
@@ -658,12 +660,12 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "sin_mantel",
-        "caminoColor": "ninguno",
-        "servilletaColor": "blanco",
+        "mantelColor": "blanco",
+        "caminoColor": "beige",
+        "servilletaColor": "dorado",
         "servilletaDoblez": [
-          "corbata",
-          "corazon"
+          "corazon",
+          "corbata"
         ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
@@ -725,10 +727,11 @@ var DEFAULT_LAYOUT = {
         ],
         "capacidadMax": 40,
         "caminoAcomodo": "diagonal",
-        "servilletaColor2": "beige",
+        "servilletaColor2": "champagne",
         "cristal2": "ninguno",
         "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal"
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto"
       }
     },
     {
@@ -748,12 +751,12 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "sin_mantel",
-        "caminoColor": "ninguno",
-        "servilletaColor": "blanco",
+        "mantelColor": "blanco",
+        "caminoColor": "beige",
+        "servilletaColor": "dorado",
         "servilletaDoblez": [
-          "corbata",
-          "corazon"
+          "corazon",
+          "corbata"
         ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
@@ -807,10 +810,11 @@ var DEFAULT_LAYOUT = {
         ],
         "capacidadMax": 40,
         "caminoAcomodo": "diagonal",
-        "servilletaColor2": "beige",
+        "servilletaColor2": "champagne",
         "cristal2": "ninguno",
         "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal"
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto"
       }
     },
     {
@@ -830,12 +834,12 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "sin_mantel",
-        "caminoColor": "ninguno",
-        "servilletaColor": "blanco",
+        "mantelColor": "blanco",
+        "caminoColor": "beige",
+        "servilletaColor": "dorado",
         "servilletaDoblez": [
-          "corbata",
-          "corazon"
+          "corazon",
+          "corbata"
         ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
@@ -897,10 +901,11 @@ var DEFAULT_LAYOUT = {
         ],
         "capacidadMax": 40,
         "caminoAcomodo": "diagonal",
-        "servilletaColor2": "beige",
+        "servilletaColor2": "champagne",
         "cristal2": "ninguno",
         "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal"
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto"
       }
     },
     {
