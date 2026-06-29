@@ -554,12 +554,12 @@ var DEFAULT_LAYOUT = {
       "name": "Mesa Imperial",
       "x": 19.3,
       "y": 28,
-      "w": 7.2,
+      "w": 9.6,
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 30,
-      "tablones": 3,
+      "chairs": 37,
+      "tablones": 4,
       "editable": true,
       "removable": true,
       "layer": "mobiliario",
@@ -575,7 +575,89 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 2
+        "mesaNum": 2,
+        "invitados": [
+          {
+            "nombre": "Mauricio Miranda",
+            "pases": 1
+          },
+          {
+            "nombre": "Damián Alonso",
+            "pases": 1
+          },
+          {
+            "nombre": "Dulce Figueroa",
+            "pases": 1
+          },
+          {
+            "nombre": "Dulce Valdes",
+            "pases": 1
+          },
+          {
+            "nombre": "Elías Alemán",
+            "pases": 2
+          },
+          {
+            "nombre": "Villalvazo Cortes",
+            "pases": 2
+          },
+          {
+            "nombre": "Francisco Diaz",
+            "pases": 2
+          },
+          {
+            "nombre": "Karla Diaz",
+            "pases": 4
+          },
+          {
+            "nombre": "Gabriel Ledesma",
+            "pases": 3
+          },
+          {
+            "nombre": "Yessica Ladrón de Guevara",
+            "pases": 3
+          },
+          {
+            "nombre": "Gael Olivares",
+            "pases": 1
+          },
+          {
+            "nombre": "Giezi Sanchez",
+            "pases": 2
+          },
+          {
+            "nombre": "Heriberto Avelar",
+            "pases": 3
+          },
+          {
+            "nombre": "Isabel Basurto",
+            "pases": 3
+          },
+          {
+            "nombre": "Javier Emiliano",
+            "pases": 1
+          },
+          {
+            "nombre": "Josthin Erubiel",
+            "pases": 1
+          },
+          {
+            "nombre": "Ulises Jair",
+            "pases": 1
+          },
+          {
+            "nombre": "Esteban Fabian",
+            "pases": 2
+          },
+          {
+            "nombre": "Mtro. Vals",
+            "pases": 1
+          },
+          {
+            "nombre": "Jesus Guillen",
+            "pases": 2
+          }
+        ]
       }
     },
     {
@@ -585,12 +667,12 @@ var DEFAULT_LAYOUT = {
       "name": "Mesa Imperial",
       "x": 36.9,
       "y": 28.1,
-      "w": 7.2,
+      "w": 9.6,
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 30,
-      "tablones": 3,
+      "chairs": 35,
+      "tablones": 4,
       "editable": true,
       "removable": true,
       "layer": "mobiliario",
@@ -606,7 +688,53 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 4
+        "mesaNum": 4,
+        "invitados": [
+          {
+            "nombre": "Elena Villegas",
+            "pases": 2
+          },
+          {
+            "nombre": "Carlos Díaz",
+            "pases": 6
+          },
+          {
+            "nombre": "Pamela Díaz",
+            "pases": 3
+          },
+          {
+            "nombre": "Mariana Saldívar",
+            "pases": 3
+          },
+          {
+            "nombre": "Maricela Rodriguez",
+            "pases": 3
+          },
+          {
+            "nombre": "Ricardo Villegas Garcia",
+            "pases": 5
+          },
+          {
+            "nombre": "Ricardo Villegas Cervantes",
+            "pases": 3
+          },
+          {
+            "nombre": "Bertha Garcia",
+            "pases": 2
+          },
+          {
+            "nombre": "Cinthia Maldonado",
+            "pases": 3
+          },
+          {
+            "nombre": "Jaeson Díaz",
+            "pases": 2
+          },
+          {
+            "nombre": "Priscila Hernandez",
+            "pases": 3
+          }
+        ]
       }
     },
     {
@@ -616,12 +744,12 @@ var DEFAULT_LAYOUT = {
       "name": "Mesa Imperial",
       "x": 45.400000000000006,
       "y": 28.200000000000003,
-      "w": 7.2,
+      "w": 9.6,
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 30,
-      "tablones": 3,
+      "chairs": 36,
+      "tablones": 4,
       "editable": true,
       "removable": true,
       "layer": "mobiliario",
@@ -637,7 +765,45 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 5
+        "mesaNum": 5,
+        "invitados": [
+          {
+            "nombre": "Beny Téllez",
+            "pases": 2
+          },
+          {
+            "nombre": "Nelly Ochoa",
+            "pases": 4
+          },
+          {
+            "nombre": "Ximena Ochoa",
+            "pases": 3
+          },
+          {
+            "nombre": "Yildis Ochoa",
+            "pases": 5
+          },
+          {
+            "nombre": "Sotelo Bahena",
+            "pases": 4
+          },
+          {
+            "nombre": "Manuel Gonzalez",
+            "pases": 5
+          },
+          {
+            "nombre": "Ángel Vargas",
+            "pases": 5
+          },
+          {
+            "nombre": "Mercedes Salgado",
+            "pases": 4
+          },
+          {
+            "nombre": "Stefany Toledo",
+            "pases": 4
+          }
+        ]
       }
     },
     {
@@ -647,12 +813,12 @@ var DEFAULT_LAYOUT = {
       "name": "Mesa Imperial",
       "x": 28.3,
       "y": 28.1,
-      "w": 7.2,
+      "w": 9.6,
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 30,
-      "tablones": 3,
+      "chairs": 36,
+      "tablones": 4,
       "editable": true,
       "removable": true,
       "layer": "mobiliario",
@@ -668,7 +834,57 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 3
+        "mesaNum": 3,
+        "invitados": [
+          {
+            "nombre": "José Hilario Roque",
+            "pases": 2
+          },
+          {
+            "nombre": "Braulio Roque",
+            "pases": 2
+          },
+          {
+            "nombre": "Ángeles Roque",
+            "pases": 3
+          },
+          {
+            "nombre": "Patricia Sanchez",
+            "pases": 1
+          },
+          {
+            "nombre": "Gabriela Medina",
+            "pases": 2
+          },
+          {
+            "nombre": "Paulina Medina",
+            "pases": 2
+          },
+          {
+            "nombre": "Carlos Sanchez",
+            "pases": 4
+          },
+          {
+            "nombre": "Fernanda Sanchez",
+            "pases": 5
+          },
+          {
+            "nombre": "Andrea Sanchez",
+            "pases": 5
+          },
+          {
+            "nombre": "Alejandra Sanchez",
+            "pases": 4
+          },
+          {
+            "nombre": "Luis Sanchez",
+            "pases": 2
+          },
+          {
+            "nombre": "Alvania Rances",
+            "pases": 4
+          }
+        ]
       }
     },
     {

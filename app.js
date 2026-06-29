@@ -503,6 +503,22 @@
       setVal('mesa-copas-color2', elem.mesaConfig.copasColor2 || 'transparente');
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
+
+      var guestsListEl = document.getElementById('mesa-invitados-list');
+      if (guestsListEl) {
+        if (elem.mesaConfig.invitados && elem.mesaConfig.invitados.length > 0) {
+          var html = '';
+          elem.mesaConfig.invitados.forEach(function (guest) {
+            html += '<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 4px 0;">';
+            html += '  <span>' + guest.nombre + '</span>';
+            html += '  <span class="badge" style="background: rgba(244, 63, 94, 0.2); color: #f43f5e; padding: 2px 6px; border-radius: 4px; font-weight: bold;">' + guest.pases + ' pases</span>';
+            html += '</div>';
+          });
+          guestsListEl.innerHTML = html;
+        } else {
+          guestsListEl.innerHTML = '<span style="color: #64748b;">No hay invitados asignados a esta mesa.</span>';
+        }
+      }
     }
 
     // Type badge
@@ -1417,7 +1433,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-28-v2';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v1';
 
   function loadFromLocalStorage() {
     try {

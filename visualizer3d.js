@@ -57,9 +57,17 @@ window.Visualizer3D = (function () {
   }
 
   // Helper to convert hex string to number
-  function parseColor(hex) {
-    if (!hex) return 0xffffff;
-    return parseInt(hex.replace('#', '0x'));
+  function parseColor(hex, type) {
+    if (hex && hex.startsWith('#')) {
+      return parseInt(hex.replace('#', '0x'));
+    }
+    if (type && window.getCatalogEntry) {
+      var cat = window.getCatalogEntry(type);
+      if (cat && cat.color) {
+        return parseInt(cat.color.replace('#', '0x'));
+      }
+    }
+    return 0xffffff;
   }
 
   // 🌸 COLOR MAP AND MATERIAL HELPERS FOR TABLEWARE & LINENS
@@ -854,7 +862,8 @@ window.Visualizer3D = (function () {
             group.userData.type !== elem.type ||
             group.userData.salonType !== elem.salonType ||
             group.userData.elevation !== elem.elevation ||
-            group.userData.techos !== currentTechosVisible) {
+            group.userData.techos !== currentTechosVisible ||
+            group.userData.mesaNum !== (elem.mesaConfig ? elem.mesaConfig.mesaNum : 0)) {
           needsRebuild = true;
           _scene.remove(group);
           delete _active3dElements[elem.id];
@@ -873,7 +882,8 @@ window.Visualizer3D = (function () {
           color: elem.color,
           salonType: elem.salonType,
           elevation: elem.elevation,
-          techos: currentTechosVisible
+          techos: currentTechosVisible,
+          mesaNum: elem.mesaConfig ? elem.mesaConfig.mesaNum : 0
         };
 
         _buildProceduralMesh(group, elem);
@@ -969,7 +979,7 @@ window.Visualizer3D = (function () {
   function _buildStructure(group, elem) {
     var w = elem.w;
     var h = elem.h;
-    var colorNum = parseColor(elem.color);
+    var colorNum = parseColor(elem.color, elem.type);
     var showTechos = _getLayerVisibility('techos');
 
     if (elem.type === 'salon') {
@@ -1464,7 +1474,7 @@ window.Visualizer3D = (function () {
   function _buildAccess(group, elem) {
     var w = elem.w;
     var h = elem.h;
-    var colorNum = parseColor(elem.color);
+    var colorNum = parseColor(elem.color, elem.type);
     var showTechos = _getLayerVisibility('techos');
 
     if (elem.type.indexOf('door') === 0) {
@@ -1604,7 +1614,7 @@ window.Visualizer3D = (function () {
   function _buildFurniture(group, elem) {
     var w = elem.w;
     var h = elem.h;
-    var colorNum = parseColor(elem.color);
+    var colorNum = parseColor(elem.color, elem.type);
     var isCircle = elem.shape === 'circle';
     var numChairs = elem.chairs || 0;
 
@@ -1796,7 +1806,7 @@ window.Visualizer3D = (function () {
 
     } else if (elem.type === 'lounge_set') {
       // Lounge sofa sets (U-shaped arrangement around table)
-      var sofaColor = parseColor(elem.color);
+      var sofaColor = parseColor(elem.color, elem.type);
       var sofaMat = new THREE.MeshStandardMaterial({ color: sofaColor, roughness: 0.7 });
 
       // Left sofa
@@ -2273,7 +2283,7 @@ window.Visualizer3D = (function () {
   function _buildEntertainment(group, elem) {
     var w = elem.w;
     var h = elem.h;
-    var colorNum = parseColor(elem.color);
+    var colorNum = parseColor(elem.color, elem.type);
 
     if (elem.type.indexOf('dancefloor') === 0) {
       // Dancefloor deck
@@ -2674,7 +2684,7 @@ window.Visualizer3D = (function () {
   function _buildDecoration(group, elem) {
     var w = elem.w;
     var h = elem.h;
-    var colorNum = parseColor(elem.color);
+    var colorNum = parseColor(elem.color, elem.type);
 
     if (elem.type.indexOf('centerpiece') === 0) {
       // Vase cylinder
@@ -2782,7 +2792,7 @@ window.Visualizer3D = (function () {
   function _buildProvider(group, elem) {
     var w = elem.w;
     var h = elem.h;
-    var colorNum = parseColor(elem.color);
+    var colorNum = parseColor(elem.color, elem.type);
 
     if (elem.type === 'vendor_paletas') {
       // Paletas La Princesa pushcart
