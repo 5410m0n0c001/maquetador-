@@ -728,15 +728,18 @@ button, input, select, textarea {
 
 /* TOPBAR */
 .topbar {
-  height: var(--topbar-height);
+  min-height: var(--topbar-height);
+  height: auto;
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding: 6px 12px;
   z-index: 5;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .topbar-left {
