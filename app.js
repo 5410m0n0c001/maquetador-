@@ -482,7 +482,9 @@
     var tabMesaBtn = document.getElementById('tab-mesa');
     if (tabMesaBtn) {
       tabMesaBtn.style.display = hasMesa ? '' : 'none';
-      if (!hasMesa && tabMesaBtn.classList.contains('active')) {
+      if (hasMesa) {
+        tabMesaBtn.click();
+      } else if (tabMesaBtn.classList.contains('active')) {
         var tabPropsBtn = document.getElementById('tab-settings');
         if (tabPropsBtn) tabPropsBtn.click();
       }

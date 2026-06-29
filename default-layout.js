@@ -379,7 +379,7 @@ var DEFAULT_LAYOUT = {
       "h": 3.5,
       "rotation": 0,
       "color": "#f472b6",
-      "chairs": 10,
+      "chairs": 4,
       "editable": true,
       "removable": true,
       "layer": "mobiliario",
