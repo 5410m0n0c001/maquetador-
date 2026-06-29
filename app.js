@@ -1543,7 +1543,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v4';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v5';
 
   function loadFromLocalStorage() {
     try {
@@ -1651,6 +1651,35 @@
     if (activeSel) activeSel.remove();
     var resizeHandles = clonedSvg.querySelectorAll('.resize-handle');
     resizeHandles.forEach(function (h) { h.remove(); });
+
+    // Clean up rulers and center/crop to terrain bounds so the full plan is printed
+    var rulerH = clonedSvg.querySelector('#svg-ruler-h');
+    if (rulerH) rulerH.remove();
+    var rulerV = clonedSvg.querySelector('#svg-ruler-v');
+    if (rulerV) rulerV.remove();
+    var terrainBorder = clonedSvg.querySelector('#svg-terrain-border');
+    if (terrainBorder) terrainBorder.remove();
+
+    var scale = 15; // SCALE is 15px per meter
+    var tw = AppState.terrain.w * scale;
+    var th = AppState.terrain.h * scale;
+
+    var svgBg = clonedSvg.querySelector('#svg-background');
+    if (svgBg) {
+      svgBg.setAttribute('width', tw);
+      svgBg.setAttribute('height', th);
+    }
+
+    var zoomGroup = clonedSvg.querySelector('#svg-zoom-group');
+    if (zoomGroup) {
+      zoomGroup.removeAttribute('transform');
+    }
+
+    clonedSvg.setAttribute('viewBox', '0 0 ' + tw + ' ' + th);
+    clonedSvg.setAttribute('width', '100%');
+    clonedSvg.setAttribute('height', '100%');
+    clonedSvg.style.width = '100%';
+    clonedSvg.style.height = 'auto';
 
     var svgString = new XMLSerializer().serializeToString(clonedSvg);
 
