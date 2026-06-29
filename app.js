@@ -2208,8 +2208,8 @@
     html += '  @media print {\n';
     html += '    body { padding: 0; margin: 0; }\n';
     html += '    .no-print { display: none; }\n';
-    html += '    .page-break { page-break-before: always; }\n';
-    html += '    .map-container { height: 800px; border: none; background: none; padding: 0; margin: 0; page-break-inside: avoid; }\n';
+    html += '    .page-break { page-break-before: always !important; break-before: page !important; }\n';
+    html += '    .map-container { height: auto !important; max-height: 480px !important; border: none; background: none; padding: 0; margin: 0; page-break-inside: avoid !important; break-inside: avoid !important; }\n';
     html += '  }\n';
     html += '</style>\n</head>\n<body>\n';
 
