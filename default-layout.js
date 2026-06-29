@@ -559,7 +559,7 @@ var DEFAULT_LAYOUT = {
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 37,
+      "chairs": 39,
       "tablones": 4,
       "editable": true,
       "removable": true,
@@ -597,18 +597,6 @@ var DEFAULT_LAYOUT = {
           {
             "nombre": "Elías Alemán",
             "pases": 2
-          },
-          {
-            "nombre": "Villalvazo Cortes",
-            "pases": 2
-          },
-          {
-            "nombre": "Francisco Diaz",
-            "pases": 2
-          },
-          {
-            "nombre": "Karla Diaz",
-            "pases": 4
           },
           {
             "nombre": "Gabriel Ledesma",
@@ -651,12 +639,16 @@ var DEFAULT_LAYOUT = {
             "pases": 2
           },
           {
-            "nombre": "Mtro. Vals",
-            "pases": 1
+            "nombre": "Manuel Gonzalez",
+            "pases": 5
           },
           {
-            "nombre": "Jesus Guillen",
-            "pases": 2
+            "nombre": "Stefany Toledo",
+            "pases": 4
+          },
+          {
+            "nombre": "Alvania Ronces",
+            "pases": 4
           }
         ]
       }
@@ -672,7 +664,7 @@ var DEFAULT_LAYOUT = {
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 35,
+      "chairs": 37,
       "tablones": 4,
       "editable": true,
       "removable": true,
@@ -734,6 +726,10 @@ var DEFAULT_LAYOUT = {
           {
             "nombre": "Priscila Hernandez",
             "pases": 3
+          },
+          {
+            "nombre": "Jesus Guillen",
+            "pases": 2
           }
         ]
       }
@@ -789,10 +785,6 @@ var DEFAULT_LAYOUT = {
             "pases": 4
           },
           {
-            "nombre": "Manuel Gonzalez",
-            "pases": 5
-          },
-          {
             "nombre": "Ángel Vargas",
             "pases": 5
           },
@@ -801,8 +793,20 @@ var DEFAULT_LAYOUT = {
             "pases": 4
           },
           {
-            "nombre": "Stefany Toledo",
+            "nombre": "Villalvazo Cortes",
+            "pases": 2
+          },
+          {
+            "nombre": "Karla Diaz",
             "pases": 4
+          },
+          {
+            "nombre": "Francisco Diaz",
+            "pases": 2
+          },
+          {
+            "nombre": "Mtro. Vals",
+            "pases": 1
           }
         ]
       }
@@ -818,7 +822,7 @@ var DEFAULT_LAYOUT = {
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 36,
+      "chairs": 32,
       "tablones": 4,
       "editable": true,
       "removable": true,
@@ -880,10 +884,6 @@ var DEFAULT_LAYOUT = {
           {
             "nombre": "Luis Sanchez",
             "pases": 2
-          },
-          {
-            "nombre": "Alvania Rances",
-            "pases": 4
           }
         ]
       }

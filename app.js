@@ -1543,7 +1543,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v10';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v11';
 
   function loadFromLocalStorage() {
     try {
