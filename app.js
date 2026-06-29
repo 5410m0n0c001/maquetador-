@@ -562,6 +562,107 @@
     }
   }
 
+  function renderNapkinColorSelectors(elem) {
+    var container = document.getElementById('mesa-servilletas-colores-container');
+    if (!container) return;
+    
+    var activeDobleces = [];
+    if (elem && elem.mesaConfig) {
+      var dobVal = elem.mesaConfig.servilletaDoblez;
+      if (Array.isArray(dobVal)) {
+        activeDobleces = dobVal;
+      } else if (typeof dobVal === 'string' && dobVal) {
+        activeDobleces = [dobVal];
+      }
+    }
+    
+    if (activeDobleces.length === 0) {
+      activeDobleces = ['default'];
+    }
+    
+    var colorOptions = [
+      { value: 'blanco', label: 'Blanco' },
+      { value: 'dorado', label: 'Dorado' },
+      { value: 'champagne', label: 'Champagne' },
+      { value: 'negro', label: 'Negro' },
+      { value: 'caqui', label: 'Caqui' },
+      { value: 'azul_marino', label: 'Azul Marino' },
+      { value: 'arena', label: 'Arena' },
+      { value: 'chocolate', label: 'Chocolate' },
+      { value: 'palo_de_rosa', label: 'Palo de Rosa' },
+      { value: 'rojo', label: 'Rojo' },
+      { value: 'verde_olivo', label: 'Verde Olivo' },
+      { value: 'azul_rey', label: 'Azul Rey' },
+      { value: 'rosa_mexicano', label: 'Rosa Mexicano' }
+    ];
+    
+    var labelsMap = {
+      'corazon': 'Corazón',
+      'corbata': 'Corbata',
+      'loto': 'Loto',
+      'vela': 'Vela',
+      'abanico': 'Abanico',
+      'piramide': 'Pirámide',
+      'default': '(General)'
+    };
+    
+    var html = '';
+    activeDobleces.forEach(function (fold) {
+      var foldKey = 'servilletaColor_' + fold;
+      var foldLabel = labelsMap[fold] || fold.charAt(0).toUpperCase() + fold.slice(1);
+      
+      var defaultColor = 'blanco';
+      if (fold === 'corazon') {
+        defaultColor = (elem.mesaConfig && elem.mesaConfig.servilletaColorCorazon) || 'dorado';
+      } else if (fold === 'corbata') {
+        defaultColor = (elem.mesaConfig && elem.mesaConfig.servilletaColorCorbata) || 'champagne';
+      } else if (fold === 'default') {
+        defaultColor = (elem.mesaConfig && elem.mesaConfig.servilletaColorOtros) || 'blanco';
+      }
+      
+      var currentColor = (elem.mesaConfig && elem.mesaConfig[foldKey]) || defaultColor;
+      if (elem.mesaConfig && !elem.mesaConfig[foldKey]) {
+        elem.mesaConfig[foldKey] = currentColor;
+      }
+      
+      html += '<div class="form-group" style="margin-bottom: 10px;">';
+      html += '  <label class="form-label" style="font-size:12px; font-weight:600; color:#94a3b8; display:flex; align-items:center; gap:4px; margin-bottom:4px;">';
+      html += '    <i class="fa-solid fa-palette"></i> Color Servilleta ' + foldLabel;
+      html += '  </label>';
+      html += '  <select class="form-input napkin-fold-color-select" data-fold="' + fold + '" style="font-size:12px; padding:6px 10px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px; width:100%; box-sizing:border-box;">';
+      
+      colorOptions.forEach(function (opt) {
+        var selected = opt.value === currentColor ? ' selected' : '';
+        html += '    <option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
+      });
+      
+      html += '  </select>';
+      html += '</div>';
+    });
+    
+    container.innerHTML = html;
+    
+    var selects = container.querySelectorAll('.napkin-fold-color-select');
+    selects.forEach(function (sel) {
+      sel.onchange = function () {
+        if (!AppState.selectedId) return;
+        var el = AppState.elements.find(function (e) { return e.id === AppState.selectedId; });
+        if (!el || !el.mesaConfig) return;
+        
+        saveHistory();
+        var foldType = sel.getAttribute('data-fold');
+        var val = sel.value;
+        el.mesaConfig['servilletaColor_' + foldType] = val;
+        
+        if (foldType === 'corazon') el.mesaConfig.servilletaColorCorazon = val;
+        else if (foldType === 'corbata') el.mesaConfig.servilletaColorCorbata = val;
+        else if (foldType === 'default') el.mesaConfig.servilletaColorOtros = val;
+        
+        _refresh();
+      };
+    });
+  }
+
   function _populateInspector(elem) {
     function setVal(id, v) {
       var el = document.getElementById(id);
@@ -664,9 +765,7 @@
       setVal('mesa-capacidad-max', elem.mesaConfig.capacidadMax || '');
       setVal('mesa-camino-color', elem.mesaConfig.caminoColor || 'ninguno');
       setVal('mesa-camino-acomodo', elem.mesaConfig.caminoAcomodo || 'centro');
-      setVal('mesa-servilleta-color-corazon', elem.mesaConfig.servilletaColorCorazon || 'dorado');
-      setVal('mesa-servilleta-color-corbata', elem.mesaConfig.servilletaColorCorbata || 'champagne');
-      setVal('mesa-servilleta-color-otros', elem.mesaConfig.servilletaColorOtros || 'blanco');
+      renderNapkinColorSelectors(elem);
       setVal('mesa-cubiertos', elem.mesaConfig.cubiertos || 'plateado');
       setVal('mesa-plato-base', elem.mesaConfig.platoBase || 'ninguno');
       setVal('mesa-plato-trinche', elem.mesaConfig.platoTrinche || 'redondo_blanco');
@@ -902,6 +1001,7 @@
           if (box.checked) checkedVals.push(box.value);
         });
         elem.mesaConfig.servilletaDoblez = checkedVals;
+        renderNapkinColorSelectors(elem);
         _refresh();
       };
     });
@@ -910,9 +1010,6 @@
     mesaInp('mesa-mantel-color', 'mantelColor');
     mesaInp('mesa-camino-color', 'caminoColor');
     mesaInp('mesa-camino-acomodo', 'caminoAcomodo');
-    mesaInp('mesa-servilleta-color-corazon', 'servilletaColorCorazon');
-    mesaInp('mesa-servilleta-color-corbata', 'servilletaColorCorbata');
-    mesaInp('mesa-servilleta-color-otros', 'servilletaColorOtros');
     mesaInp('mesa-cubiertos', 'cubiertos');
     mesaInp('mesa-plato-base', 'platoBase');
     mesaInp('mesa-plato-trinche', 'platoTrinche');
@@ -1699,7 +1796,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v19';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v20';
 
   function loadFromLocalStorage() {
     try {
@@ -2046,17 +2143,31 @@
         activeDobleces = [config.servilletaDoblez];
       }
       
+      var labelsMap = {
+        'corazon': 'Corazón',
+        'corbata': 'Corbata',
+        'loto': 'Loto',
+        'vela': 'Vela',
+        'abanico': 'Abanico',
+        'piramide': 'Pirámide',
+        'default': '(General)'
+      };
+      
       var sParts = [];
       activeDobleces.forEach(function (fold) {
-        var foldLabel = fold.charAt(0).toUpperCase() + fold.slice(1);
-        var foldColor = 'blanco';
+        var foldLabel = labelsMap[fold] || fold.charAt(0).toUpperCase() + fold.slice(1);
+        var foldKey = 'servilletaColor_' + fold;
+        
+        var defaultColor = 'blanco';
         if (fold === 'corazon') {
-          foldColor = config.servilletaColorCorazon || 'dorado';
+          defaultColor = config.servilletaColorCorazon || 'dorado';
         } else if (fold === 'corbata') {
-          foldColor = config.servilletaColorCorbata || 'champagne';
+          defaultColor = config.servilletaColorCorbata || 'champagne';
         } else {
-          foldColor = config.servilletaColorOtros || 'blanco';
+          defaultColor = config.servilletaColorOtros || 'blanco';
         }
+        
+        var foldColor = config[foldKey] || defaultColor;
         var colLabel = foldColor.charAt(0).toUpperCase() + foldColor.slice(1);
         sParts.push(foldLabel + ' (' + colLabel + ')');
       });
