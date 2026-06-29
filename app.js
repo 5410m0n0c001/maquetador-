@@ -746,17 +746,7 @@
       var v = parseFloat(el.value);
       if (!isNaN(v) && v > 0) {
         saveHistory();
-        var elem = AppState.elements.find(function (e) { return e.id === id; });
-        if (elem && elem.type === 'table_imperial') {
-          var n = Math.max(2, Math.round(v / 2.4));
-          var chairsCount = n * 10;
-          updateElement(id, { w: v, tablones: n, chairs: chairsCount });
-          updateInspectorField('mesa-num-tablones', n);
-          updateInspectorField('inspector-chairs', chairsCount);
-          updateCounters();
-        } else {
-          updateElement(id, { w: v });
-        }
+        updateElement(id, { w: v });
       }
     });
     onInpChange('inspector-h', function (id, el) {
@@ -1695,7 +1685,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v15';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v16';
 
   function loadFromLocalStorage() {
     try {
