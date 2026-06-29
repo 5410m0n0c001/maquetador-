@@ -418,7 +418,8 @@
       
       // Calculate capacity and occupancy
       var isTable = t.startsWith('table_') || t === 'lounge_set';
-      if (isTable) {
+      var isDecorativeTable = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet'].indexOf(t) !== -1;
+      if (isTable && !isDecorativeTable) {
         if (elem.chairs) totalGuests += elem.chairs;
         
         var cap = 10;
@@ -1685,7 +1686,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v16';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v17';
 
   function loadFromLocalStorage() {
     try {
