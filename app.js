@@ -1543,7 +1543,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v5';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v6';
 
   function loadFromLocalStorage() {
     try {
@@ -1804,9 +1804,15 @@
     html += '  <div class="brand-title">\n';
     html += '    🌸 Primavera <span class="brand-sub">| Planeador de Eventos</span>\n';
     html += '  </div>\n';
-    html += '  <div class="doc-title">\n';
-    html += '    <div>FICHA TÉCNICA</div>\n';
-    html += '    <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + '</div>\n';
+    html += '  <div style="display: flex; align-items: center; gap: 15px;">\n';
+    html += '    <div style="display: flex; flex-direction: column; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 6px; background: #fff;">\n';
+    html += '      <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://5410m0n0c001.github.io/maquetador-/" style="width: 50px; height: 50px; display: block;" alt="Ver en 3D" />\n';
+    html += '      <span style="font-size: 8px; color: #475569; font-weight: 700; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px;">Ver en 3D 📱</span>\n';
+    html += '    </div>\n';
+    html += '    <div class="doc-title">\n';
+    html += '      <div>FICHA TÉCNICA</div>\n';
+    html += '      <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + '</div>\n';
+    html += '    </div>\n';
     html += '  </div>\n';
     html += '</div>\n';
 
