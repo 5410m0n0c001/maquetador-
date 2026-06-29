@@ -553,12 +553,15 @@ window.Editor2D = (function () {
     });
     // Shorten long names
     var displayName = elem.name || (cat ? cat.name : elem.type);
+    if (elem.mesaConfig && elem.mesaConfig.mesaNum) {
+      displayName = 'Mesa ' + elem.mesaConfig.mesaNum;
+    }
     if (displayName.length > 18) displayName = displayName.slice(0, 16) + '…';
     labelEl.textContent = displayName;
     g.appendChild(labelEl);
 
     // Chair / capacity badge
-    if (elem.chairs && elem.chairs > 0 && shape !== 'imperial') {
+    if (elem.chairs && elem.chairs > 0) {
       var badge = svgEl('text', {
         x: px,
         y: py + labelFontSize * 1.4,
