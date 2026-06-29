@@ -562,23 +562,53 @@
     }
   }
 
-  function renderNapkinColorSelectors(elem) {
-    var container = document.getElementById('mesa-servilletas-colores-container');
+  function renderNapkinSlots(elem) {
+    var container = document.getElementById('mesa-servilletas-config-container');
     if (!container) return;
     
-    var activeDobleces = [];
-    if (elem && elem.mesaConfig) {
-      var dobVal = elem.mesaConfig.servilletaDoblez;
-      if (Array.isArray(dobVal)) {
-        activeDobleces = dobVal;
-      } else if (typeof dobVal === 'string' && dobVal) {
-        activeDobleces = [dobVal];
-      }
+    if (!elem || !elem.mesaConfig) {
+      container.innerHTML = '';
+      return;
     }
     
-    if (activeDobleces.length === 0) {
-      activeDobleces = ['default'];
+    var cfg = elem.mesaConfig;
+    
+    var activeFolds = [];
+    if (Array.isArray(cfg.servilletaDoblez)) {
+      activeFolds = cfg.servilletaDoblez;
+    } else if (typeof cfg.servilletaDoblez === 'string' && cfg.servilletaDoblez) {
+      activeFolds = [cfg.servilletaDoblez];
     }
+    
+    var slots = [
+      { type: activeFolds[0] || 'ninguno', color: '' },
+      { type: activeFolds[1] || 'ninguno', color: '' },
+      { type: activeFolds[2] || 'ninguno', color: '' }
+    ];
+    
+    slots.forEach(function (slot) {
+      if (slot.type !== 'ninguno') {
+        var foldKey = 'servilletaColor_' + slot.type;
+        var defaultColor = 'blanco';
+        if (slot.type === 'corazon') defaultColor = cfg.servilletaColorCorazon || 'dorado';
+        else if (slot.type === 'corbata') defaultColor = cfg.servilletaColorCorbata || 'champagne';
+        else if (slot.type === 'default') defaultColor = cfg.servilletaColorOtros || 'blanco';
+        
+        slot.color = cfg[foldKey] || defaultColor;
+      } else {
+        slot.color = 'blanco';
+      }
+    });
+    
+    var foldOptions = [
+      { value: 'ninguno', label: 'Ninguno' },
+      { value: 'corazon', label: 'Corazón' },
+      { value: 'corbata', label: 'Corbata' },
+      { value: 'loto', label: 'Loto' },
+      { value: 'vela', label: 'Vela' },
+      { value: 'abanico', label: 'Abanico' },
+      { value: 'piramide', label: 'Pirámide' }
+    ];
     
     var colorOptions = [
       { value: 'blanco', label: 'Blanco' },
@@ -596,71 +626,87 @@
       { value: 'rosa_mexicano', label: 'Rosa Mexicano' }
     ];
     
-    var labelsMap = {
-      'corazon': 'Corazón',
-      'corbata': 'Corbata',
-      'loto': 'Loto',
-      'vela': 'Vela',
-      'abanico': 'Abanico',
-      'piramide': 'Pirámide',
-      'default': '(General)'
-    };
-    
     var html = '';
-    activeDobleces.forEach(function (fold) {
-      var foldKey = 'servilletaColor_' + fold;
-      var foldLabel = labelsMap[fold] || fold.charAt(0).toUpperCase() + fold.slice(1);
+    slots.forEach(function (slot, idx) {
+      var slotNum = idx + 1;
+      html += '<div style="background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 10px;">';
+      html += '  <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">';
+      html += '    <i class="fa-solid fa-cookie"></i> Doblez de Servilleta ' + slotNum;
+      html += '  </div>';
       
-      var defaultColor = 'blanco';
-      if (fold === 'corazon') {
-        defaultColor = (elem.mesaConfig && elem.mesaConfig.servilletaColorCorazon) || 'dorado';
-      } else if (fold === 'corbata') {
-        defaultColor = (elem.mesaConfig && elem.mesaConfig.servilletaColorCorbata) || 'champagne';
-      } else if (fold === 'default') {
-        defaultColor = (elem.mesaConfig && elem.mesaConfig.servilletaColorOtros) || 'blanco';
-      }
-      
-      var currentColor = (elem.mesaConfig && elem.mesaConfig[foldKey]) || defaultColor;
-      if (elem.mesaConfig && !elem.mesaConfig[foldKey]) {
-        elem.mesaConfig[foldKey] = currentColor;
-      }
-      
-      html += '<div class="form-group" style="margin-bottom: 10px;">';
-      html += '  <label class="form-label" style="font-size:12px; font-weight:600; color:#94a3b8; display:flex; align-items:center; gap:4px; margin-bottom:4px;">';
-      html += '    <i class="fa-solid fa-palette"></i> Color Servilleta ' + foldLabel;
-      html += '  </label>';
-      html += '  <select class="form-input napkin-fold-color-select" data-fold="' + fold + '" style="font-size:12px; padding:6px 10px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px; width:100%; box-sizing:border-box;">';
-      
-      colorOptions.forEach(function (opt) {
-        var selected = opt.value === currentColor ? ' selected' : '';
-        html += '    <option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
+      html += '  <div class="form-group" style="margin-bottom: 6px;">';
+      html += '    <label class="form-label" style="font-size:11px; color:#cbd5e1; margin-bottom:2px;">Tipo de Doblez</label>';
+      html += '    <select class="form-input napkin-slot-type" data-slot="' + idx + '" style="font-size:12px; padding:6px 10px; background:#1e293b; border:1px solid #475569; color:#fff; border-radius:4px; width:100%; box-sizing:border-box;">';
+      foldOptions.forEach(function (opt) {
+        var selected = opt.value === slot.type ? ' selected' : '';
+        html += '      <option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
       });
+      html += '    </select>';
+      html += '  </div>';
       
-      html += '  </select>';
+      var colorHiddenStyle = slot.type === 'ninguno' ? ' style="margin-bottom: 0; display:none;"' : ' style="margin-bottom: 0;"';
+      html += '  <div class="form-group napkin-slot-color-wrapper" data-slot="' + idx + '"' + colorHiddenStyle + '>';
+      html += '    <label class="form-label" style="font-size:11px; color:#cbd5e1; margin-bottom:2px;">Color de Servilleta</label>';
+      html += '    <select class="form-input napkin-slot-color" data-slot="' + idx + '" style="font-size:12px; padding:6px 10px; background:#1e293b; border:1px solid #475569; color:#fff; border-radius:4px; width:100%; box-sizing:border-box;">';
+      colorOptions.forEach(function (opt) {
+        var selected = opt.value === slot.color ? ' selected' : '';
+        html += '      <option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
+      });
+      html += '    </select>';
+      html += '  </div>';
+      
       html += '</div>';
     });
     
     container.innerHTML = html;
     
-    var selects = container.querySelectorAll('.napkin-fold-color-select');
-    selects.forEach(function (sel) {
-      sel.onchange = function () {
-        if (!AppState.selectedId) return;
-        var el = AppState.elements.find(function (e) { return e.id === AppState.selectedId; });
-        if (!el || !el.mesaConfig) return;
-        
+    container.querySelectorAll('.napkin-slot-type').forEach(function (select) {
+      select.onchange = function () {
         saveHistory();
-        var foldType = sel.getAttribute('data-fold');
-        var val = sel.value;
-        el.mesaConfig['servilletaColor_' + foldType] = val;
+        var sIdx = parseInt(select.getAttribute('data-slot'), 10);
+        var selectedType = select.value;
         
-        if (foldType === 'corazon') el.mesaConfig.servilletaColorCorazon = val;
-        else if (foldType === 'corbata') el.mesaConfig.servilletaColorCorbata = val;
-        else if (foldType === 'default') el.mesaConfig.servilletaColorOtros = val;
+        var wrapper = container.querySelector('.napkin-slot-color-wrapper[data-slot="' + sIdx + '"]');
+        if (wrapper) {
+          if (selectedType === 'ninguno') {
+            wrapper.style.display = 'none';
+          } else {
+            wrapper.style.display = '';
+          }
+        }
         
-        _refresh();
+        _saveSlotsToConfig();
       };
     });
+    
+    container.querySelectorAll('.napkin-slot-color').forEach(function (select) {
+      select.onchange = function () {
+        saveHistory();
+        _saveSlotsToConfig();
+      };
+    });
+    
+    function _saveSlotsToConfig() {
+      var newFolds = [];
+      for (var i = 0; i < 3; i++) {
+        var typeSel = container.querySelector('.napkin-slot-type[data-slot="' + i + '"]');
+        var colorSel = container.querySelector('.napkin-slot-color[data-slot="' + i + '"]');
+        if (typeSel && typeSel.value !== 'ninguno') {
+          var t = typeSel.value;
+          var c = colorSel ? colorSel.value : 'blanco';
+          newFolds.push(t);
+          
+          var foldKey = 'servilletaColor_' + t;
+          cfg[foldKey] = c;
+          
+          if (t === 'corazon') cfg.servilletaColorCorazon = c;
+          else if (t === 'corbata') cfg.servilletaColorCorbata = c;
+          else if (t === 'default') cfg.servilletaColorOtros = c;
+        }
+      }
+      cfg.servilletaDoblez = newFolds;
+      _refresh();
+    }
   }
 
   function _populateInspector(elem) {
@@ -765,7 +811,7 @@
       setVal('mesa-capacidad-max', elem.mesaConfig.capacidadMax || '');
       setVal('mesa-camino-color', elem.mesaConfig.caminoColor || 'ninguno');
       setVal('mesa-camino-acomodo', elem.mesaConfig.caminoAcomodo || 'centro');
-      renderNapkinColorSelectors(elem);
+      renderNapkinSlots(elem);
       setVal('mesa-cubiertos', elem.mesaConfig.cubiertos || 'plateado');
       setVal('mesa-plato-base', elem.mesaConfig.platoBase || 'ninguno');
       setVal('mesa-plato-trinche', elem.mesaConfig.platoTrinche || 'redondo_blanco');
@@ -777,19 +823,6 @@
       setVal('mesa-menu', elem.mesaConfig.menu || '');
       setVal('mesa-floral-tipo', elem.mesaConfig.arregloFloralTipo || 'ninguno');
       setVal('mesa-floral-acomodo', elem.mesaConfig.arregloFloralAcomodo || 'ninguno');
-
-      // Populate napkin folds checkboxes
-      var dobVal = elem.mesaConfig.servilletaDoblez;
-      var activeDobleces = [];
-      if (Array.isArray(dobVal)) {
-        activeDobleces = dobVal;
-      } else if (typeof dobVal === 'string' && dobVal) {
-        activeDobleces = [dobVal];
-      }
-      var checkboxes = document.querySelectorAll('.doblez-checkbox');
-      checkboxes.forEach(function (cb) {
-        cb.checked = activeDobleces.indexOf(cb.value) !== -1;
-      });
 
       if (!elem.mesaConfig.invitados) elem.mesaConfig.invitados = [];
       renderGuestListEditor(elem);
@@ -987,24 +1020,7 @@
       renderGuestListEditor(elem);
     });
 
-    // Wire napkin folds checkboxes
-    var dobBoxes = document.querySelectorAll('.doblez-checkbox');
-    dobBoxes.forEach(function (cb) {
-      cb.onchange = function () {
-        if (!AppState.selectedId) return;
-        var elem = AppState.elements.find(function (e) { return e.id === AppState.selectedId; });
-        if (!elem || !elem.mesaConfig) return;
-        
-        saveHistory();
-        var checkedVals = [];
-        document.querySelectorAll('.doblez-checkbox').forEach(function (box) {
-          if (box.checked) checkedVals.push(box.value);
-        });
-        elem.mesaConfig.servilletaDoblez = checkedVals;
-        renderNapkinColorSelectors(elem);
-        _refresh();
-      };
-    });
+
 
     mesaInp('mesa-numero', 'mesaNum');
     mesaInp('mesa-mantel-color', 'mantelColor');
@@ -1796,7 +1812,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v20';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v21';
 
   function loadFromLocalStorage() {
     try {
