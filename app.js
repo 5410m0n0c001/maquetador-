@@ -1879,7 +1879,7 @@
       _saveLayoutToSupabase(name);
     } else if (!isLocalhost) {
       // If not running locally and not connected to Supabase, just say saved in browser
-      showToast('Guardado en la memoria de este navegador.', 'success');
+        showToast('Guardado en la memoria de este navegador.', 'success');
     }
   }
 
@@ -2019,45 +2019,87 @@
       return;
     }
 
-    // Clone the SVG so we can clean up selection borders before printing
-    var clonedSvg = svgEl.cloneNode(true);
-    var activeSel = clonedSvg.querySelector('.active-selection');
-    if (activeSel) activeSel.remove();
-    var resizeHandles = clonedSvg.querySelectorAll('.resize-handle');
-    resizeHandles.forEach(function (h) { h.remove(); });
+    // Save current layout state and positions
+    var originalMode = _currentLayoutMode;
+    var originalElements = JSON.parse(JSON.stringify(AppState.elements));
 
-    // Clean up rulers and center/crop to terrain bounds so the full plan is printed
-    var rulerH = clonedSvg.querySelector('#svg-ruler-h');
-    if (rulerH) rulerH.remove();
-    var rulerV = clonedSvg.querySelector('#svg-ruler-v');
-    if (rulerV) rulerV.remove();
-    var terrainBorder = clonedSvg.querySelector('#svg-terrain-border');
-    if (terrainBorder) terrainBorder.remove();
+    // Helper to generate clean SVG for a given mode
+    function getSvgForMode(mode) {
+      AppState.elements.forEach(function (elem) {
+        if (elem.type === 'table_imperial' && elem.mesaConfig) {
+          var num = parseInt(elem.mesaConfig.mesaNum, 10);
+          if (mode === 'vertical') {
+            elem.rotation = 90;
+            elem.w = 15.0;
+            elem.h = 1.6;
+            if (num === 2) { elem.x = 19.3; elem.y = 28.0; }
+            else if (num === 3) { elem.x = 28.3; elem.y = 28.1; }
+            else if (num === 4) { elem.x = 36.9; elem.y = 28.1; }
+            else if (num === 5) { elem.x = 45.4; elem.y = 28.2; }
+          } else {
+            elem.rotation = 0;
+            elem.w = 15.0;
+            elem.h = 1.6;
+            if (num === 2) { elem.x = 23.8; elem.y = 23.8; }
+            else if (num === 3) { elem.x = 40.9; elem.y = 23.7; }
+            else if (num === 4) { elem.x = 24.0; elem.y = 33.2; }
+            else if (num === 5) { elem.x = 40.9; elem.y = 33.0; }
+          }
+        }
+      });
+      
+      if (window.Editor2D) window.Editor2D.update(AppState.elements);
 
-    var scale = 15; // SCALE is 15px per meter
-    var tw = AppState.terrain.w * scale;
-    var th = AppState.terrain.h * scale;
+      var svgElForMode = document.getElementById('svg-canvas');
+      if (!svgElForMode) return '';
 
-    var svgBg = clonedSvg.querySelector('#svg-background');
-    if (svgBg) {
-      svgBg.setAttribute('width', tw);
-      svgBg.setAttribute('height', th);
+      var clonedSvg = svgElForMode.cloneNode(true);
+      var activeSel = clonedSvg.querySelector('.active-selection');
+      if (activeSel) activeSel.remove();
+      var resizeHandles = clonedSvg.querySelectorAll('.resize-handle');
+      resizeHandles.forEach(function (h) { h.remove(); });
+      var rulerH = clonedSvg.querySelector('#svg-ruler-h');
+      if (rulerH) rulerH.remove();
+      var rulerV = clonedSvg.querySelector('#svg-ruler-v');
+      if (rulerV) rulerV.remove();
+      var terrainBorder = clonedSvg.querySelector('#svg-terrain-border');
+      if (terrainBorder) terrainBorder.remove();
+
+      var scale = 15;
+      var tw = AppState.terrain.w * scale;
+      var th = AppState.terrain.h * scale;
+
+      var svgBg = clonedSvg.querySelector('#svg-background');
+      if (svgBg) {
+        svgBg.setAttribute('width', tw);
+        svgBg.setAttribute('height', th);
+      }
+
+      var zoomGroup = clonedSvg.querySelector('#svg-zoom-group');
+      if (zoomGroup) {
+        zoomGroup.removeAttribute('transform');
+      }
+
+      clonedSvg.setAttribute('viewBox', '0 0 ' + tw + ' ' + th);
+      clonedSvg.setAttribute('width', '100%');
+      clonedSvg.setAttribute('height', '100%');
+      clonedSvg.style.width = '100%';
+      clonedSvg.style.height = '100%';
+      clonedSvg.setAttribute('shape-rendering', 'geometricPrecision');
+      clonedSvg.setAttribute('text-rendering', 'geometricPrecision');
+
+      return new XMLSerializer().serializeToString(clonedSvg);
     }
 
-    var zoomGroup = clonedSvg.querySelector('#svg-zoom-group');
-    if (zoomGroup) {
-      zoomGroup.removeAttribute('transform');
-    }
+    // Generate both layouts
+    var verticalSvgString = getSvgForMode('vertical');
+    var horizontalSvgString = getSvgForMode('horizontal');
 
-    clonedSvg.setAttribute('viewBox', '0 0 ' + tw + ' ' + th);
-    clonedSvg.setAttribute('width', '100%');
-    clonedSvg.setAttribute('height', '100%');
-    clonedSvg.style.width = '100%';
-    clonedSvg.style.height = '100%';
-    clonedSvg.setAttribute('shape-rendering', 'geometricPrecision');
-    clonedSvg.setAttribute('text-rendering', 'geometricPrecision');
-
-    var svgString = new XMLSerializer().serializeToString(clonedSvg);
+    // Restore original state
+    AppState.elements = originalElements;
+    _currentLayoutMode = originalMode;
+    if (window.Editor2D) window.Editor2D.update(AppState.elements);
+    _refresh();
 
     // Get event data
     var totalGuests = 0;
@@ -2189,7 +2231,7 @@
     html += '    </div>\n';
     html += '    <div class="doc-title">\n';
     html += '      <div>FICHA TÉCNICA</div>\n';
-    html += '      <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + ' (' + (_currentLayoutMode === 'vertical' ? 'Acomodo Vertical' : 'Acomodo Horizontal') + ')</div>\n';
+    html += '      <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + '</div>\n';
     html += '    </div>\n';
     html += '  </div>\n';
     html += '</div>\n';
@@ -2205,9 +2247,14 @@
     html += '  <div class="meta-card"><div class="meta-val" style="font-size: 13px; font-weight: 600; padding: 6px 0;">' + formattedDate + '</div><div class="meta-lbl">Fecha Reporte</div></div>\n';
     html += '</div>\n';
 
-    // Section 1: Plano Map
-    html += '<div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento (Croquis)</div>\n';
-    html += '<div class="map-container">\n' + svgString + '\n</div>\n';
+    // Section 1: Plano Map (Acomodo Vertical)
+    html += '<div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 1: Acomodo Vertical (Fila Única)</div>\n';
+    html += '<div class="map-container">\n' + verticalSvgString + '\n</div>\n';
+
+    // Section 1.5: Plano Map (Acomodo Horizontal)
+    html += '<div class="page-break"></div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 2: Acomodo Horizontal (2x2 Pasillo Central)</div>\n';
+    html += '<div class="map-container">\n' + horizontalSvgString + '\n</div>\n';
 
     // Section: Minuto a Minuto & Información Relevante
     html += '<div class="page-break"></div>\n';
@@ -2222,7 +2269,7 @@
     var timelineEvents = [
       { time: '13:00 HRS', title: 'Ceremonia Religiosa', desc: 'Misa de Acción de Gracias. Puntualidad recomendada.' },
       { time: '14:45 HRS', title: 'Cóctel de Bienvenida', desc: 'Recepción y brindis de bienvenida en Jardín “Manzanares”.' },
-      { time: '15:30 HRS', title: 'Entrega de Paletas', desc: 'Entrega de paletas heladas (Paletas La Princesa).' },
+      { time: '15:30 HRS', title: 'Entrega de Paletas Heladas', desc: 'Entrega de paletas (Paletas La Princesa).' },
       { time: '16:00 HRS', title: 'Banquete', desc: 'Degustación de nuestro menú seleccionado.' },
       { time: '00:00 HRS', title: 'Fin del Evento', desc: 'Agradecemos habernos acompañado en esta noche mágica.' }
     ];
@@ -2262,9 +2309,6 @@
     html += '  </div>\n';
     html += '</div>\n';
 
-    // Page break before tables list if needed
-    html += '<div class="page-break"></div>\n';
-
     // Section 2: Tables Specifications
     html += '<div class="section-title"><i class="fa-solid fa-circle-dot" style="margin-right: 6px; color:#f43f5e;"></i> Especificaciones de Mobiliario y Montaje</div>\n';
     html += '<table>\n';
@@ -2282,20 +2326,14 @@
 
     tablesList.forEach(function (t) {
       var config = t.mesaConfig || {};
-      var typeName = typeLabels[t.type] || (window.getCatalogEntry ? window.getCatalogEntry(t.type).name : t.type);
-      
       var mesaLabel = config.mesaNum ? 'Mesa ' + config.mesaNum : 'Sin Número';
       if (t.type === 'table_honor_xv' || t.type === 'table_honor_king' || t.type === 'table_honor_bride') {
-        mesaLabel = '<strong>' + mesaLabel + ' (Honor)</strong>';
-      } else if (t.type === 'table_cake') {
-        mesaLabel = '<strong>Mesa de Pastel</strong>';
+        mesaLabel = 'Honor ' + (config.mesaNum || '');
       }
 
-      var maxCap = config.capacidadMax ? config.capacidadMax : (t.type === 'table_imperial' ? ((t.tablones || 4) * 10) : 10);
-      var capacityText = '<strong>' + (t.chairs || 0) + ' / ' + maxCap + '</strong>';
-      if (t.type === 'table_imperial' && t.tablones) {
-        capacityText += '<br><span style="font-size: 11px; color:#64748b;">(' + t.tablones + ' Tablones)</span>';
-      }
+      var typeName = typeLabels[t.type] || t.type;
+      var capacityText = t.chairs ? t.chairs + ' Sillas' : '-';
+      if (config.capacidadMax) capacityText += ' (Máx ' + config.capacidadMax + ')';
 
       // Montage details
       var montageItems = [];
@@ -2489,6 +2527,42 @@
 
       html += '</div>\n';
     }
+
+    // Section 5: Cruce de Pendientes y Menús (Hoja de Control)
+    html += '<div class="page-break"></div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-clipboard-check" style="margin-right: 6px; color:#f43f5e;"></i> Ficha de Control y Conciliación de Pendientes</div>\n';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
+    
+    // Left column: Menu counts
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-utensils" style="color:#f43f5e; margin-right: 6px;"></i> Conciliación de Menús</h4>\n';
+    html += '    <table style="width: 100%; margin-bottom: 0; font-size: 12px;">\n';
+    html += '      <thead>\n';
+    html += '        <tr><th>Tipo de Menú</th><th style="text-align:center;">Contratado</th><th style="text-align:center;">Asignado</th></tr>\n';
+    html += '      </thead>\n';
+    html += '      <tbody>\n';
+    html += '        <tr><td><strong>Menú Adultos (2 Tiempos)</strong></td><td style="text-align:center; font-weight:700;">85</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
+    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong><br><small style="color:#64748b;">Hamburguesa con papas y espagueti</small></td><td style="text-align:center; font-weight:700;">65</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
+    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#f43f5e; font-size:14px;">150</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalGuests + '</td></tr>\n';
+    html += '      </tbody>\n';
+    html += '    </table>\n';
+    html += '    <p style="font-size: 11px; color: #475569; margin-top: 12px; line-height: 1.4;">\n';
+    html += '      <strong>Nota de Control:</strong> Contamos con una lista de <strong>' + totalGuests + '</strong> invitados asignados a las mesas imperiales en el plano, dejando un margen de <strong>' + (150 - totalGuests) + '</strong> platillos del paquete contratado de 150 para invitados de última hora o ajustes del Hostess.\n';
+    html += '    </p>\n';
+    html += '  </div>\n';
+    
+    // Right column: Pending checklist
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:#f43f5e; margin-right: 6px;"></i> Estatus de Tareas y Pendientes</h4>\n';
+    html += '    <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Paletas La Princesa</strong>: Hora de entrega confirmada a las <strong>15:30 HRS (3:30 PM)</strong>.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Área Infantil en Mantenimiento</strong>: Se validará la contratación e instalación de <strong>Inflables</strong> para compensar este espacio para los niños.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-clock-rotate-left" style="color:#64748b; margin-top:3px;"></i> <div><strong>Minuto a Minuto y Coordinación</strong>: Pendiente completar detalles del itinerario de música, fotos y sorpresas.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Alimentación Eléctrica</strong>: Checar contactos e instalación para la Mesa de Pastel (chisperos y vela de brillo).</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Confirmaciones y Personal</strong>: Revisar letras decorativas ZOE, confirmación de Hostess, meseros y confirmar si el Valet Parking está incluido.</div></li>\n';
+    html += '    </ul>\n';
+    html += '  </div>\n';
+    html += '</div>\n';
 
     // Document Footer
     html += '<div class="footer">\n';
