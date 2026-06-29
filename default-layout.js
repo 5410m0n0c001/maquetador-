@@ -21,23 +21,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "bg",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "bg"
     },
     {
       "id": "el_1782328234176_2",
@@ -54,22 +38,6 @@ var DEFAULT_LAYOUT = {
       "editable": true,
       "removable": true,
       "layer": "estructuras",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      },
       "salonType": "sin_muros"
     },
     {
@@ -86,23 +54,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "bg",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "bg"
     },
     {
       "id": "el_1782332070498_4",
@@ -118,23 +70,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "estructuras",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "estructuras"
     },
     {
       "id": "el_1782332356872_5",
@@ -150,23 +86,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "estructuras",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "estructuras"
     },
     {
       "id": "el_1782332557254_7",
@@ -182,23 +102,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "accesos",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "accesos"
     },
     {
       "id": "el_1782332565358_8",
@@ -214,23 +118,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "accesos",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "accesos"
     },
     {
       "id": "el_1782332659588_9",
@@ -246,23 +134,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "estructuras",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "estructuras"
     },
     {
       "id": "el_1782332733540_10",
@@ -278,23 +150,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "estructuras",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "estructuras"
     },
     {
       "id": "el_1782332781078_11",
@@ -310,23 +166,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "estructuras",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "estructuras"
     },
     {
       "id": "el_1782332819192_12",
@@ -342,23 +182,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "estructuras",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "estructuras"
     },
     {
       "id": "el_1782332851752_13",
@@ -374,23 +198,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "accesos",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "accesos"
     },
     {
       "id": "el_1782332973416_14",
@@ -430,7 +238,10 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "servilletaColorCorazon": "dorado",
         "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
+        "servilletaColorOtros": "blanco",
+        "servilletaColor_corazon": "dorado",
+        "servilletaColor_corbata": "champagne",
+        "servilletaColor_default": "blanco"
       }
     },
     {
@@ -447,23 +258,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "entretenimiento",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "entretenimiento"
     },
     {
       "id": "el_1782333031916_16",
@@ -479,23 +274,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "decoracion",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "decoracion"
     },
     {
       "id": "el_1782333144880_17",
@@ -511,23 +290,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "entretenimiento",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "entretenimiento"
     },
     {
       "id": "el_1782333947644_19",
@@ -543,23 +306,7 @@ var DEFAULT_LAYOUT = {
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "entretenimiento",
-      "mesaConfig": {
-        "mesaNum": 0,
-        "mantelColor": "blanco",
-        "caminoColor": "ninguno",
-        "servilletaDoblez": "loto",
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
-      }
+      "layer": "entretenimiento"
     },
     {
       "id": "el_1782334027164_20",
@@ -674,7 +421,10 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "servilletaColorCorazon": "dorado",
         "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
+        "servilletaColorOtros": "blanco",
+        "servilletaColor_corazon": "dorado",
+        "servilletaColor_corbata": "champagne",
+        "servilletaColor_default": "blanco"
       }
     },
     {
@@ -766,7 +516,10 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "servilletaColorCorazon": "dorado",
         "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
+        "servilletaColorOtros": "blanco",
+        "servilletaColor_corazon": "dorado",
+        "servilletaColor_corbata": "champagne",
+        "servilletaColor_default": "blanco"
       }
     },
     {
@@ -850,7 +603,10 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "servilletaColorCorazon": "dorado",
         "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
+        "servilletaColorOtros": "blanco",
+        "servilletaColor_corazon": "dorado",
+        "servilletaColor_corbata": "champagne",
+        "servilletaColor_default": "blanco"
       }
     },
     {
@@ -942,7 +698,10 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "servilletaColorCorazon": "dorado",
         "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
+        "servilletaColorOtros": "blanco",
+        "servilletaColor_corazon": "dorado",
+        "servilletaColor_corbata": "champagne",
+        "servilletaColor_default": "blanco"
       }
     },
     {
