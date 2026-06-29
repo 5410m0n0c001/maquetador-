@@ -1301,7 +1301,6 @@
   var _currentLayoutMode = 'vertical';
 
   function setLayoutMode(mode) {
-    if (mode === _currentLayoutMode) return;
     _currentLayoutMode = mode;
 
     var btnVer = document.getElementById('btn-layout-ver');
@@ -1320,7 +1319,7 @@
 
     AppState.elements.forEach(function (elem) {
       if (elem.type === 'table_imperial' && elem.mesaConfig) {
-        var num = elem.mesaConfig.mesaNum;
+        var num = parseInt(elem.mesaConfig.mesaNum, 10);
         if (mode === 'vertical') {
           elem.rotation = 90;
           elem.w = 16.8;
