@@ -1543,7 +1543,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v7';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v8';
 
   function loadFromLocalStorage() {
     try {
@@ -1959,6 +1959,48 @@
 
       html += '  </tbody>\n';
       html += '</table>\n';
+    }
+
+    // Section 4: Guest List by Table
+    var hasAnyGuests = tablesList.some(function (t) {
+      return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length > 0;
+    });
+
+    if (hasAnyGuests) {
+      html += '<div class="page-break"></div>\n';
+      html += '<div class="section-title"><i class="fa-solid fa-users" style="margin-right: 6px; color:#f43f5e;"></i> Distribución de Invitados por Mesa</div>\n';
+      html += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; font-size: 12px; margin-bottom: 30px;">\n';
+
+      tablesList.forEach(function (t) {
+        var config = t.mesaConfig || {};
+        if (!config.invitados || config.invitados.length === 0) return;
+
+        var mesaLabel = config.mesaNum ? 'Mesa ' + config.mesaNum : 'Sin Número';
+        if (t.type === 'table_honor_xv' || t.type === 'table_honor_king' || t.type === 'table_honor_bride') {
+          mesaLabel += ' (Honor)';
+        }
+
+        var totalMesaGuests = config.invitados.reduce(function (sum, g) { return sum + (g.pases || 0); }, 0);
+
+        html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; page-break-inside: avoid; display: flex; flex-direction: column;">\n';
+        html += '    <div style="font-weight: 700; font-size: 14px; color: #0f172a; border-bottom: 2px solid #f43f5e; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">\n';
+        html += '      <span>' + mesaLabel + '</span>\n';
+        html += '      <span style="font-size: 11px; background: #ffe4e6; color: #f43f5e; padding: 2px 8px; border-radius: 20px;">' + totalMesaGuests + ' asignados</span>\n';
+        html += '    </div>\n';
+        html += '    <div style="column-count: 2; column-gap: 15px;">\n';
+
+        config.invitados.forEach(function (g) {
+          html += '      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding: 3px 0; break-inside: avoid; font-size: 11px;">\n';
+          html += '        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">' + g.nombre + '</span>\n';
+          html += '        <span style="font-weight: 600; color: #f43f5e; margin-left: 4px;">' + g.pases + 'p</span>\n';
+          html += '      </div>\n';
+        });
+
+        html += '    </div>\n';
+        html += '  </div>\n';
+      });
+
+      html += '</div>\n';
     }
 
     // Document Footer
