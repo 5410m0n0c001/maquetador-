@@ -745,7 +745,7 @@ var DEFAULT_LAYOUT = {
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 36,
+      "chairs": 31,
       "tablones": 4,
       "editable": true,
       "removable": true,
@@ -785,10 +785,6 @@ var DEFAULT_LAYOUT = {
             "pases": 4
           },
           {
-            "nombre": "Ángel Vargas",
-            "pases": 5
-          },
-          {
             "nombre": "Mercedes Salgado",
             "pases": 4
           },
@@ -822,7 +818,7 @@ var DEFAULT_LAYOUT = {
       "h": 6,
       "rotation": 90,
       "color": "#5c3d2e",
-      "chairs": 32,
+      "chairs": 37,
       "tablones": 4,
       "editable": true,
       "removable": true,
@@ -884,6 +880,10 @@ var DEFAULT_LAYOUT = {
           {
             "nombre": "Luis Sanchez",
             "pases": 2
+          },
+          {
+            "nombre": "Ángel Vargas",
+            "pases": 5
           }
         ]
       }
