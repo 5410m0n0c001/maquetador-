@@ -474,6 +474,16 @@
     setVal('inspector-chairs', elem.chairs || 0);
     setVal('inspector-elevation', elem.elevation || 0.0);
 
+    var chairsInp = document.getElementById('inspector-chairs');
+    if (chairsInp) {
+      var isTable = elem.type.startsWith('table_') || elem.type === 'lounge_set';
+      if (isTable && elem.type !== 'table_imperial') {
+        chairsInp.setAttribute('max', '10');
+      } else {
+        chairsInp.removeAttribute('max');
+      }
+    }
+
     // Salon specific settings
     var salonSettings = document.getElementById('inspector-salon-settings');
     if (salonSettings) {
@@ -669,7 +679,19 @@
     });
     onInpChange('inspector-chairs', function (id, el) {
       var v = parseInt(el.value, 10);
-      if (!isNaN(v) && v >= 0) { saveHistory(); updateElement(id, { chairs: v }); updateCounters(); }
+      if (!isNaN(v) && v >= 0) {
+        var elem = AppState.elements.find(function (e) { return e.id === id; });
+        if (elem) {
+          var isTable = elem.type.startsWith('table_') || elem.type === 'lounge_set';
+          if (isTable && elem.type !== 'table_imperial' && v > 10) {
+            v = 10;
+            el.value = 10;
+          }
+          saveHistory();
+          updateElement(id, { chairs: v });
+          updateCounters();
+        }
+      }
     });
     onInpChange('inspector-elevation', function (id, el) {
       var v = parseFloat(el.value);
@@ -1521,7 +1543,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v3';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v4';
 
   function loadFromLocalStorage() {
     try {

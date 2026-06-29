@@ -432,8 +432,8 @@ window.ELEMENTS_CATALOG = [
     defaultH: 1.6,
     shape: 'circle',
     color: '#e2e8f0',
-    defaultChairs: 12,
-    description: 'Mesa de mármol redonda para 12 personas.',
+    defaultChairs: 10,
+    description: 'Mesa de mármol redonda para 10 personas.',
     layer: 'mobiliario',
     planoOnly: false
   },
@@ -446,8 +446,8 @@ window.ELEMENTS_CATALOG = [
     defaultH: 1.6,
     shape: 'square',
     color: '#cbd5e1',
-    defaultChairs: 12,
-    description: 'Mesa de mármol cuadrada para 12 personas.',
+    defaultChairs: 10,
+    description: 'Mesa de mármol cuadrada para 10 personas.',
     layer: 'mobiliario',
     planoOnly: false
   },
