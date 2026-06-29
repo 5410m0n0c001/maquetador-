@@ -968,6 +968,18 @@
         var val = el.type === 'checkbox' ? el.checked : el.value;
         elem.mesaConfig[field] = val;
         
+        if (field === 'ensambleTipo') {
+          if (val === 'angosto') {
+            elem.h = 1.6;
+            updateInspectorField('inspector-h', 1.6);
+          } else if (val === 'ancho') {
+            elem.w = 2.4;
+            elem.h = (elem.tablones || 4) * 0.8;
+            updateInspectorField('inspector-w', 2.4);
+            updateInspectorField('inspector-h', elem.h);
+          }
+        }
+        
         if (field === 'mantelColor') {
           var colorMap = {
             blanco: '#ffffff',
@@ -1812,7 +1824,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v21';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v22';
 
   function loadFromLocalStorage() {
     try {
