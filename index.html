@@ -637,6 +637,13 @@
             <input type="number" id="mesa-numero" class="form-input" min="1" placeholder="1" />
           </div>
 
+          <div class="form-group">
+            <label class="form-label" for="mesa-capacidad-max">
+              <i class="fa-solid fa-users-gear"></i> Capacidad Máxima
+            </label>
+            <input type="number" id="mesa-capacidad-max" class="form-input" min="1" max="100" placeholder="Ej: 40" />
+          </div>
+
           <div class="divider-xs"></div>
           <p class="config-section-label">
             <i class="fa-solid fa-shirt"></i> Manteleria
@@ -697,7 +704,17 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="mesa-servilleta-color">Color Servilletas</label>
+            <label class="form-label" for="mesa-camino-acomodo">Acomodo del Camino</label>
+            <select id="mesa-camino-acomodo" class="form-input">
+              <option value="centro">Estándar (Al Centro)</option>
+              <option value="diagonal">Diagonal</option>
+              <option value="cruzado">Cruzado / En X</option>
+              <option value="ninguno">Ninguno</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-servilleta-color">Color Servilletas 1</label>
             <select id="mesa-servilleta-color" class="form-input">
               <option value="blanco">Blanco</option>
               <option value="negro">Negro</option>
@@ -715,14 +732,58 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="mesa-servilleta-doblez">Doblez Servilletas</label>
-            <select id="mesa-servilleta-doblez" class="form-input">
-              <option value="loto">Flor de Loto</option>
-              <option value="carta">Sobre / Carta</option>
-              <option value="abanico">Abanico Clásico</option>
-              <option value="piramide">Pirámide</option>
-              <option value="bolsillo">Bolsillo para Cubiertos</option>
-              <option value="capullo">Capullo de Rosa</option>
+            <label class="form-label" for="mesa-servilleta-color2">Color Servilletas 2 (Intercalada/Opcional)</label>
+            <select id="mesa-servilleta-color2" class="form-input">
+              <option value="ninguno">Ninguno (Un solo color)</option>
+              <option value="blanco">Blanco</option>
+              <option value="negro">Negro</option>
+              <option value="caqui">Caqui</option>
+              <option value="azul_marino">Azul Marino</option>
+              <option value="arena">Arena</option>
+              <option value="chocolate">Chocolate</option>
+              <option value="dorado">Dorado</option>
+              <option value="palo_de_rosa">Palo de Rosa</option>
+              <option value="rojo">Rojo</option>
+              <option value="verde_olivo">Verde Olivo</option>
+              <option value="azul_rey">Azul Rey</option>
+              <option value="rosa_mexicano">Rosa Mexicano</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Dobleces de Servilleta (Selecciona uno o más)</label>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#fff;"><input type="checkbox" class="doblez-checkbox" value="loto"> Loto</label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#fff;"><input type="checkbox" class="doblez-checkbox" value="corbata"> Corbata</label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#fff;"><input type="checkbox" class="doblez-checkbox" value="corazon"> Corazón</label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#fff;"><input type="checkbox" class="doblez-checkbox" value="vela"> Vela</label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#fff;"><input type="checkbox" class="doblez-checkbox" value="abanico"> Abanico</label>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#fff;"><input type="checkbox" class="doblez-checkbox" value="piramide"> Pirámide</label>
+            </div>
+          </div>
+
+          <div class="divider-xs"></div>
+          <p class="config-section-label">
+            <i class="fa-solid fa-leaf"></i> Arreglo Floral
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-floral-tipo">Tipo de Arreglo</label>
+            <select id="mesa-floral-tipo" class="form-input">
+              <option value="ninguno">Sin Arreglo</option>
+              <option value="bajo">Bajo (Follaje/Bajo en mesa)</option>
+              <option value="alto">Alto (Base alta/Estructura)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mesa-floral-acomodo">Acomodo del Arreglo</label>
+            <select id="mesa-floral-acomodo" class="form-input">
+              <option value="ninguno">Ninguno</option>
+              <option value="horizontal">Horizontal (A lo largo)</option>
+              <option value="vertical">Vertical</option>
+              <option value="cruzado">Cruzado / En X</option>
+              <option value="diagonal">Diagonal</option>
             </select>
           </div>
 
@@ -888,11 +949,11 @@
 
 
 <!-- SCRIPTS (order matters) -->
-<script src="elements-db.js?v=20260629_15"></script>
-<script src="default-layout.js?v=20260629_15"></script>
-<script src="editor2d.js?v=20260629_15"></script>
-<script src="visualizer3d.js?v=20260629_15"></script>
-<script src="app.js?v=20260629_15"></script>
+<script src="elements-db.js?v=20260629_16"></script>
+<script src="default-layout.js?v=20260629_16"></script>
+<script src="editor2d.js?v=20260629_16"></script>
+<script src="visualizer3d.js?v=20260629_16"></script>
+<script src="app.js?v=20260629_16"></script>
 
 </body>
 </html>

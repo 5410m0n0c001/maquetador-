@@ -207,9 +207,12 @@
       layer: cat.layer || cat.category,
       mesaConfig: {
         mesaNum: isMesa ? _tableCounter : 0,
+        capacidadMax: null,
         mantelColor: (type.indexOf('campirana') > -1 || type.indexOf('marble') > -1) ? 'sin_mantel' : 'blanco',
         caminoColor: 'ninguno',
+        caminoAcomodo: 'centro',
         servilletaColor: 'blanco',
+        servilletaColor2: 'ninguno',
         servilletaDoblez: 'loto',
         cubiertos: 'plateado',
         platoBase: 'ninguno',
@@ -219,7 +222,9 @@
         cristal2: 'ninguno',
         copasColor2: 'transparente',
         tipoSilla: 'tiffany',
-        menu: ''
+        menu: '',
+        arregloFloralTipo: 'ninguno',
+        arregloFloralAcomodo: 'ninguno'
       }
     };
 
@@ -296,7 +301,9 @@
       mesaConfig: {
         mantelColor: 'blanco',
         caminoColor: 'ninguno',
+        caminoAcomodo: 'centro',
         servilletaColor: 'blanco',
+        servilletaColor2: 'ninguno',
         servilletaDoblez: 'loto',
         cubiertos: 'plateado',
         platoBase: 'ninguno',
@@ -305,7 +312,10 @@
         copasColor: 'transparente',
         tipoSilla: 'tiffany',
         menu: '',
-        mesaNum: _tableCounter
+        mesaNum: _tableCounter,
+        capacidadMax: null,
+        arregloFloralTipo: 'ninguno',
+        arregloFloralAcomodo: 'ninguno'
       }
     };
     saveHistory();
@@ -411,8 +421,10 @@
       if (isTable) {
         if (elem.chairs) totalGuests += elem.chairs;
         
-        var cap = elem.chairs || 0;
-        if (t === 'table_imperial') {
+        var cap = 10;
+        if (elem.mesaConfig && elem.mesaConfig.capacidadMax !== undefined && elem.mesaConfig.capacidadMax !== null && elem.mesaConfig.capacidadMax !== '') {
+          cap = parseInt(elem.mesaConfig.capacidadMax, 10);
+        } else if (t === 'table_imperial') {
           var tablones = elem.tablones || Math.max(2, Math.round(elem.w / 2.4));
           cap = tablones * 10;
         }
@@ -455,7 +467,7 @@
     var guestsListEl = document.getElementById('mesa-invitados-list');
     if (!guestsListEl) return;
     
-    var maxCapacity = elem.type === 'table_imperial' ? ((elem.tablones || 4) * 10) : 10;
+    var maxCapacity = (elem.mesaConfig && elem.mesaConfig.capacidadMax) ? elem.mesaConfig.capacidadMax : (elem.type === 'table_imperial' ? ((elem.tablones || 4) * 10) : 10);
     var invitados = elem.mesaConfig.invitados || [];
     
     var html = '';
@@ -572,7 +584,8 @@
     if (chairsInp) {
       var isTable = elem.type.startsWith('table_') || elem.type === 'lounge_set';
       if (isTable && elem.type !== 'table_imperial') {
-        chairsInp.setAttribute('max', '10');
+        var maxCap = (elem.mesaConfig && elem.mesaConfig.capacidadMax) ? elem.mesaConfig.capacidadMax : 10;
+        chairsInp.setAttribute('max', maxCap.toString());
       } else {
         chairsInp.removeAttribute('max');
       }
@@ -637,9 +650,11 @@
         }
         mantelSelect.value = val;
       }
+      setVal('mesa-capacidad-max', elem.mesaConfig.capacidadMax || '');
       setVal('mesa-camino-color', elem.mesaConfig.caminoColor || 'ninguno');
+      setVal('mesa-camino-acomodo', elem.mesaConfig.caminoAcomodo || 'centro');
       setVal('mesa-servilleta-color', elem.mesaConfig.servilletaColor || 'blanco');
-      setVal('mesa-servilleta-doblez', elem.mesaConfig.servilletaDoblez || 'loto');
+      setVal('mesa-servilleta-color2', elem.mesaConfig.servilletaColor2 || 'ninguno');
       setVal('mesa-cubiertos', elem.mesaConfig.cubiertos || 'plateado');
       setVal('mesa-plato-base', elem.mesaConfig.platoBase || 'ninguno');
       setVal('mesa-plato-trinche', elem.mesaConfig.platoTrinche || 'redondo_blanco');
@@ -649,6 +664,21 @@
       setVal('mesa-copas-color2', elem.mesaConfig.copasColor2 || 'transparente');
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
+      setVal('mesa-floral-tipo', elem.mesaConfig.arregloFloralTipo || 'ninguno');
+      setVal('mesa-floral-acomodo', elem.mesaConfig.arregloFloralAcomodo || 'ninguno');
+
+      // Populate napkin folds checkboxes
+      var dobVal = elem.mesaConfig.servilletaDoblez;
+      var activeDobleces = [];
+      if (Array.isArray(dobVal)) {
+        activeDobleces = dobVal;
+      } else if (typeof dobVal === 'string' && dobVal) {
+        activeDobleces = [dobVal];
+      }
+      var checkboxes = document.querySelectorAll('.doblez-checkbox');
+      checkboxes.forEach(function (cb) {
+        cb.checked = activeDobleces.indexOf(cb.value) !== -1;
+      });
 
       if (!elem.mesaConfig.invitados) elem.mesaConfig.invitados = [];
       renderGuestListEditor(elem);
@@ -836,11 +866,50 @@
         _refresh();
       });
     }
+    onInpChange('mesa-capacidad-max', function (id, el) {
+      var elem = AppState.elements.find(function (e) { return e.id === id; });
+      if (!elem || !elem.mesaConfig) return;
+      saveHistory();
+      var v = parseInt(el.value, 10);
+      if (isNaN(v) || v < 1) {
+        elem.mesaConfig.capacidadMax = null;
+      } else {
+        elem.mesaConfig.capacidadMax = v;
+        if (elem.chairs > v) {
+          showToast('La cantidad de sillas se ajustó al nuevo límite de capacidad.', 'warning');
+          elem.chairs = v;
+          updateInspectorField('inspector-chairs', v);
+        }
+      }
+      updateCounters();
+      _refresh();
+      renderGuestListEditor(elem);
+    });
+
+    // Wire napkin folds checkboxes
+    var dobBoxes = document.querySelectorAll('.doblez-checkbox');
+    dobBoxes.forEach(function (cb) {
+      cb.onchange = function () {
+        if (!AppState.selectedId) return;
+        var elem = AppState.elements.find(function (e) { return e.id === AppState.selectedId; });
+        if (!elem || !elem.mesaConfig) return;
+        
+        saveHistory();
+        var checkedVals = [];
+        document.querySelectorAll('.doblez-checkbox').forEach(function (box) {
+          if (box.checked) checkedVals.push(box.value);
+        });
+        elem.mesaConfig.servilletaDoblez = checkedVals;
+        _refresh();
+      };
+    });
+
     mesaInp('mesa-numero', 'mesaNum');
     mesaInp('mesa-mantel-color', 'mantelColor');
     mesaInp('mesa-camino-color', 'caminoColor');
+    mesaInp('mesa-camino-acomodo', 'caminoAcomodo');
     mesaInp('mesa-servilleta-color', 'servilletaColor');
-    mesaInp('mesa-servilleta-doblez', 'servilletaDoblez');
+    mesaInp('mesa-servilleta-color2', 'servilletaColor2');
     mesaInp('mesa-cubiertos', 'cubiertos');
     mesaInp('mesa-plato-base', 'platoBase');
     mesaInp('mesa-plato-trinche', 'platoTrinche');
@@ -850,6 +919,8 @@
     mesaInp('mesa-copas-color2', 'copasColor2');
     mesaInp('mesa-silla-tipo', 'tipoSilla');
     mesaInp('mesa-menu', 'menu');
+    mesaInp('mesa-floral-tipo', 'arregloFloralTipo');
+    mesaInp('mesa-floral-acomodo', 'arregloFloralAcomodo');
 
     // Action buttons
     var btnRotate = document.getElementById('btn-rotate-90');
@@ -1624,7 +1695,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v14';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v15';
 
   function loadFromLocalStorage() {
     try {
@@ -1945,7 +2016,8 @@
         mesaLabel = '<strong>Mesa de Pastel</strong>';
       }
 
-      var capacityText = t.chairs ? t.chairs + ' Sillas' : '0 Sillas';
+      var maxCap = config.capacidadMax ? config.capacidadMax : (t.type === 'table_imperial' ? ((t.tablones || 4) * 10) : 10);
+      var capacityText = '<strong>' + (t.chairs || 0) + ' / ' + maxCap + '</strong>';
       if (t.type === 'table_imperial' && t.tablones) {
         capacityText += '<br><span style="font-size: 11px; color:#64748b;">(' + t.tablones + ' Tablones)</span>';
       }
@@ -1957,10 +2029,34 @@
         montageItems.push('<strong>Mantel:</strong> ' + mantelText);
       }
       if (config.caminoColor && config.caminoColor !== 'ninguno') {
-        montageItems.push('<strong>Camino:</strong> ' + config.caminoColor.charAt(0).toUpperCase() + config.caminoColor.slice(1));
+        var caminoText = config.caminoColor.charAt(0).toUpperCase() + config.caminoColor.slice(1);
+        if (config.caminoAcomodo && config.caminoAcomodo !== 'centro') {
+          caminoText += ' (' + (config.caminoAcomodo === 'diagonal' ? 'Diagonal' : 'Cruzado') + ')';
+        }
+        montageItems.push('<strong>Camino:</strong> ' + caminoText);
       }
-      if (config.servilletaColor && config.servilletaDoblez) {
-        montageItems.push('<strong>Servilleta:</strong> ' + config.servilletaColor.charAt(0).toUpperCase() + config.servilletaColor.slice(1) + ' (' + config.servilletaDoblez + ')');
+      if (config.servilletaColor) {
+        var sColor = config.servilletaColor.charAt(0).toUpperCase() + config.servilletaColor.slice(1);
+        if (config.servilletaColor2 && config.servilletaColor2 !== 'ninguno') {
+          sColor += ' e ' + config.servilletaColor2.charAt(0).toUpperCase() + config.servilletaColor2.slice(1);
+        }
+        
+        var activeDobleces = [];
+        if (Array.isArray(config.servilletaDoblez)) {
+          activeDobleces = config.servilletaDoblez;
+        } else if (typeof config.servilletaDoblez === 'string' && config.servilletaDoblez) {
+          activeDobleces = [config.servilletaDoblez];
+        }
+        
+        var foldText = activeDobleces.map(function (f) {
+          return f.charAt(0).toUpperCase() + f.slice(1);
+        }).join(', ');
+        
+        if (foldText) {
+          montageItems.push('<strong>Servilleta:</strong> ' + sColor + ' (' + foldText + ')');
+        } else {
+          montageItems.push('<strong>Servilleta:</strong> ' + sColor);
+        }
       }
       if (config.platoBase && config.platoBase !== 'ninguno') {
         var pbText = plateBaseLabels[config.platoBase] || config.platoBase.replace('_', ' ');
@@ -1971,6 +2067,13 @@
       }
       if (config.cubiertos) {
         montageItems.push('<strong>Cubiertos:</strong> ' + config.cubiertos);
+      }
+      if (config.arregloFloralTipo && config.arregloFloralTipo !== 'ninguno') {
+        var floralText = config.arregloFloralTipo === 'bajo' ? 'Bajo' : 'Alto';
+        if (config.arregloFloralAcomodo && config.arregloFloralAcomodo !== 'ninguno') {
+          floralText += ' (' + config.arregloFloralAcomodo.charAt(0).toUpperCase() + config.arregloFloralAcomodo.slice(1) + ')';
+        }
+        montageItems.push('<strong>Floral:</strong> ' + floralText);
       }
       var montageText = montageItems.join('<br>');
 
@@ -2042,6 +2145,13 @@
       html += '  </tbody>\n';
       html += '</table>\n';
     }
+
+    // Montage reference image section
+    html += '<div class="page-break"></div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-image" style="margin-right: 6px; color:#f43f5e;"></i> Referencia Visual de Montaje</div>\n';
+    html += '<div style="display: flex; justify-content: center; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 30px;">\n';
+    html += '  <img src="montaje xvzoe.jpeg" style="max-width: 100%; max-height: 600px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);" alt="Montaje XV Zoe" />\n';
+    html += '</div>\n';
 
     // Section 4: Guest List by Table
     var hasAnyGuests = tablesList.some(function (t) {

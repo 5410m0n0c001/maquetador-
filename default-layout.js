@@ -388,14 +388,23 @@ var DEFAULT_LAYOUT = {
         "mantelColor": "blanco",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
-        "servilletaDoblez": "loto",
+        "servilletaDoblez": [
+          "corbata",
+          "corazon"
+        ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
         "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
+        "cristal": "cubero",
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
-        "menu": ""
+        "menu": "",
+        "capacidadMax": 10,
+        "caminoAcomodo": "diagonal",
+        "servilletaColor2": "beige",
+        "cristal2": "ninguno",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal"
       }
     },
     {
@@ -568,11 +577,14 @@ var DEFAULT_LAYOUT = {
         "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
-        "servilletaDoblez": "loto",
+        "servilletaDoblez": [
+          "corbata",
+          "corazon"
+        ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
         "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
+        "cristal": "cubero",
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
@@ -650,7 +662,13 @@ var DEFAULT_LAYOUT = {
             "nombre": "Alvania Ronces",
             "pases": 4
           }
-        ]
+        ],
+        "capacidadMax": 40,
+        "caminoAcomodo": "diagonal",
+        "servilletaColor2": "beige",
+        "cristal2": "ninguno",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal"
       }
     },
     {
@@ -673,11 +691,14 @@ var DEFAULT_LAYOUT = {
         "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
-        "servilletaDoblez": "loto",
+        "servilletaDoblez": [
+          "corbata",
+          "corazon"
+        ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
         "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
+        "cristal": "cubero",
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
@@ -731,7 +752,13 @@ var DEFAULT_LAYOUT = {
             "nombre": "Jesus Guillen",
             "pases": 2
           }
-        ]
+        ],
+        "capacidadMax": 40,
+        "caminoAcomodo": "diagonal",
+        "servilletaColor2": "beige",
+        "cristal2": "ninguno",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal"
       }
     },
     {
@@ -754,11 +781,14 @@ var DEFAULT_LAYOUT = {
         "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
-        "servilletaDoblez": "loto",
+        "servilletaDoblez": [
+          "corbata",
+          "corazon"
+        ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
         "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
+        "cristal": "cubero",
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
@@ -804,7 +834,13 @@ var DEFAULT_LAYOUT = {
             "nombre": "Mtro. Vals",
             "pases": 1
           }
-        ]
+        ],
+        "capacidadMax": 40,
+        "caminoAcomodo": "diagonal",
+        "servilletaColor2": "beige",
+        "cristal2": "ninguno",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal"
       }
     },
     {
@@ -827,11 +863,14 @@ var DEFAULT_LAYOUT = {
         "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
-        "servilletaDoblez": "loto",
+        "servilletaDoblez": [
+          "corbata",
+          "corazon"
+        ],
         "cubiertos": "plateado",
         "platoBase": "ninguno",
         "platoTrinche": "redondo_blanco",
-        "cristal": "standard",
+        "cristal": "cubero",
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
@@ -885,7 +924,13 @@ var DEFAULT_LAYOUT = {
             "nombre": "Ángel Vargas",
             "pases": 5
           }
-        ]
+        ],
+        "capacidadMax": 40,
+        "caminoAcomodo": "diagonal",
+        "servilletaColor2": "beige",
+        "cristal2": "ninguno",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal"
       }
     },
     {
