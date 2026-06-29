@@ -564,7 +564,7 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "blanco",
+        "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
         "servilletaDoblez": "loto",
@@ -677,7 +677,7 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "blanco",
+        "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
         "servilletaDoblez": "loto",
@@ -754,7 +754,7 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "blanco",
+        "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
         "servilletaDoblez": "loto",
@@ -823,7 +823,7 @@ var DEFAULT_LAYOUT = {
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mantelColor": "blanco",
+        "mantelColor": "sin_mantel",
         "caminoColor": "ninguno",
         "servilletaColor": "blanco",
         "servilletaDoblez": "loto",

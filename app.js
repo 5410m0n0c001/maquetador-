@@ -490,7 +490,28 @@
 
     if (hasMesa && elem.mesaConfig) {
       setVal('mesa-numero', elem.mesaConfig.mesaNum || 0);
-      setVal('mesa-mantel-color', elem.mesaConfig.mantelColor || 'blanco');
+      
+      var mantelSelect = document.getElementById('mesa-mantel-color');
+      if (mantelSelect) {
+        var val = elem.mesaConfig.mantelColor || 'blanco';
+        var toRemove = [];
+        for (var i = 0; i < mantelSelect.options.length; i++) {
+          var opt = mantelSelect.options[i];
+          if (opt.value.startsWith('#') || opt.text.indexOf('Personalizado') === 0) {
+            toRemove.push(opt);
+          }
+        }
+        toRemove.forEach(function (opt) { opt.remove(); });
+
+        var optionExists = Array.from(mantelSelect.options).some(function (opt) { return opt.value === val; });
+        if (!optionExists && val.startsWith('#')) {
+          var opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = 'Personalizado (' + val + ')';
+          mantelSelect.add(opt);
+        }
+        mantelSelect.value = val;
+      }
       setVal('mesa-camino-color', elem.mesaConfig.caminoColor || 'ninguno');
       setVal('mesa-servilleta-color', elem.mesaConfig.servilletaColor || 'blanco');
       setVal('mesa-servilleta-doblez', elem.mesaConfig.servilletaDoblez || 'loto');
@@ -605,7 +626,23 @@
       if (!isNaN(v)) updateElement(id, { rotation: v });
     });
     onInpChange('inspector-color', function (id, el) {
-      updateElement(id, { color: el.value });
+      var elem = AppState.elements.find(function (e) { return e.id === id; });
+      var updates = { color: el.value };
+      if (elem && elem.mesaConfig) {
+        elem.mesaConfig.mantelColor = el.value;
+        var selectEl = document.getElementById('mesa-mantel-color');
+        if (selectEl) {
+          var optionExists = Array.from(selectEl.options).some(function (opt) { return opt.value === el.value; });
+          if (!optionExists) {
+            var opt = document.createElement('option');
+            opt.value = el.value;
+            opt.textContent = 'Personalizado (' + el.value + ')';
+            selectEl.add(opt);
+          }
+          selectEl.value = el.value;
+        }
+      }
+      updateElement(id, updates);
       var disp = document.getElementById('color-hex-display');
       if (disp) disp.textContent = el.value.toUpperCase();
     });
@@ -642,6 +679,36 @@
         if (!elem || !elem.mesaConfig) return;
         var val = el.type === 'checkbox' ? el.checked : el.value;
         elem.mesaConfig[field] = val;
+        
+        if (field === 'mantelColor') {
+          var colorMap = {
+            blanco: '#ffffff',
+            marfil: '#fffff0',
+            negro: '#18181b',
+            caqui: '#c3b091',
+            azul_marino: '#0f172a',
+            arena: '#e5e5e5',
+            chocolate: '#3b2314',
+            dorado: '#d4af37',
+            palo_de_rosa: '#d39e9e',
+            rojo: '#ef4444',
+            verde: '#10b981',
+            amarillo: '#f59e0b'
+          };
+          if (val === 'sin_mantel') {
+            var cat = window.getCatalogEntry ? window.getCatalogEntry(elem.type) : null;
+            elem.color = (cat && cat.color) ? cat.color : '#888888';
+          } else if (colorMap[val]) {
+            elem.color = colorMap[val];
+          } else if (val.startsWith('#')) {
+            elem.color = val;
+          }
+          var colorPicker = document.getElementById('inspector-color');
+          if (colorPicker) colorPicker.value = elem.color;
+          var disp = document.getElementById('color-hex-display');
+          if (disp) disp.textContent = elem.color.toUpperCase();
+        }
+        
         _refresh();
       });
     }
@@ -1433,7 +1500,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v1';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v2';
 
   function loadFromLocalStorage() {
     try {
