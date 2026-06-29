@@ -1296,6 +1296,78 @@
   }
 
   // ══════════════════════════════════════════════════════════
+  // LAYOUT SWITCHER
+  // ══════════════════════════════════════════════════════════
+  var _currentLayoutMode = 'vertical';
+
+  function setLayoutMode(mode) {
+    if (mode === _currentLayoutMode) return;
+    _currentLayoutMode = mode;
+
+    var btnVer = document.getElementById('btn-layout-ver');
+    var btnHor = document.getElementById('btn-layout-hor');
+    if (btnVer && btnHor) {
+      if (mode === 'vertical') {
+        btnVer.classList.add('active');
+        btnHor.classList.remove('active');
+      } else {
+        btnHor.classList.add('active');
+        btnVer.classList.remove('active');
+      }
+    }
+
+    saveHistory();
+
+    AppState.elements.forEach(function (elem) {
+      if (elem.type === 'table_imperial' && elem.mesaConfig) {
+        var num = elem.mesaConfig.mesaNum;
+        if (mode === 'vertical') {
+          elem.rotation = 90;
+          elem.w = 16.8;
+          elem.h = 1.6;
+          if (num === 2) { elem.x = 19.3; elem.y = 28.0; }
+          else if (num === 3) { elem.x = 28.3; elem.y = 28.1; }
+          else if (num === 4) { elem.x = 36.9; elem.y = 28.1; }
+          else if (num === 5) { elem.x = 45.4; elem.y = 28.2; }
+        } else {
+          elem.rotation = 0;
+          elem.w = 16.8;
+          elem.h = 1.6;
+          if (num === 2) { elem.x = 13.0; elem.y = 22.0; }
+          else if (num === 3) { elem.x = 37.0; elem.y = 22.0; }
+          else if (num === 4) { elem.x = 13.0; elem.y = 36.0; }
+          else if (num === 5) { elem.x = 37.0; elem.y = 36.0; }
+        }
+      }
+    });
+
+    _refresh();
+    updateCounters();
+
+    if (AppState.selectedId) {
+      var elem = AppState.elements.find(function (e) { return e.id === AppState.selectedId; });
+      if (elem) _populateInspector(elem);
+    }
+
+    showToast('Acomodo cambiado a ' + (mode === 'vertical' ? 'Vertical (Original)' : 'Horizontal (Alternativo)') + '.', 'success');
+  }
+
+  function _wireLayoutSwitcher() {
+    var btnVer = document.getElementById('btn-layout-ver');
+    var btnHor = document.getElementById('btn-layout-hor');
+    if (btnVer) {
+      btnVer.onclick = function () {
+        setLayoutMode('vertical');
+      };
+    }
+    if (btnHor) {
+      btnHor.onclick = function () {
+        setLayoutMode('horizontal');
+      };
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
   // LIGHTING
   // ══════════════════════════════════════════════════════════
   function _wireLighting() {
@@ -2096,7 +2168,7 @@
     html += '    </div>\n';
     html += '    <div class="doc-title">\n';
     html += '      <div>FICHA TÉCNICA</div>\n';
-    html += '      <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + '</div>\n';
+    html += '      <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + ' (' + (_currentLayoutMode === 'vertical' ? 'Acomodo Vertical' : 'Acomodo Horizontal') + ')</div>\n';
     html += '    </div>\n';
     html += '  </div>\n';
     html += '</div>\n';
@@ -2115,6 +2187,59 @@
     // Section 1: Plano Map
     html += '<div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento (Croquis)</div>\n';
     html += '<div class="map-container">\n' + svgString + '\n</div>\n';
+
+    // Section: Minuto a Minuto & Información Relevante
+    html += '<div class="page-break"></div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-clock" style="margin-right: 6px; color:#f43f5e;"></i> Cronograma y Minuto a Minuto del Evento</div>\n';
+    html += '<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px;">\n';
+    
+    // Itinerario
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">Itinerario del Gran Día (04 de Julio de 2026)</h4>\n';
+    html += '    <div style="position: relative; padding-left: 20px; border-left: 2px solid #cbd5e1;">\n';
+    
+    var timelineEvents = [
+      { time: '13:00 HRS', title: 'Ceremonia Religiosa', desc: 'Misa de Acción de Gracias. Puntualidad recomendada.' },
+      { time: '14:45 HRS', title: 'Cóctel de Bienvenida', desc: 'Recepción y brindis de bienvenida en Jardín “Manzanares”.' },
+      { time: '15:30 HRS', title: 'Entrega de Paletas', desc: 'Entrega de paletas heladas (Paletas La Princesa).' },
+      { time: '16:00 HRS', title: 'Banquete', desc: 'Degustación de nuestro menú seleccionado.' },
+      { time: '00:00 HRS', title: 'Fin del Evento', desc: 'Agradecemos habernos acompañado en esta noche mágica.' }
+    ];
+    
+    timelineEvents.forEach(function (ev) {
+      html += '      <div style="margin-bottom: 12px; position: relative;">\n';
+      html += '        <div style="position: absolute; left: -26px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #f43f5e; border: 2px solid #fff;"></div>\n';
+      html += '        <div style="font-weight: 700; font-size: 11px; color: #f43f5e; margin-bottom: 1px;">' + ev.time + '</div>\n';
+      html += '        <div style="font-weight: 600; font-size: 13px; color: #0f172a; margin-bottom: 1px;">' + ev.title + '</div>\n';
+      html += '        <div style="font-size: 11px; color: #475569;">' + ev.desc + '</div>\n';
+      html += '      </div>\n';
+    });
+    
+    html += '    </div>\n';
+    html += '  </div>\n';
+    
+    // Información Relevante
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px; display: flex; flex-direction: column; gap: 15px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">Información Relevante</h4>\n';
+    
+    html += '    <div>\n';
+    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Código de Vestimenta</div>\n';
+    html += '      <div style="font-weight: 600; font-size: 12px; color: #0f172a; margin-top: 2px;">Formal (no etiqueta rigurosa)</div>\n';
+    html += '      <div style="font-size: 10px; color: #b45309; font-weight: 600; margin-top: 2px;">* Se reserva el color beige y dorado para la festejada.</div>\n';
+    html += '    </div>\n';
+    
+    html += '    <div>\n';
+    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mesa de Regalos</div>\n';
+    html += '      <div style="font-weight: 600; font-size: 12px; color: #0f172a; margin-top: 2px;">Regalos pequeños o Sobres ($)</div>\n';
+    html += '    </div>\n';
+    
+    html += '    <div>\n';
+    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Confirmación de Asistencia</div>\n';
+    html += '      <div style="font-weight: 600; font-size: 12px; color: #0f172a; margin-top: 2px;">Antes del 15 de Junio de 2026</div>\n';
+    html += '    </div>\n';
+    
+    html += '  </div>\n';
+    html += '</div>\n';
 
     // Page break before tables list if needed
     html += '<div class="page-break"></div>\n';
@@ -2611,6 +2736,7 @@
 
     // Wire UI Views & Buttons
     _wireViewSwitcher();
+    _wireLayoutSwitcher();
     _wireLighting();
     _wireBrightnessSlider();
     _wireLayerToggles();
