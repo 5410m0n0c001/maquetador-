@@ -1322,7 +1322,7 @@
         var num = parseInt(elem.mesaConfig.mesaNum, 10);
         if (mode === 'vertical') {
           elem.rotation = 90;
-          elem.w = 16.8;
+          elem.w = 15.0;
           elem.h = 1.6;
           if (num === 2) { elem.x = 19.3; elem.y = 28.0; }
           else if (num === 3) { elem.x = 28.3; elem.y = 28.1; }
@@ -1330,12 +1330,12 @@
           else if (num === 5) { elem.x = 45.4; elem.y = 28.2; }
         } else {
           elem.rotation = 0;
-          elem.w = 16.8;
+          elem.w = 15.0;
           elem.h = 1.6;
-          if (num === 2) { elem.x = 13.0; elem.y = 22.0; }
-          else if (num === 3) { elem.x = 37.0; elem.y = 22.0; }
-          else if (num === 4) { elem.x = 13.0; elem.y = 36.0; }
-          else if (num === 5) { elem.x = 37.0; elem.y = 36.0; }
+          if (num === 2) { elem.x = 23.8; elem.y = 23.8; }
+          else if (num === 3) { elem.x = 40.9; elem.y = 23.7; }
+          else if (num === 4) { elem.x = 24.0; elem.y = 33.2; }
+          else if (num === 5) { elem.x = 40.9; elem.y = 33.0; }
         }
       }
     });
@@ -1917,7 +1917,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v22';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v23';
 
   function loadFromLocalStorage() {
     try {
