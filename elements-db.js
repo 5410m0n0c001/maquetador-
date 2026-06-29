@@ -1094,6 +1094,20 @@ window.ELEMENTS_CATALOG = [
     planoOnly: false
   },
   {
+    type: 'cart_esquites',
+    name: 'Carrito de Esquites',
+    category: 'proveedores',
+    icon: 'fa-cart-shopping',
+    defaultW: 2.0,
+    defaultH: 1.2,
+    shape: 'rect',
+    color: '#eab308',
+    defaultChairs: 0,
+    description: 'Estación móvil / carrito de esquites y elotes.',
+    layer: 'proveedores',
+    planoOnly: false
+  },
+  {
     type: 'vendor_generic',
     name: 'Proveedor Genérico',
     category: 'proveedores',

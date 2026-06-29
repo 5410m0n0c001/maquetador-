@@ -1624,7 +1624,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v12';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v13';
 
   function loadFromLocalStorage() {
     try {
@@ -1820,7 +1820,8 @@
       'table_candy': 'Mesa de Dulces',
       'table_shots': 'Carrito de Shots',
       'table_buffet': 'Mesa de Buffet',
-      'lounge_set': 'Sala Lounge'
+      'lounge_set': 'Sala Lounge',
+      'cart_esquites': 'Carrito de Esquites'
     };
 
     var glassLabels = {

@@ -2256,6 +2256,96 @@ window.Visualizer3D = (function () {
         group.add(cap);
       }
 
+    } else if (elem.type === 'cart_esquites') {
+      var cartMat = new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.5 });
+      var metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.1 });
+      var blackMetalMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8, roughness: 0.2 });
+
+      var cartTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.04, h), cartMat);
+      cartTop.position.y = 0.90;
+      cartTop.castShadow = true;
+      cartTop.receiveShadow = true;
+      group.add(cartTop);
+
+      var cartShelf = new THREE.Mesh(new THREE.BoxGeometry(w - 0.06, 0.03, h - 0.06), cartMat);
+      cartShelf.position.y = 0.45;
+      cartShelf.castShadow = true;
+      group.add(cartShelf);
+
+      var legGeom = new THREE.CylinderGeometry(0.02, 0.02, 0.86, 8);
+      var legOffs = [
+        { x: -w / 2 + 0.06, z: -h / 2 + 0.06 },
+        { x: w / 2 - 0.06, z: -h / 2 + 0.06 },
+        { x: -w / 2 + 0.06, z: h / 2 - 0.06 },
+        { x: w / 2 - 0.06, z: h / 2 - 0.06 }
+      ];
+      legOffs.forEach(function(off) {
+        var leg = new THREE.Mesh(legGeom, blackMetalMat);
+        leg.position.set(off.x, 0.47, off.z);
+        leg.castShadow = true;
+        group.add(leg);
+      });
+
+      var wheelGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.03, 12);
+      legOffs.forEach(function(off) {
+        var wheel = new THREE.Mesh(wheelGeom, blackMetalMat);
+        wheel.rotation.x = Math.PI / 2;
+        wheel.position.set(off.x, 0.04, off.z);
+        wheel.castShadow = true;
+        group.add(wheel);
+      });
+
+      var handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, w - 0.10, 8), blackMetalMat);
+      handleBar.rotation.z = Math.PI / 2;
+      handleBar.position.set(0, 1.10, -h / 2 + 0.04);
+      handleBar.castShadow = true;
+      group.add(handleBar);
+
+      var handleUpGeom = new THREE.CylinderGeometry(0.015, 0.015, 0.20, 8);
+      var hUpL = new THREE.Mesh(handleUpGeom, blackMetalMat);
+      hUpL.position.set(-w / 2 + 0.10, 1.0, -h / 2 + 0.04);
+      group.add(hUpL);
+      var hUpR = new THREE.Mesh(handleUpGeom, blackMetalMat);
+      hUpR.position.set(w / 2 - 0.10, 1.0, -h / 2 + 0.04);
+      group.add(hUpR);
+
+      var pot = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.24, 16), metalMat);
+      pot.position.set(-w / 4, 1.04, 0);
+      pot.castShadow = true;
+      group.add(pot);
+
+      var potLid = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.02, 16), metalMat);
+      potLid.position.set(-w / 4, 1.17, 0);
+      group.add(potLid);
+
+      var potHandle = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.01, 8, 12), metalMat);
+      potHandle.position.set(-w / 4, 1.20, 0);
+      group.add(potHandle);
+
+      var jarGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.10, 12);
+      
+      var mayoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+      var mayoJar = new THREE.Mesh(jarGeom, mayoMat);
+      mayoJar.position.set(w / 4, 0.97, -0.10);
+      mayoJar.castShadow = true;
+      group.add(mayoJar);
+
+      var cheeseMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.6 });
+      var cheeseJar = new THREE.Mesh(jarGeom, cheeseMat);
+      cheeseJar.position.set(w / 4, 0.97, 0);
+      cheeseJar.castShadow = true;
+      group.add(cheeseJar);
+
+      var chiliMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.6 });
+      var chiliJar = new THREE.Mesh(jarGeom, chiliMat);
+      chiliJar.position.set(w / 4, 0.97, 0.10);
+      chiliJar.castShadow = true;
+      group.add(chiliJar);
+
+      var shakerCap = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.02, 12), metalMat);
+      shakerCap.position.set(w / 4, 1.03, 0.10);
+      group.add(shakerCap);
+
     } else {
       _buildGenericBox(group, elem, colorNum, 0.85);
     }
