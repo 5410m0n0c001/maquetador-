@@ -211,8 +211,9 @@
         mantelColor: (type.indexOf('campirana') > -1 || type.indexOf('marble') > -1) ? 'sin_mantel' : 'blanco',
         caminoColor: 'beige',
         caminoAcomodo: 'diagonal',
-        servilletaColor: 'dorado',
-        servilletaColor2: 'champagne',
+        servilletaColorCorazon: 'dorado',
+        servilletaColorCorbata: 'champagne',
+        servilletaColorOtros: 'blanco',
         servilletaDoblez: ['corazon', 'corbata'],
         cubiertos: 'plateado',
         platoBase: 'ninguno',
@@ -303,8 +304,9 @@
         mantelColor: 'blanco',
         caminoColor: 'beige',
         caminoAcomodo: 'diagonal',
-        servilletaColor: 'dorado',
-        servilletaColor2: 'champagne',
+        servilletaColorCorazon: 'dorado',
+        servilletaColorCorbata: 'champagne',
+        servilletaColorOtros: 'blanco',
         servilletaDoblez: ['corazon', 'corbata'],
         cubiertos: 'plateado',
         platoBase: 'ninguno',
@@ -662,8 +664,9 @@
       setVal('mesa-capacidad-max', elem.mesaConfig.capacidadMax || '');
       setVal('mesa-camino-color', elem.mesaConfig.caminoColor || 'ninguno');
       setVal('mesa-camino-acomodo', elem.mesaConfig.caminoAcomodo || 'centro');
-      setVal('mesa-servilleta-color', elem.mesaConfig.servilletaColor || 'blanco');
-      setVal('mesa-servilleta-color2', elem.mesaConfig.servilletaColor2 || 'ninguno');
+      setVal('mesa-servilleta-color-corazon', elem.mesaConfig.servilletaColorCorazon || 'dorado');
+      setVal('mesa-servilleta-color-corbata', elem.mesaConfig.servilletaColorCorbata || 'champagne');
+      setVal('mesa-servilleta-color-otros', elem.mesaConfig.servilletaColorOtros || 'blanco');
       setVal('mesa-cubiertos', elem.mesaConfig.cubiertos || 'plateado');
       setVal('mesa-plato-base', elem.mesaConfig.platoBase || 'ninguno');
       setVal('mesa-plato-trinche', elem.mesaConfig.platoTrinche || 'redondo_blanco');
@@ -907,8 +910,9 @@
     mesaInp('mesa-mantel-color', 'mantelColor');
     mesaInp('mesa-camino-color', 'caminoColor');
     mesaInp('mesa-camino-acomodo', 'caminoAcomodo');
-    mesaInp('mesa-servilleta-color', 'servilletaColor');
-    mesaInp('mesa-servilleta-color2', 'servilletaColor2');
+    mesaInp('mesa-servilleta-color-corazon', 'servilletaColorCorazon');
+    mesaInp('mesa-servilleta-color-corbata', 'servilletaColorCorbata');
+    mesaInp('mesa-servilleta-color-otros', 'servilletaColorOtros');
     mesaInp('mesa-cubiertos', 'cubiertos');
     mesaInp('mesa-plato-base', 'platoBase');
     mesaInp('mesa-plato-trinche', 'platoTrinche');
@@ -1695,7 +1699,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v18';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v19';
 
   function loadFromLocalStorage() {
     try {
@@ -2035,28 +2039,30 @@
         }
         montageItems.push('<strong>Camino:</strong> ' + caminoText);
       }
-      if (config.servilletaColor) {
-        var sColor = config.servilletaColor.charAt(0).toUpperCase() + config.servilletaColor.slice(1);
-        if (config.servilletaColor2 && config.servilletaColor2 !== 'ninguno') {
-          sColor += ' e ' + config.servilletaColor2.charAt(0).toUpperCase() + config.servilletaColor2.slice(1);
-        }
-        
-        var activeDobleces = [];
-        if (Array.isArray(config.servilletaDoblez)) {
-          activeDobleces = config.servilletaDoblez;
-        } else if (typeof config.servilletaDoblez === 'string' && config.servilletaDoblez) {
-          activeDobleces = [config.servilletaDoblez];
-        }
-        
-        var foldText = activeDobleces.map(function (f) {
-          return f.charAt(0).toUpperCase() + f.slice(1);
-        }).join(', ');
-        
-        if (foldText) {
-          montageItems.push('<strong>Servilleta:</strong> ' + sColor + ' (' + foldText + ')');
+      var activeDobleces = [];
+      if (Array.isArray(config.servilletaDoblez)) {
+        activeDobleces = config.servilletaDoblez;
+      } else if (typeof config.servilletaDoblez === 'string' && config.servilletaDoblez) {
+        activeDobleces = [config.servilletaDoblez];
+      }
+      
+      var sParts = [];
+      activeDobleces.forEach(function (fold) {
+        var foldLabel = fold.charAt(0).toUpperCase() + fold.slice(1);
+        var foldColor = 'blanco';
+        if (fold === 'corazon') {
+          foldColor = config.servilletaColorCorazon || 'dorado';
+        } else if (fold === 'corbata') {
+          foldColor = config.servilletaColorCorbata || 'champagne';
         } else {
-          montageItems.push('<strong>Servilleta:</strong> ' + sColor);
+          foldColor = config.servilletaColorOtros || 'blanco';
         }
+        var colLabel = foldColor.charAt(0).toUpperCase() + foldColor.slice(1);
+        sParts.push(foldLabel + ' (' + colLabel + ')');
+      });
+      
+      if (sParts.length > 0) {
+        montageItems.push('<strong>Servilleta:</strong> ' + sParts.join(', '));
       }
       if (config.platoBase && config.platoBase !== 'ninguno') {
         var pbText = plateBaseLabels[config.platoBase] || config.platoBase.replace('_', ' ');
