@@ -560,10 +560,7 @@
       if (guestsListEl) {
         if (elem.mesaConfig.invitados && elem.mesaConfig.invitados.length > 0) {
           var html = '';
-          var sortedGuests = elem.mesaConfig.invitados.slice().sort(function (a, b) {
-            return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
-          });
-          sortedGuests.forEach(function (guest) {
+          elem.mesaConfig.invitados.forEach(function (guest) {
             html += '<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 4px 0;">';
             html += '  <span>' + guest.nombre + '</span>';
             html += '  <span class="badge" style="background: rgba(244, 63, 94, 0.2); color: #f43f5e; padding: 2px 6px; border-radius: 4px; font-weight: bold;">' + guest.pases + ' pases</span>';
@@ -1546,7 +1543,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v9';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v10';
 
   function loadFromLocalStorage() {
     try {
@@ -1969,8 +1966,6 @@
       return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length > 0;
     });
 
-    var allGuests = [];
-
     if (hasAnyGuests) {
       html += '<div class="page-break"></div>\n';
       html += '<div class="section-title"><i class="fa-solid fa-users" style="margin-right: 6px; color:#f43f5e;"></i> Distribución de Invitados por Mesa</div>\n';
@@ -1987,15 +1982,6 @@
 
         var totalMesaGuests = config.invitados.reduce(function (sum, g) { return sum + (g.pases || 0); }, 0);
 
-        // Collect for master directory
-        config.invitados.forEach(function (g) {
-          allGuests.push({
-            nombre: g.nombre,
-            pases: g.pases,
-            mesa: config.mesaNum ? 'Mesa ' + config.mesaNum : 'Honor'
-          });
-        });
-
         html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; page-break-inside: avoid; display: flex; flex-direction: column;">\n';
         html += '    <div style="font-weight: 700; font-size: 14px; color: #0f172a; border-bottom: 2px solid #f43f5e; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">\n';
         html += '      <span>' + mesaLabel + '</span>\n';
@@ -2003,12 +1989,7 @@
         html += '    </div>\n';
         html += '    <div style="column-count: 2; column-gap: 15px;">\n';
 
-        // Sort alphabetically by name
-        var sortedGuests = config.invitados.slice().sort(function (a, b) {
-          return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
-        });
-
-        sortedGuests.forEach(function (g) {
+        config.invitados.forEach(function (g) {
           html += '      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding: 3px 0; break-inside: avoid; font-size: 11px;">\n';
           html += '        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">' + g.nombre + '</span>\n';
           html += '        <span style="font-weight: 600; color: #f43f5e; margin-left: 4px;">' + g.pases + 'p</span>\n';
@@ -2016,26 +1997,6 @@
         });
 
         html += '    </div>\n';
-        html += '  </div>\n';
-      });
-
-      html += '</div>\n';
-    }
-
-    // Section 5: Master Alphabetical Guest Directory
-    if (allGuests.length > 0) {
-      allGuests.sort(function (a, b) {
-        return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
-      });
-
-      html += '<div class="page-break"></div>\n';
-      html += '<div class="section-title"><i class="fa-solid fa-signature" style="margin-right: 6px; color:#f43f5e;"></i> Directorio General de Invitados (A-Z)</div>\n';
-      html += '<div style="column-count: 3; column-gap: 20px; font-size: 11px; margin-bottom: 30px;">\n';
-
-      allGuests.forEach(function (g) {
-        html += '  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding: 4px 0; break-inside: avoid;">\n';
-        html += '    <span style="font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="' + g.nombre + '">' + g.nombre + '</span>\n';
-        html += '    <span style="color: #64748b; font-size: 10px; flex-shrink: 0; margin-left: 6px;">' + g.mesa + ' (' + g.pases + 'p)</span>\n';
         html += '  </div>\n';
       });
 
