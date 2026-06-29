@@ -14,7 +14,7 @@
     elements: [],
     terrain: { w: 50, h: 60 },
     selectedId: null,
-    activeView: '2d',
+    activeView: '3d',
     useGrid: true,
     history: [],
     historyIndex: -1,
@@ -967,8 +967,8 @@
     if (btn2d) btn2d.onclick = function () { setView('2d'); };
     if (btn3d) btn3d.onclick = function () { setView('3d'); };
 
-    // Default to 2D for initial blueprinting
-    setView('2d');
+    // Initialize to default view
+    setView(AppState.activeView);
   }
 
   // ══════════════════════════════════════════════════════════
@@ -1500,7 +1500,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v2';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v3';
 
   function loadFromLocalStorage() {
     try {

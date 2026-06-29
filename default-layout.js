@@ -65,7 +65,8 @@ var DEFAULT_LAYOUT = {
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": ""
-      }
+      },
+      "salonType": "sin_muros"
     },
     {
       "id": "el_1782331899288_3",
@@ -920,7 +921,7 @@ var DEFAULT_LAYOUT = {
   ],
   "layers": {
     "estructuras": true,
-    "techos": true,
+    "techos": false,
     "accesos": true,
     "mobiliario": true,
     "entretenimiento": true,
