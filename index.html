@@ -109,24 +109,6 @@
 
       <div class="divider"></div>
 
-      <div class="panel-header" style="margin-top: 10px;">
-        <i class="fa-solid fa-arrows-spin"></i>
-        <span>Distribución de Mesas</span>
-      </div>
-      <p class="panel-hint">Define la orientación y acomodo por defecto para las mesas imperiales.</p>
-
-      <div class="form-group">
-        <label class="form-label" for="terrain-layout-mode">
-          <i class="fa-solid fa-table-cells"></i> Versión del Plano
-        </label>
-        <select class="form-input" id="terrain-layout-mode">
-          <option value="vertical">Acomodo Vertical (Fila Única)</option>
-          <option value="horizontal">Acomodo Horizontal (2x2 Pasillo Central)</option>
-        </select>
-      </div>
-
-      <div class="divider"></div>
-
       <div class="form-group">
         <div class="toggle-label">
           <span><i class="fa-solid fa-grip-dots"></i> Ajustar a cuadrícula</span>
@@ -390,6 +372,15 @@
           </button>
           <button id="btn-light-gala" class="view-btn lighting-btn" title="Ambiente de Gala">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Gala
+          </button>
+        </div>
+        <!-- Layout Version Toggle -->
+        <div class="view-toggle" id="topbar-layout-group" style="margin-left: 12px; border-color: rgba(255,255,255,0.05);">
+          <button id="btn-layout-ver" class="view-btn active" title="Acomodo Vertical (Fila Única)">
+            <i class="fa-solid fa-arrows-up-down"></i> Vertical
+          </button>
+          <button id="btn-layout-hor" class="view-btn" title="Acomodo Horizontal (2x2 Pasillo Central)">
+            <i class="fa-solid fa-arrows-left-right"></i> Horizontal
           </button>
         </div>
         <!-- Brightness Slider -->

@@ -734,8 +734,32 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 12px;
   z-index: 5;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.topbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  margin: 0 10px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -743,7 +767,7 @@ button, input, select, textarea {
 .view-toggle {
   display: flex;
   background-color: var(--bg-primary);
-  padding: 4px;
+  padding: 3px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
 }
@@ -751,16 +775,17 @@ button, input, select, textarea {
 .view-btn {
   border: none;
   background: none;
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 5px 9px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
   border-radius: 6px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .view-btn:hover {
@@ -775,33 +800,35 @@ button, input, select, textarea {
 /* Counters Badge Row */
 .counters-row {
   display: flex;
-  gap: 15px;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
 .counter-badge {
   background-color: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: 5px 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .counter-badge i {
   color: var(--accent);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .counter-value {
   font-family: monospace;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
 }
 
 .counter-lbl {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
 }
 

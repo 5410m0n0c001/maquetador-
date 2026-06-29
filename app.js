@@ -1304,9 +1304,16 @@
     if (mode === _currentLayoutMode) return;
     _currentLayoutMode = mode;
 
-    var selectEl = document.getElementById('terrain-layout-mode');
-    if (selectEl) {
-      selectEl.value = mode;
+    var btnVer = document.getElementById('btn-layout-ver');
+    var btnHor = document.getElementById('btn-layout-hor');
+    if (btnVer && btnHor) {
+      if (mode === 'vertical') {
+        btnVer.classList.add('active');
+        btnHor.classList.remove('active');
+      } else {
+        btnHor.classList.add('active');
+        btnVer.classList.remove('active');
+      }
     }
 
     saveHistory();
@@ -1346,9 +1353,18 @@
   }
 
   function _wireLayoutSwitcher() {
-    onInpChange('terrain-layout-mode', function (id, el) {
-      setLayoutMode(el.value);
-    });
+    var btnVer = document.getElementById('btn-layout-ver');
+    var btnHor = document.getElementById('btn-layout-hor');
+    if (btnVer) {
+      btnVer.onclick = function () {
+        setLayoutMode('vertical');
+      };
+    }
+    if (btnHor) {
+      btnHor.onclick = function () {
+        setLayoutMode('horizontal');
+      };
+    }
   }
 
   // ══════════════════════════════════════════════════════════
@@ -1875,8 +1891,17 @@
     if (mesa2) {
       var mode = (mesa2.rotation === 0) ? 'horizontal' : 'vertical';
       _currentLayoutMode = mode;
-      var selectEl = document.getElementById('terrain-layout-mode');
-      if (selectEl) selectEl.value = mode;
+      var btnVer = document.getElementById('btn-layout-ver');
+      var btnHor = document.getElementById('btn-layout-hor');
+      if (btnVer && btnHor) {
+        if (mode === 'vertical') {
+          btnVer.classList.add('active');
+          btnHor.classList.remove('active');
+        } else {
+          btnHor.classList.add('active');
+          btnVer.classList.remove('active');
+        }
+      }
     }
   }
 
