@@ -451,6 +451,100 @@
   // ══════════════════════════════════════════════════════════
   // INSPECTOR
   // ══════════════════════════════════════════════════════════
+  function renderGuestListEditor(elem) {
+    var guestsListEl = document.getElementById('mesa-invitados-list');
+    if (!guestsListEl) return;
+    
+    var maxCapacity = elem.type === 'table_imperial' ? ((elem.tablones || 4) * 10) : 10;
+    var invitados = elem.mesaConfig.invitados || [];
+    
+    var html = '';
+    html += '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">';
+    if (invitados.length === 0) {
+      html += '  <span style="color:#64748b; font-size:12px;">No hay invitados asignados a esta mesa.</span>';
+    } else {
+      invitados.forEach(function (guest, idx) {
+        html += '  <div class="guest-edit-row" data-index="' + idx + '" style="display:flex; align-items:center; gap:6px;">';
+        html += '    <input type="text" class="guest-name-input form-input" value="' + guest.nombre + '" style="flex:1; padding:4px 8px; font-size:12px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px;" placeholder="Nombre" />';
+        html += '    <input type="number" class="guest-passes-input form-input" min="1" max="' + maxCapacity + '" value="' + guest.pases + '" style="width:50px; padding:4px; font-size:12px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px; text-align:center;" />';
+        html += '    <button class="guest-delete-btn" style="padding:4px 8px; background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.3); color:#f43f5e; border-radius:4px; cursor:pointer;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>';
+        html += '  </div>';
+      });
+    }
+    html += '</div>';
+    html += '<button id="btn-add-guest" style="width:100%; padding:6px; background:rgba(244,63,94,0.1); color:#f43f5e; border:1px dashed #f43f5e; border-radius:4px; font-weight:bold; cursor:pointer; font-size:12px;">';
+    html += '  <i class="fa-solid fa-plus"></i> Agregar Invitado';
+    html += '</button>';
+    
+    guestsListEl.innerHTML = html;
+    
+    var rows = guestsListEl.querySelectorAll('.guest-edit-row');
+    rows.forEach(function (row) {
+      var idx = parseInt(row.dataset.index, 10);
+      var nameInp = row.querySelector('.guest-name-input');
+      var passesInp = row.querySelector('.guest-passes-input');
+      var delBtn = row.querySelector('.guest-delete-btn');
+      
+      nameInp.oninput = function () {
+        invitados[idx].nombre = nameInp.value;
+      };
+      
+      nameInp.onchange = function () {
+        saveHistory();
+      };
+      
+      passesInp.onchange = function () {
+        var v = parseInt(passesInp.value, 10);
+        if (isNaN(v) || v < 1) v = 1;
+        
+        var otherSum = 0;
+        invitados.forEach(function (g, gIdx) {
+          if (gIdx !== idx) otherSum += g.pases;
+        });
+        
+        if (otherSum + v > maxCapacity) {
+          showToast('¡Capacidad excedida! El límite de la mesa es de ' + maxCapacity + ' personas.', 'warning');
+          v = maxCapacity - otherSum;
+          if (v < 1) v = 1;
+          passesInp.value = v;
+        }
+        
+        saveHistory();
+        invitados[idx].pases = v;
+        elem.chairs = invitados.reduce(function (sum, g) { return sum + g.pases; }, 0);
+        updateCounters();
+        _refresh();
+      };
+      
+      delBtn.onclick = function () {
+        saveHistory();
+        invitados.splice(idx, 1);
+        elem.chairs = invitados.reduce(function (sum, g) { return sum + g.pases; }, 0);
+        updateCounters();
+        _refresh();
+        renderGuestListEditor(elem);
+      };
+    });
+    
+    var addBtn = guestsListEl.querySelector('#btn-add-guest');
+    if (addBtn) {
+      addBtn.onclick = function () {
+        var currentSum = invitados.reduce(function (sum, g) { return sum + g.pases; }, 0);
+        if (currentSum >= maxCapacity) {
+          showToast('¡Mesa llena! No se pueden agregar más invitados a esta mesa.', 'warning');
+          return;
+        }
+        
+        saveHistory();
+        invitados.push({ nombre: 'Nuevo Invitado', pases: 1 });
+        elem.chairs = invitados.reduce(function (sum, g) { return sum + g.pases; }, 0);
+        updateCounters();
+        _refresh();
+        renderGuestListEditor(elem);
+      };
+    }
+  }
+
   function _populateInspector(elem) {
     function setVal(id, v) {
       var el = document.getElementById(id);
@@ -556,21 +650,8 @@
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
 
-      var guestsListEl = document.getElementById('mesa-invitados-list');
-      if (guestsListEl) {
-        if (elem.mesaConfig.invitados && elem.mesaConfig.invitados.length > 0) {
-          var html = '';
-          elem.mesaConfig.invitados.forEach(function (guest) {
-            html += '<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 4px 0;">';
-            html += '  <span>' + guest.nombre + '</span>';
-            html += '  <span class="badge" style="background: rgba(244, 63, 94, 0.2); color: #f43f5e; padding: 2px 6px; border-radius: 4px; font-weight: bold;">' + guest.pases + ' pases</span>';
-            html += '</div>';
-          });
-          guestsListEl.innerHTML = html;
-        } else {
-          guestsListEl.innerHTML = '<span style="color: #64748b;">No hay invitados asignados a esta mesa.</span>';
-        }
-      }
+      if (!elem.mesaConfig.invitados) elem.mesaConfig.invitados = [];
+      renderGuestListEditor(elem);
     }
 
     // Type badge
@@ -1543,7 +1624,7 @@
     });
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v11';
+  var CURRENT_LAYOUT_VERSION = '2026-06-29-v12';
 
   function loadFromLocalStorage() {
     try {
