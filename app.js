@@ -2196,6 +2196,7 @@
     html += '  .section-title { font-size: 18px; font-weight: 600; color: #0f172a; border-left: 4px solid #f43f5e; padding-left: 10px; margin: 30px 0 15px 0; }\n';
     html += '  .map-container { border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; background: #f8fafc; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; page-break-inside: avoid; height: 680px; box-sizing: border-box; }\n';
     html += '  .map-container svg { width: 100%; height: 100%; max-height: 100%; display: block; }\n';
+    html += '  .print-section-wrapper { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 30px; display: block; }\n';
     html += '  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; page-break-inside: auto; }\n';
     html += '  tr { page-break-inside: avoid; page-break-after: auto; }\n';
     html += '  th { background: #0f172a; color: #fff; font-weight: 600; text-align: left; padding: 10px; border: 1px solid #1e293b; }\n';
@@ -2209,7 +2210,8 @@
     html += '    body { padding: 0; margin: 0; }\n';
     html += '    .no-print { display: none; }\n';
     html += '    .page-break { page-break-before: always !important; break-before: page !important; }\n';
-    html += '    .map-container { height: auto !important; max-height: 480px !important; border: none; background: none; padding: 0; margin: 0; page-break-inside: avoid !important; break-inside: avoid !important; }\n';
+    html += '    .print-section-wrapper { page-break-inside: avoid !important; break-inside: avoid !important; }\n';
+    html += '    .map-container { height: 480px !important; max-height: 480px !important; border: none; background: none; padding: 0; margin: 0; page-break-inside: avoid !important; break-inside: avoid !important; }\n';
     html += '  }\n';
     html += '</style>\n</head>\n<body>\n';
 
@@ -2247,30 +2249,65 @@
     html += '  <div class="meta-card"><div class="meta-val" style="font-size: 13px; font-weight: 600; padding: 6px 0;">' + formattedDate + '</div><div class="meta-lbl">Fecha Reporte</div></div>\n';
     html += '</div>\n';
 
-    // Section 1: Plano Map (Acomodo Vertical)
-    html += '<div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 1: Acomodo Vertical (Fila Única)</div>\n';
-    html += '<div class="map-container">\n' + verticalSvgString + '\n</div>\n';
+    // Ficha Técnica General Card (renders on Page 1)
+    html += '<div class="print-section-wrapper" style="margin-bottom: 0;">\n';
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px 25px; display: flex; flex-direction: column; gap: 15px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #f43f5e; padding-bottom: 8px; font-size:16px;"><i class="fa-solid fa-circle-info" style="color:#f43f5e; margin-right: 8px;"></i> Ficha Técnica General</h4>\n';
+    html += '    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">\n';
+    html += '      <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">\n';
+    html += '        <div><strong>Festejada:</strong> Zoe (Mis XV Años)</div>\n';
+    html += '        <div><strong>Lugar:</strong> Jardín Manzanares</div>\n';
+    html += '        <div><strong>Fecha:</strong> Sábado 04 de Julio de 2026</div>\n';
+    html += '        <div><strong>Capacidad Máxima:</strong> 150 Personas (Contratados)</div>\n';
+    html += '        <div><strong>Coordinador General:</strong> Alex Salomon</div>\n';
+    html += '        <div><strong>Tiempo de Renta/Servicio:</strong> 9 Horas totales</div>\n';
+    html += '      </div>\n';
+    html += '      <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">\n';
+    html += '        <div>\n';
+    html += '          <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Código de Vestimenta</div>\n';
+    html += '          <div style="font-weight: 600; font-size: 13px; color: #0f172a; margin-top: 2px;">Formal (no etiqueta rigurosa)</div>\n';
+    html += '          <div style="font-size: 11px; color: #b45309; font-weight: 600; margin-top: 2px;">* Se reserva el color beige y dorado exclusivamente para la festejada (Zoe).</div>\n';
+    html += '        </div>\n';
+    html += '        <div>\n';
+    html += '          <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mesa de Regalos</div>\n';
+    html += '          <div style="font-weight: 600; font-size: 13px; color: #0f172a; margin-top: 2px;">Regalos pequeños o Sobres ($)</div>\n';
+    html += '          <div style="font-size: 11px; color: #475569; margin-top: 2px;">* Se proveerán 100 sobres para los invitados adultos.</div>\n';
+    html += '        </div>\n';
+    html += '      </div>\n';
+    html += '    </div>\n';
+    html += '    <div style="border-top: 1px solid #cbd5e1; padding-top: 12px; margin-top: 5px; font-size: 12px; line-height: 1.5; color: #475569;">\n';
+    html += '      <strong>Detalles Logísticos:</strong> El chicharrón, guacamole y pastel son provistos directamente por los anfitriones. Las paletas heladas se entregan puntualmente a las 15:30 (Se deben entregar 250 piezas).\n';
+    html += '    </div>\n';
+    html += '  </div>\n';
+    html += '</div>\n';
 
-    // Section 1.5: Plano Map (Acomodo Horizontal)
+    // Section 1: Plano Map (Acomodo Vertical) - Renders on Page 2
     html += '<div class="page-break"></div>\n';
-    html += '<div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 2: Acomodo Horizontal (2x2 Pasillo Central)</div>\n';
-    html += '<div class="map-container">\n' + horizontalSvgString + '\n</div>\n';
+    html += '<div class="print-section-wrapper">\n';
+    html += '  <div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 1: Acomodo Vertical (Fila Única)</div>\n';
+    html += '  <div class="map-container">\n' + verticalSvgString + '\n</div>\n';
+    html += '</div>\n';
+
+    // Section 1.5: Plano Map (Acomodo Horizontal) - Renders on Page 3
+    html += '<div class="page-break"></div>\n';
+    html += '<div class="print-section-wrapper">\n';
+    html += '  <div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 2: Acomodo Horizontal (2x2 Pasillo Central)</div>\n';
+    html += '  <div class="map-container">\n' + horizontalSvgString + '\n</div>\n';
+    html += '</div>\n';
 
     // Section: Minuto a Minuto & Información Relevante
     html += '<div class="page-break"></div>\n';
-    html += '<div class="section-title"><i class="fa-solid fa-clock" style="margin-right: 6px; color:#f43f5e;"></i> Cronograma y Minuto a Minuto del Evento</div>\n';
-    html += '<div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; margin-bottom: 25px;">\n';
-    
-    // Itinerario
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size:14px;"><i class="fa-solid fa-calendar-day" style="color:#f43f5e; margin-right: 6px;"></i> Itinerario del Gran Día (04 de Julio de 2026)</h4>\n';
+    html += '<div class="print-section-wrapper">\n';
+    html += '  <div class="section-title"><i class="fa-solid fa-clock" style="margin-right: 6px; color:#f43f5e;"></i> Cronograma y Minuto a Minuto del Evento</div>\n';
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px 25px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; font-size:14px;"><i class="fa-solid fa-calendar-day" style="color:#f43f5e; margin-right: 6px;"></i> Itinerario del Gran Día (04 de Julio de 2026)</h4>\n';
     html += '    <div style="position: relative; padding-left: 20px; border-left: 2px solid #cbd5e1; font-size: 11px;">\n';
     
     var timelineEvents = [
       { time: '13:00 - 13:45 HRS', title: 'Ceremonia Religiosa (Misa)', desc: 'Lugar: Parroquia de San Francisco de Asís.' },
       { time: '13:45 - 14:00 HRS', title: 'Sesión Fotográfica', desc: 'Proveedor: Alfred Fotografic (Festejada y Padrinos).' },
       { time: '15:00 - 15:45 HRS', title: 'Recepción / Cóctel', desc: 'Lugar: Jardín Manzanares. Entrada y trago de bienvenida.' },
-      { time: '15:30 HRS', title: 'Entrega de Paletas Heladas', desc: 'Servicio de Paletas La Princesa, Vitroleros de Jamaica y Refrescos.' },
+      { time: '15:30 HRS', title: 'Entrega de Paletas Heladas', desc: 'Servicio de Paletas La Princesa (250 piezas), Vitroleros de Jamaica y Refrescos.' },
       { time: '15:45 - 16:00 HRS', title: 'Asignación de Mesas', desc: 'Hostess realiza acomodo de invitados y servicio de trago largo.' },
       { time: '16:00 - 16:10 HRS', title: 'Entrada Triunfal', desc: 'Ingreso oficial de la festejada (Zoe) con fotos y pirotecnia.' },
       { time: '16:10 - 17:10 HRS', title: 'Banquete (Servicio)', desc: 'Degustación del menú formal a 2 tiempos para adultos y niños.' },
@@ -2281,7 +2318,7 @@
       { time: '19:20 HRS', title: 'Partida de Pastel', desc: 'Pastel tradicional con chisperos y velas de brillo.' },
       { time: '19:30 - 20:20 HRS', title: 'Vals de la Festejada', desc: 'Vals familiar con Zoe, sus padres, padrinos y coreografía.' },
       { time: '20:20 HRS', title: 'Baile General / Animación', desc: 'Show de luces y mezclas de DJ Alfred.' },
-      { time: '21:30 - 22:30 HRS', title: 'Torna Fiesta', desc: 'Servicio de Barra de Esquites y Elotes por los meseros.' },
+      { time: '21:30 - 22:30 HRS', title: 'Torna Fiesta', desc: 'Servicio de Barra de Esquites, Elotes y Tamales (120 pzas: 40 pzas de c/u) por los meseros.' },
       { time: '23:00 - 23:30 HRS', title: 'Fin del Evento', desc: 'Cierre de servicio y agradecimientos de los anfitriones.' }
     ];
     
@@ -2297,37 +2334,6 @@
     html += '    </div>\n';
     html += '  </div>\n';
     
-    // Información Relevante
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; display: flex; flex-direction: column; gap: 12px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size:14px;"><i class="fa-solid fa-circle-info" style="color:#f43f5e; margin-right: 6px;"></i> Ficha Técnica General</h4>\n';
-    
-    html += '    <div style="font-size: 11px; line-height:1.4; display:flex; flex-direction:column; gap:8px;">\n';
-    html += '      <div><strong>Festejada:</strong> Zoe (Mis XV Años)</div>\n';
-    html += '      <div><strong>Lugar:</strong> Jardín Manzanares</div>\n';
-    html += '      <div><strong>Fecha:</strong> Sábado 04 de Julio de 2026</div>\n';
-    html += '      <div><strong>Capacidad Máxima:</strong> 150 Personas (Contratados)</div>\n';
-    html += '      <div><strong>Coordinador General:</strong> Alex Salomon</div>\n';
-    html += '      <div><strong>Tiempo de Renta/Servicio:</strong> 9 Horas totales</div>\n';
-    html += '    </div>\n';
-
-    html += '    <div style="border-top:1px solid #cbd5e1; padding-top:10px; margin-top:5px;">\n';
-    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Código de Vestimenta</div>\n';
-    html += '      <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-top: 2px;">Formal (no etiqueta rigurosa)</div>\n';
-    html += '      <div style="font-size: 10px; color: #b45309; font-weight: 600; margin-top: 2px;">* Se reserva el color beige y dorado exclusivamente para la festejada (Zoe).</div>\n';
-    html += '    </div>\n';
-    
-    html += '    <div>\n';
-    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mesa de Regalos</div>\n';
-    html += '      <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-top: 2px;">Regalos pequeños o Sobres ($)</div>\n';
-    html += '      <div style="font-size: 10px; color: #475569; margin-top: 2px;">* Se proveerán 100 sobres para los invitados adultos.</div>\n';
-    html += '    </div>\n';
-    
-    html += '    <div>\n';
-    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Detalles Logísticos</div>\n';
-    html += '      <div style="font-size: 10px; color: #475569; margin-top: 2px;">El chicharrón, guacamole y pastel son provistos directamente por los anfitriones. Las paletas heladas se entregan puntualmente a las 15:30.</div>\n';
-    html += '    </div>\n';
-    
-    html += '  </div>\n';
     html += '</div>\n';
 
     // Section 1.8: Menú del Evento y Servicio A&B
