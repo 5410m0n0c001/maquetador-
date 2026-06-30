@@ -209,7 +209,7 @@
         mesaNum: isMesa ? _tableCounter : 0,
         capacidadMax: null,
         mantelColor: (type.indexOf('campirana') > -1 || type.indexOf('marble') > -1) ? 'sin_mantel' : 'blanco',
-        caminoColor: 'beige',
+        caminoColor: 'dorado',
         caminoAcomodo: 'diagonal',
         servilletaColorCorazon: 'dorado',
         servilletaColorCorbata: 'champagne',
@@ -302,7 +302,7 @@
       layer: 'mobiliario',
       mesaConfig: {
         mantelColor: 'blanco',
-        caminoColor: 'beige',
+        caminoColor: 'dorado',
         caminoAcomodo: 'diagonal',
         servilletaColorCorazon: 'dorado',
         servilletaColorCorbata: 'champagne',
@@ -1917,7 +1917,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-29-v23';
+  var CURRENT_LAYOUT_VERSION = '2026-06-30-v25';
 
   function loadFromLocalStorage() {
     try {
@@ -2259,27 +2259,38 @@
     // Section: Minuto a Minuto & Información Relevante
     html += '<div class="page-break"></div>\n';
     html += '<div class="section-title"><i class="fa-solid fa-clock" style="margin-right: 6px; color:#f43f5e;"></i> Cronograma y Minuto a Minuto del Evento</div>\n';
-    html += '<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px;">\n';
+    html += '<div style="display: grid; grid-template-columns: 1.8fr 1.2fr; gap: 20px; margin-bottom: 25px;">\n';
     
     // Itinerario
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">Itinerario del Gran Día (04 de Julio de 2026)</h4>\n';
-    html += '    <div style="position: relative; padding-left: 20px; border-left: 2px solid #cbd5e1;">\n';
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size:14px;"><i class="fa-solid fa-calendar-day" style="color:#f43f5e; margin-right: 6px;"></i> Itinerario del Gran Día (04 de Julio de 2026)</h4>\n';
+    html += '    <div style="position: relative; padding-left: 20px; border-left: 2px solid #cbd5e1; font-size: 11px;">\n';
     
     var timelineEvents = [
-      { time: '13:00 HRS', title: 'Ceremonia Religiosa', desc: 'Misa de Acción de Gracias. Puntualidad recomendada.' },
-      { time: '14:45 HRS', title: 'Cóctel de Bienvenida', desc: 'Recepción y brindis de bienvenida en Jardín “Manzanares”.' },
-      { time: '15:30 HRS', title: 'Entrega de Paletas Heladas', desc: 'Entrega de paletas (Paletas La Princesa).' },
-      { time: '16:00 HRS', title: 'Banquete', desc: 'Degustación de nuestro menú seleccionado.' },
-      { time: '00:00 HRS', title: 'Fin del Evento', desc: 'Agradecemos habernos acompañado en esta noche mágica.' }
+      { time: '13:00 - 13:45 HRS', title: 'Ceremonia Religiosa (Misa)', desc: 'Lugar: Parroquia de San Francisco de Asís.' },
+      { time: '13:45 - 14:00 HRS', title: 'Sesión Fotográfica', desc: 'Proveedor: Alfred Fotografic (Festejada y Padrinos).' },
+      { time: '15:00 - 15:45 HRS', title: 'Recepción / Cóctel', desc: 'Lugar: Jardín Manzanares. Entrada y trago de bienvenida.' },
+      { time: '15:30 HRS', title: 'Entrega de Paletas Heladas', desc: 'Servicio de Paletas La Princesa, Vitroleros de Jamaica y Refrescos.' },
+      { time: '15:45 - 16:00 HRS', title: 'Asignación de Mesas', desc: 'Hostess realiza acomodo de invitados y servicio de trago largo.' },
+      { time: '16:00 - 16:10 HRS', title: 'Entrada Triunfal', desc: 'Ingreso oficial de la festejada (Zoe) con fotos y pirotecnia.' },
+      { time: '16:10 - 17:10 HRS', title: 'Banquete (Servicio)', desc: 'Degustación del menú formal a 2 tiempos para adultos y niños.' },
+      { time: '16:15 - 17:15 HRS', title: 'Cantante Raudel Carmona', desc: 'Presentación musical en vivo durante la comida.' },
+      { time: '17:00 - 19:00 HRS', title: 'Apertura Cabina Inflable', desc: 'Cabina de fotos inflable y carrito de esquites activados.' },
+      { time: '17:30 HRS', title: 'Abrir Pista de Baile', desc: 'DJ Alfred da inicio oficial a la fiesta y baile general.' },
+      { time: '18:00 HRS', title: 'Inauguración Mesa de Dulces', desc: 'Apertura oficial por Zoe y sus Padrinos.' },
+      { time: '19:20 HRS', title: 'Partida de Pastel', desc: 'Pastel tradicional con chisperos y velas de brillo.' },
+      { time: '19:30 - 20:20 HRS', title: 'Vals de la Festejada', desc: 'Vals familiar con Zoe, sus padres, padrinos y coreografía.' },
+      { time: '20:20 HRS', title: 'Baile General / Animación', desc: 'Show de luces y mezclas de DJ Alfred.' },
+      { time: '21:30 - 22:30 HRS', title: 'Torna Fiesta', desc: 'Servicio de Barra de Esquites y Elotes por los meseros.' },
+      { time: '23:00 - 23:30 HRS', title: 'Fin del Evento', desc: 'Cierre de servicio y agradecimientos de los anfitriones.' }
     ];
     
     timelineEvents.forEach(function (ev) {
-      html += '      <div style="margin-bottom: 12px; position: relative;">\n';
-      html += '        <div style="position: absolute; left: -26px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #f43f5e; border: 2px solid #fff;"></div>\n';
-      html += '        <div style="font-weight: 700; font-size: 11px; color: #f43f5e; margin-bottom: 1px;">' + ev.time + '</div>\n';
-      html += '        <div style="font-weight: 600; font-size: 13px; color: #0f172a; margin-bottom: 1px;">' + ev.title + '</div>\n';
-      html += '        <div style="font-size: 11px; color: #475569;">' + ev.desc + '</div>\n';
+      html += '      <div style="margin-bottom: 7px; position: relative;">\n';
+      html += '        <div style="position: absolute; left: -26px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: #f43f5e; border: 2px solid #fff;"></div>\n';
+      html += '        <div style="font-weight: 700; font-size: 10px; color: #f43f5e; margin-bottom: 0px;">' + ev.time + '</div>\n';
+      html += '        <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-bottom: 0px;">' + ev.title + '</div>\n';
+      html += '        <div style="font-size: 10px; color: #475569; line-height: 1.3;">' + ev.desc + '</div>\n';
       html += '      </div>\n';
     });
     
@@ -2287,25 +2298,73 @@
     html += '  </div>\n';
     
     // Información Relevante
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px; display: flex; flex-direction: column; gap: 15px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;">Información Relevante</h4>\n';
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; display: flex; flex-direction: column; gap: 12px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; font-size:14px;"><i class="fa-solid fa-circle-info" style="color:#f43f5e; margin-right: 6px;"></i> Ficha Técnica General</h4>\n';
     
-    html += '    <div>\n';
+    html += '    <div style="font-size: 11px; line-height:1.4; display:flex; flex-direction:column; gap:8px;">\n';
+    html += '      <div><strong>Festejada:</strong> Zoe (Mis XV Años)</div>\n';
+    html += '      <div><strong>Lugar:</strong> Jardín Manzanares</div>\n';
+    html += '      <div><strong>Fecha:</strong> Sábado 04 de Julio de 2026</div>\n';
+    html += '      <div><strong>Capacidad Máxima:</strong> 150 Personas (Contratados)</div>\n';
+    html += '      <div><strong>Coordinador General:</strong> Alex Salomon</div>\n';
+    html += '      <div><strong>Tiempo de Renta/Servicio:</strong> 9 Horas totales</div>\n';
+    html += '    </div>\n';
+
+    html += '    <div style="border-top:1px solid #cbd5e1; padding-top:10px; margin-top:5px;">\n';
     html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Código de Vestimenta</div>\n';
-    html += '      <div style="font-weight: 600; font-size: 12px; color: #0f172a; margin-top: 2px;">Formal (no etiqueta rigurosa)</div>\n';
-    html += '      <div style="font-size: 10px; color: #b45309; font-weight: 600; margin-top: 2px;">* Se reserva el color beige y dorado para la festejada.</div>\n';
+    html += '      <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-top: 2px;">Formal (no etiqueta rigurosa)</div>\n';
+    html += '      <div style="font-size: 10px; color: #b45309; font-weight: 600; margin-top: 2px;">* Se reserva el color beige y dorado exclusivamente para la festejada (Zoe).</div>\n';
     html += '    </div>\n';
     
     html += '    <div>\n';
     html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mesa de Regalos</div>\n';
-    html += '      <div style="font-weight: 600; font-size: 12px; color: #0f172a; margin-top: 2px;">Regalos pequeños o Sobres ($)</div>\n';
+    html += '      <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-top: 2px;">Regalos pequeños o Sobres ($)</div>\n';
+    html += '      <div style="font-size: 10px; color: #475569; margin-top: 2px;">* Se proveerán 100 sobres para los invitados adultos.</div>\n';
     html += '    </div>\n';
     
     html += '    <div>\n';
-    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Confirmación de Asistencia</div>\n';
-    html += '      <div style="font-weight: 600; font-size: 12px; color: #0f172a; margin-top: 2px;">Antes del 15 de Junio de 2026</div>\n';
+    html += '      <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Detalles Logísticos</div>\n';
+    html += '      <div style="font-size: 10px; color: #475569; margin-top: 2px;">El chicharrón, guacamole y pastel son provistos directamente por los anfitriones. Las paletas heladas se entregan puntualmente a las 15:30.</div>\n';
     html += '    </div>\n';
     
+    html += '  </div>\n';
+    html += '</div>\n';
+
+    // Section 1.8: Menú del Evento y Servicio A&B
+    html += '<div class="page-break"></div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-utensils" style="margin-right: 6px; color:#f43f5e;"></i> Ficha de Menú y Servicios de Alimentos & Bebidas</div>\n';
+    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
+    
+    // Left column: Menu
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-plate-wheat" style="color:#f43f5e; margin-right:6px;"></i> Menú Seleccionado</h4>\n';
+    html += '    <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">\n';
+    html += '      <div><strong>Entrada:</strong><br><span style="color:#475569; font-style:italic; padding-left:10px; display:inline-block;">Sopa de Tortilla clásica.</span></div>\n';
+    html += '      <div><strong>Plato Fuerte Adultos (50% / 50%):</strong><br>\n';
+    html += '        <ul style="margin: 4px 0 0 0; padding-left: 20px; color:#475569; font-style:italic;">\n';
+    html += '          <li><strong>Opción Lomo (50%):</strong> Lomo en adobo a los 3 chiles, papa horneada y atado de verduras.</li>\n';
+    html += '          <li><strong>Opción Pechuga (50%):</strong> Pechuga en salsa de pimiento asado rellena de espinaca con queso gouda, calabacita rellena y atado de verduras.</li>\n';
+    html += '        </ul>\n';
+    html += '      </div>\n';
+    html += '      <div><strong>Plato Infantil / Adolescentes:</strong><br><span style="color:#475569; font-style:italic; padding-left:10px; display:inline-block;">Hamburguesa con espagueti y papas chips, servido con golosina.</span></div>\n';
+    html += '      <div><strong>Torna Fiesta (21:30 - 22:30):</strong><br><span style="color:#475569; font-style:italic; padding-left:10px; display:inline-block;">Barra tradicional de esquites y elotes.</span></div>\n';
+    html += '    </div>\n';
+    html += '  </div>\n';
+    
+    // Right column: Beverages & Services
+    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-bottle-water" style="color:#f43f5e; margin-right:6px;"></i> Bebidas y Suministros</h4>\n';
+    html += '    <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">\n';
+    html += '      <div><strong>Por parte del Salón / Servicio:</strong><br><span style="color:#475569; padding-left:10px; display:inline-block;">Refrescos ilimitados y hielo de servicio.</span></div>\n';
+    html += '      <div><strong>Proporcionado por el Anfitrión:</strong><br>\n';
+    html += '        <ul style="margin: 4px 0 0 0; padding-left: 20px; color:#475569;">\n';
+    html += '          <li>Bebidas: Tequila, Whisky y Cerveza.</li>\n';
+    html += '          <li>Tornafiesta, pastel de XV Años.</li>\n';
+    html += '          <li>3 Vitroleros de Agua de Jamaica.</li>\n';
+    html += '        </ul>\n';
+    html += '      </div>\n';
+    html += '      <div><strong>Montaje de Mesa Principal (Zoe):</strong><br><span style="color:#475569; padding-left:10px; display:inline-block;">Sillón de Princesa Especial, 4 sillas Tiffany, mesa especial y back decorativo con telas. Centro de mesa grande.</span></div>\n';
+    html += '    </div>\n';
     html += '  </div>\n';
     html += '</div>\n';
 
@@ -2553,13 +2612,14 @@
     
     // Right column: Pending checklist
     html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:#f43f5e; margin-right: 6px;"></i> Estatus de Tareas y Pendientes</h4>\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:#f43f5e; margin-right: 6px;"></i> Estatus de Tareas y Pendientes Logísticos</h4>\n';
     html += '    <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Paletas La Princesa</strong>: Hora de entrega confirmada a las <strong>15:30 HRS (3:30 PM)</strong>.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Área Infantil en Mantenimiento</strong>: Se validará la contratación e instalación de <strong>Inflables</strong> para compensar este espacio para los niños.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-clock-rotate-left" style="color:#64748b; margin-top:3px;"></i> <div><strong>Minuto a Minuto y Coordinación</strong>: Pendiente completar detalles del itinerario de música, fotos y sorpresas.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Alimentación Eléctrica</strong>: Checar contactos e instalación para la Mesa de Pastel (chisperos y vela de brillo).</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Confirmaciones y Personal</strong>: Revisar letras decorativas ZOE, confirmación de Hostess, meseros y confirmar si el Valet Parking está incluido.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Cronograma y Minuto a Minuto</strong>: Itinerario oficial completado con las 16 actividades y coordinado con los proveedores.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Ficha de Menú y Montaje General</strong>: Sopa de tortilla, lomo/pechuga (50/50), menú infantil, tornaesquites y mesa principal especial validados.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Paletas La Princesa</strong>: Confirmado a las 15:30 HRS junto con 3 vitroleros de agua de Jamaica.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Área Infantil / Brincolín</strong>: Área infantil sigue en mantenimiento; se validará inflables para compensar. Cabina inflable contratada (17:00-19:00).</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Instalación Eléctrica (Pastel)</strong>: Pendiente checar contactos para chisperos y velas de brillo en la mesa de pastel.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Servicios Especiales</strong>: Pendiente confirmar hostess, meseros y si el Valet Parking está incluido.</div></li>\n';
     html += '    </ul>\n';
     html += '  </div>\n';
     html += '</div>\n';

@@ -211,7 +211,7 @@ var DEFAULT_LAYOUT = {
       "mesaConfig": {
         "mesaNum": 1,
         "mantelColor": "blanco",
-        "caminoColor": "beige",
+        "caminoColor": "dorado",
         "servilletaDoblez": [
           "corazon",
           "corbata"
@@ -319,7 +319,7 @@ var DEFAULT_LAYOUT = {
       "layer": "mobiliario",
       "mesaConfig": {
         "mantelColor": "blanco",
-        "caminoColor": "beige",
+        "caminoColor": "dorado",
         "servilletaDoblez": [
           "corazon",
           "corbata"
@@ -438,7 +438,7 @@ var DEFAULT_LAYOUT = {
       "layer": "mobiliario",
       "mesaConfig": {
         "mantelColor": "blanco",
-        "caminoColor": "beige",
+        "caminoColor": "dorado",
         "servilletaDoblez": [
           "corazon",
           "corbata"
@@ -533,7 +533,7 @@ var DEFAULT_LAYOUT = {
       "layer": "mobiliario",
       "mesaConfig": {
         "mantelColor": "blanco",
-        "caminoColor": "beige",
+        "caminoColor": "dorado",
         "servilletaDoblez": [
           "corazon",
           "corbata"
@@ -620,7 +620,7 @@ var DEFAULT_LAYOUT = {
       "layer": "mobiliario",
       "mesaConfig": {
         "mantelColor": "blanco",
-        "caminoColor": "beige",
+        "caminoColor": "dorado",
         "servilletaDoblez": [
           "corazon",
           "corbata"

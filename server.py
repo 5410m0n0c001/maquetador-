@@ -2,6 +2,10 @@ import http.server
 import json
 import os
 import sys
+import socketserver
+
+class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    daemon_threads = True
 
 PORT = 8000
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -125,9 +129,9 @@ if __name__ == '__main__':
     print("Soporta guardado automático local en /layouts")
     print("======================================================")
     
-    server_address = ('', PORT)
+    server_address = ('127.0.0.1', PORT)
     try:
-        httpd = http.server.HTTPServer(server_address, LocalServerHandler)
+        httpd = ThreadingHTTPServer(server_address, LocalServerHandler)
         httpd.serve_forever()
     except KeyboardInterrupt:
         print("\nServidor detenido por el usuario.")
