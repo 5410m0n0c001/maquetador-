@@ -2025,10 +2025,10 @@
 
     // Helper to generate clean SVG for a given mode
     function getSvgForMode(mode) {
-      AppState.elements.forEach(function (elem) {
-        if (elem.type === 'table_imperial' && elem.mesaConfig) {
-          var num = parseInt(elem.mesaConfig.mesaNum, 10);
-          if (mode === 'vertical') {
+      if (mode === 'vertical') {
+        AppState.elements.forEach(function (elem) {
+          if (elem.type === 'table_imperial' && elem.mesaConfig) {
+            var num = parseInt(elem.mesaConfig.mesaNum, 10);
             elem.rotation = 90;
             elem.w = 15.0;
             elem.h = 1.6;
@@ -2036,7 +2036,12 @@
             else if (num === 3) { elem.x = 28.3; elem.y = 28.1; }
             else if (num === 4) { elem.x = 36.9; elem.y = 28.1; }
             else if (num === 5) { elem.x = 45.4; elem.y = 28.2; }
-          } else {
+          }
+        });
+      } else if (mode === 'horizontal') {
+        AppState.elements.forEach(function (elem) {
+          if (elem.type === 'table_imperial' && elem.mesaConfig) {
+            var num = parseInt(elem.mesaConfig.mesaNum, 10);
             elem.rotation = 0;
             elem.w = 15.0;
             elem.h = 1.6;
@@ -2045,8 +2050,8 @@
             else if (num === 4) { elem.x = 24.0; elem.y = 33.2; }
             else if (num === 5) { elem.x = 40.9; elem.y = 33.0; }
           }
-        }
-      });
+        });
+      }
       
       if (window.Editor2D) window.Editor2D.update(AppState.elements);
 

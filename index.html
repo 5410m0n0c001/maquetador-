@@ -26,6 +26,25 @@
 </head>
 <body>
 
+<script>
+  (function() {
+    var LS_KEY = 'primavera_layout_state';
+    var CURRENT_VERSION = '2026-07-04-v27';
+    try {
+      var savedVersion = localStorage.getItem(LS_KEY + '_version');
+      if (savedVersion !== CURRENT_VERSION) {
+        console.log('[HTML Init] Invalidating outdated localStorage: ' + savedVersion + ' -> ' + CURRENT_VERSION);
+        localStorage.removeItem(LS_KEY);
+        localStorage.removeItem(LS_KEY + '_name');
+        localStorage.removeItem(LS_KEY + '_auto');
+        localStorage.removeItem(LS_KEY + '_version');
+      }
+    } catch(e) {
+      console.warn('[HTML Init] Error clearing localStorage:', e);
+    }
+  })();
+</script>
+
 <!-- APP WRAPPER -->
 <div id="app-wrapper">
 
