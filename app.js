@@ -1917,7 +1917,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-07-04-v30';
+  var CURRENT_LAYOUT_VERSION = '2026-07-04-v31';
 
   function loadFromLocalStorage() {
     try {

@@ -418,32 +418,66 @@ window.Editor2D = (function () {
           g.appendChild(divLine);
         }
       }
-      // Chairs along long edges
+      // Chairs along long edges (minus 6 end chairs)
       var chairs = elem.chairs || 30;
-      var chairsPerSide = Math.floor(chairs / 2);
-      var chairSpacePx = pw / chairsPerSide;
-      for (var ci = 0; ci < chairsPerSide; ci++) {
-        var chairX = px - pw / 2 + chairSpacePx * (ci + 0.5);
-        // Top
-        var cTop = svgEl('circle', {
-          cx: chairX, cy: py - ph / 2 - mToPx(CHAIR_R_M) - 1,
+      var chairsPerSide = Math.max(0, Math.floor((chairs - 6) / 2));
+      
+      if (chairsPerSide > 0) {
+        var chairSpacePx = (pw - mToPx(1.0)) / chairsPerSide;
+        for (var ci = 0; ci < chairsPerSide; ci++) {
+          var chairX = px - pw / 2 + mToPx(0.5) + chairSpacePx * (ci + 0.5);
+          // Top
+          var cTop = svgEl('circle', {
+            cx: chairX, cy: py - ph / 2 - mToPx(CHAIR_R_M) - 1,
+            r: mToPx(CHAIR_R_M),
+            fill: lighten(color, 0.5),
+            stroke: 'rgba(255,255,255,0.3)',
+            'stroke-width': 0.5,
+            'pointer-events': 'none'
+          });
+          g.appendChild(cTop);
+          // Bottom
+          var cBot = svgEl('circle', {
+            cx: chairX, cy: py + ph / 2 + mToPx(CHAIR_R_M) + 1,
+            r: mToPx(CHAIR_R_M),
+            fill: lighten(color, 0.5),
+            stroke: 'rgba(255,255,255,0.3)',
+            'stroke-width': 0.5,
+            'pointer-events': 'none'
+          });
+          g.appendChild(cBot);
+        }
+      }
+
+      // 3 Chairs on Left End (Cabecera Izquierda)
+      var leftX = px - pw / 2 - mToPx(CHAIR_R_M) - 1;
+      var endSpacePx = (ph - mToPx(0.4)) / 3;
+      for (var ei = 0; ei < 3; ei++) {
+        var chairY = py - ph / 2 + mToPx(0.2) + endSpacePx * (ei + 0.5);
+        var cLeft = svgEl('circle', {
+          cx: leftX, cy: chairY,
           r: mToPx(CHAIR_R_M),
           fill: lighten(color, 0.5),
           stroke: 'rgba(255,255,255,0.3)',
           'stroke-width': 0.5,
           'pointer-events': 'none'
         });
-        g.appendChild(cTop);
-        // Bottom
-        var cBot = svgEl('circle', {
-          cx: chairX, cy: py + ph / 2 + mToPx(CHAIR_R_M) + 1,
+        g.appendChild(cLeft);
+      }
+
+      // 3 Chairs on Right End (Cabecera Derecha)
+      var rightX = px + pw / 2 + mToPx(CHAIR_R_M) + 1;
+      for (var ei = 0; ei < 3; ei++) {
+        var chairY = py - ph / 2 + mToPx(0.2) + endSpacePx * (ei + 0.5);
+        var cRight = svgEl('circle', {
+          cx: rightX, cy: chairY,
           r: mToPx(CHAIR_R_M),
           fill: lighten(color, 0.5),
           stroke: 'rgba(255,255,255,0.3)',
           'stroke-width': 0.5,
           'pointer-events': 'none'
         });
-        g.appendChild(cBot);
+        g.appendChild(cRight);
       }
 
     } else if (shape === 'trapezoid') {
