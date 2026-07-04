@@ -451,31 +451,31 @@ var DEFAULT_LAYOUT = {
         "mesaNum": 4,
         "invitados": [
           {
-            "nombre": "Elena Villegas",
-            "pases": 2
-          },
-          {
-            "nombre": "Carlos Díaz",
-            "pases": 6
-          },
-          {
-            "nombre": "Mariana Saldívar",
-            "pases": 3
-          },
-          {
-            "nombre": "Maricela Rodriguez",
-            "pases": 3
-          },
-          {
-            "nombre": "Ricardo Villegas Garcia",
+            "nombre": "Fernanda Sanchez",
             "pases": 5
           },
           {
-            "nombre": "Ricardo Villegas Cervantes",
-            "pases": 3
+            "nombre": "Andrea Sanchez",
+            "pases": 5
           },
           {
-            "nombre": "Bertha Garcia",
+            "nombre": "Carlos Sanchez",
+            "pases": 4
+          },
+          {
+            "nombre": "Alejandra Sanchez",
+            "pases": 4
+          },
+          {
+            "nombre": "Luis Sanchez",
+            "pases": 2
+          },
+          {
+            "nombre": "José Hilario Roque",
+            "pases": 2
+          },
+          {
+            "nombre": "Braulio Roque",
             "pases": 2
           }
         ],
@@ -632,12 +632,16 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "invitados": [
           {
-            "nombre": "Fernanda Sanchez",
+            "nombre": "Elena Villegas",
+            "pases": 2
+          },
+          {
+            "nombre": "Ricardo Villegas Garcia",
             "pases": 5
           },
           {
-            "nombre": "Andrea Sanchez",
-            "pases": 5
+            "nombre": "Ricardo Villegas Cervantes",
+            "pases": 3
           }
         ]
       }
@@ -684,15 +688,15 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "invitados": [
           {
-            "nombre": "Carlos Sanchez",
-            "pases": 4
+            "nombre": "Carlos Díaz",
+            "pases": 6
           },
           {
-            "nombre": "Alejandra Sanchez",
-            "pases": 4
+            "nombre": "Bertha Garcia",
+            "pases": 2
           },
           {
-            "nombre": "Luis Sanchez",
+            "nombre": "Beny Téllez",
             "pases": 2
           }
         ]
@@ -740,24 +744,16 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "invitados": [
           {
-            "nombre": "Ángeles Roque",
+            "nombre": "Mariana Saldívar",
             "pases": 3
           },
           {
-            "nombre": "Braulio Roque",
-            "pases": 2
+            "nombre": "Maricela Rodriguez",
+            "pases": 3
           },
           {
-            "nombre": "José Hilario Roque",
-            "pases": 2
-          },
-          {
-            "nombre": "Paulina Medina",
-            "pases": 2
-          },
-          {
-            "nombre": "Patricia Sanchez",
-            "pases": 1
+            "nombre": "Isabel Basurto",
+            "pases": 3
           }
         ]
       }
@@ -804,15 +800,15 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "invitados": [
           {
-            "nombre": "Ángel Vargas",
-            "pases": 5
-          },
-          {
-            "nombre": "Gabriela Medina",
-            "pases": 2
-          },
-          {
             "nombre": "Priscila Hernandez",
+            "pases": 3
+          },
+          {
+            "nombre": "Stefany Toledo",
+            "pases": 4
+          },
+          {
+            "nombre": "Gabriel Ledesma",
             "pases": 3
           }
         ]
@@ -1028,16 +1024,20 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "invitados": [
           {
-            "nombre": "Gabriel Ledesma",
-            "pases": 3
-          },
-          {
             "nombre": "Yessica Ladrón de Guevara",
             "pases": 3
           },
           {
             "nombre": "Heriberto Avelar",
             "pases": 3
+          },
+          {
+            "nombre": "Gabriela Medina",
+            "pases": 2
+          },
+          {
+            "nombre": "Patricia Sanchez",
+            "pases": 1
           }
         ]
       }
@@ -1084,15 +1084,15 @@ var DEFAULT_LAYOUT = {
         "ensambleTipo": "angosto",
         "invitados": [
           {
-            "nombre": "Isabel Basurto",
+            "nombre": "Ángel Vargas",
+            "pases": 5
+          },
+          {
+            "nombre": "Ángeles Roque",
             "pases": 3
           },
           {
-            "nombre": "Stefany Toledo",
-            "pases": 4
-          },
-          {
-            "nombre": "Beny Téllez",
+            "nombre": "Paulina Medina",
             "pases": 2
           }
         ]

@@ -1304,6 +1304,11 @@ window.Visualizer3D = (function () {
       sign.position.set(0, 2.2, h/2 - 0.02);
       group.add(sign);
 
+      // 3D Floating label card
+      var labelCard = _createFloatingLabel("Vestidor (2do Piso)", null, "#3b82f6");
+      labelCard.position.set(0, 3.2, h/2 + 0.1);
+      group.add(labelCard);
+
     } else if (elem.type === 'garden') {
       // Grass patch
       var grass = new THREE.Mesh(
@@ -1689,6 +1694,11 @@ window.Visualizer3D = (function () {
         group.add(roof);
       }
 
+      // 3D Floating label card
+      var labelCard = _createFloatingLabel("Baños (1er Piso)", null, "#ef4444");
+      labelCard.position.set(0, 2.8, h/2 + 0.1);
+      group.add(labelCard);
+
     } else if (elem.type === 'ramp') {
       // Sloped Plane
       var rampMesh = new THREE.Mesh(
@@ -1940,13 +1950,21 @@ window.Visualizer3D = (function () {
         group.add(runner);
       }
 
-      // Chairs and tableware on both long edges
-      var sideChairs = Math.floor(numChairs / 2);
-      _addChairsLine(group, -h/2 - 0.18, w, sideChairs, 0.75, Math.PI); // Top side (facing South/table center)
-      _addChairsLine(group, h/2 + 0.18, w, sideChairs, 0.75, 0); // Bottom side (facing North/table center)
+      // Chairs and tableware on both long edges (minus 6 end chairs)
+      var sideChairs = Math.max(0, Math.floor((numChairs - 6) / 2));
+      _addChairsLine(group, -h/2 - 0.18, w - 0.8, sideChairs, 0.75, Math.PI); // Top side (facing South/table center)
+      _addChairsLine(group, h/2 + 0.18, w - 0.8, sideChairs, 0.75, 0); // Bottom side (facing North/table center)
+      
+      // Chairs on both short ends (3 chairs on each end)
+      _addChairsLineZ(group, -w/2 - 0.18, h - 0.4, 3, 0.75, -Math.PI / 2); // Left end (facing East)
+      _addChairsLineZ(group, w/2 + 0.18, h - 0.4, 3, 0.75, Math.PI / 2); // Right end (facing West)
+
       if (elem.mesaConfig) {
-        _addTablewareLine(group, -h/2 + 0.12, w, sideChairs, elem.mesaConfig, Math.PI);
-        _addTablewareLine(group, h/2 - 0.12, w, sideChairs, elem.mesaConfig, 0);
+        _addTablewareLine(group, -h/2 + 0.12, w - 0.8, sideChairs, elem.mesaConfig, Math.PI);
+        _addTablewareLine(group, h/2 - 0.12, w - 0.8, sideChairs, elem.mesaConfig, 0);
+        
+        _addTablewareLineZ(group, -w/2 + 0.12, h - 0.4, 3, elem.mesaConfig, -Math.PI / 2); // Left tableware
+        _addTablewareLineZ(group, w/2 - 0.12, h - 0.4, 3, elem.mesaConfig, Math.PI / 2); // Right tableware
       }
 
     } else if (elem.type === 'table_umbrella') {
@@ -3656,6 +3674,53 @@ window.Visualizer3D = (function () {
 
     labelGroup.position.set(0, heightOffset, 0);
     return labelGroup;
+  }
+
+  function _createFloatingLabel(text, colorHex, borderHex) {
+    var canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 128;
+    var ctx = canvas.getContext('2d');
+    
+    // Background card (dark, high contrast)
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    
+    // Draw rounded rect
+    var x = 0, y = 0, width = 512, height = 128, radius = 16;
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Colorful border
+    ctx.strokeStyle = borderHex || '#f43f5e';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    
+    // Text Label
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 256, 64);
+    
+    var texture = new THREE.CanvasTexture(canvas);
+    var labelMat = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    var labelGeom = new THREE.PlaneGeometry(3.0, 0.75);
+    var labelMesh = new THREE.Mesh(labelGeom, labelMat);
+    return labelMesh;
   }
 
   function setExposure(val) {

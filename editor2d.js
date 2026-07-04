@@ -551,9 +551,16 @@ window.Editor2D = (function () {
 
     // ── Label ─────────────────────────────────────────────
     var labelFontSize = Math.min(Math.max(mToPx(0.5) * _zoom, 7), 13) / _zoom;
+    var labelY = py;
+    if (elem.type === 'dressing_room') {
+      labelY = py - 18;
+    } else if (elem.type === 'bathroom') {
+      labelY = py + 18;
+    }
+    
     var labelEl = svgEl('text', {
       x: px,
-      y: py + (shape === 'arch' ? ph * 0.15 : 0),
+      y: labelY + (shape === 'arch' ? ph * 0.15 : 0),
       'text-anchor': 'middle',
       'dominant-baseline': 'middle',
       fill: '#ffffff',
