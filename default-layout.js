@@ -1,4 +1,11 @@
 var DEFAULT_LAYOUT = {
+  "version": "1.0",
+  "appName": "Primavera Universal Planner",
+  "exportedAt": "2026-07-03T04:53:58.416Z",
+  "terrain": {
+    "w": 50,
+    "h": 60
+  },
   "elements": [
     {
       "id": "el_1782328230247_1",
@@ -21,8 +28,8 @@ var DEFAULT_LAYOUT = {
       "type": "salon",
       "category": "estructuras",
       "name": "Salón Techado",
-      "x": 31.900000000000002,
-      "y": 18.2,
+      "x": 32.300000000000004,
+      "y": 17.8,
       "w": 33.9,
       "h": 35.1,
       "rotation": 0,
@@ -38,8 +45,8 @@ var DEFAULT_LAYOUT = {
       "type": "terrain",
       "category": "estructuras",
       "name": "Terreno Base",
-      "x": 28.3,
-      "y": 27.6,
+      "x": 25.1,
+      "y": 27.700000000000003,
       "w": 50,
       "h": 55.4,
       "rotation": 0,
@@ -71,12 +78,12 @@ var DEFAULT_LAYOUT = {
       "category": "estructuras",
       "name": "Terraza",
       "x": 7.300000000000001,
-      "y": 18,
+      "y": 18.2,
       "w": 13.1,
       "h": 35,
       "rotation": 0,
       "color": "#1e3a5f",
-      "chairs": 0,
+      "chairs": 10,
       "editable": true,
       "removable": true,
       "layer": "estructuras"
@@ -134,11 +141,11 @@ var DEFAULT_LAYOUT = {
       "type": "bar_area",
       "category": "estructuras",
       "name": "Área de Barra",
-      "x": 7.300000000000001,
-      "y": 2.7,
+      "x": 3.4000000000000004,
+      "y": 31.1,
       "w": 8.6,
       "h": 4.1,
-      "rotation": 0,
+      "rotation": 270,
       "color": "#92400e",
       "chairs": 0,
       "editable": true,
@@ -151,7 +158,7 @@ var DEFAULT_LAYOUT = {
       "category": "estructuras",
       "name": "Área Infantil",
       "x": 43.7,
-      "y": 39.7,
+      "y": 44.900000000000006,
       "w": 9.9,
       "h": 7.1,
       "rotation": 0,
@@ -234,7 +241,21 @@ var DEFAULT_LAYOUT = {
         "servilletaColorOtros": "blanco",
         "servilletaColor_corazon": "dorado",
         "servilletaColor_corbata": "champagne",
-        "servilletaColor_default": "blanco"
+        "servilletaColor_default": "blanco",
+        "invitados": [
+          {
+            "nombre": "Zoe (Quinceañera)",
+            "pases": 1
+          },
+          {
+            "nombre": "Papás de Zoe",
+            "pases": 2
+          },
+          {
+            "nombre": "Hermano de Zoe",
+            "pases": 1
+          }
+        ]
       }
     },
     {
@@ -242,8 +263,8 @@ var DEFAULT_LAYOUT = {
       "type": "giant_letters",
       "category": "entretenimiento",
       "name": "Letras Gigantes",
-      "x": 6.1000000000000005,
-      "y": 9.5,
+      "x": 7.9,
+      "y": 4.2,
       "w": 7.5,
       "h": 2.5,
       "rotation": 323,
@@ -258,8 +279,8 @@ var DEFAULT_LAYOUT = {
       "type": "tree_decor",
       "category": "decoracion",
       "name": "Árbol Decorativo",
-      "x": 32.6,
-      "y": 41,
+      "x": 30.3,
+      "y": 44,
       "w": 1.5,
       "h": 7.5,
       "rotation": 0,
@@ -274,16 +295,17 @@ var DEFAULT_LAYOUT = {
       "type": "photobooth_inflatable",
       "category": "entretenimiento",
       "name": "Cabina Inflable",
-      "x": 6.9,
-      "y": 27.700000000000003,
-      "w": 3,
-      "h": 3,
+      "x": 4.3,
+      "y": 22.3,
+      "w": 6.2,
+      "h": 5.5,
       "rotation": 0,
       "color": "#0369a1",
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "entretenimiento"
+      "layer": "entretenimiento",
+      "mesaConfig": {}
     },
     {
       "id": "el_1782333947644_19",
@@ -305,14 +327,14 @@ var DEFAULT_LAYOUT = {
       "id": "el_1782334027164_20",
       "type": "table_imperial",
       "category": "mobiliario",
-      "name": "Mesa Imperial",
-      "x": 23.8,
-      "y": 23.8,
-      "w": 15,
-      "h": 1.6,
-      "rotation": 0,
+      "name": "Mesa Imperial (Terraza Zoe)",
+      "x": 11.8,
+      "y": 17.1,
+      "w": 8,
+      "h": 2.3,
+      "rotation": 270,
       "color": "#5c3d2e",
-      "chairs": 39,
+      "chairs": 18,
       "tablones": 4,
       "editable": true,
       "removable": true,
@@ -334,6 +356,18 @@ var DEFAULT_LAYOUT = {
         "mesaNum": 2,
         "invitados": [
           {
+            "nombre": "Pamela Díaz",
+            "pases": 5
+          },
+          {
+            "nombre": "jessica Maldonado",
+            "pases": 2
+          },
+          {
+            "nombre": "Jimena Maldonado",
+            "pases": 1
+          },
+          {
             "nombre": "Mauricio Miranda",
             "pases": 1
           },
@@ -346,7 +380,7 @@ var DEFAULT_LAYOUT = {
             "pases": 1
           },
           {
-            "nombre": "Dulce Valdes",
+            "nombre": "Dulce Valdez",
             "pases": 1
           },
           {
@@ -354,28 +388,12 @@ var DEFAULT_LAYOUT = {
             "pases": 2
           },
           {
-            "nombre": "Gabriel Ledesma",
-            "pases": 3
-          },
-          {
-            "nombre": "Yessica Ladrón de Guevara",
-            "pases": 3
-          },
-          {
             "nombre": "Gael Olivares",
             "pases": 1
           },
           {
             "nombre": "Giezi Sanchez",
-            "pases": 2
-          },
-          {
-            "nombre": "Heriberto Avelar",
-            "pases": 3
-          },
-          {
-            "nombre": "Isabel Basurto",
-            "pases": 3
+            "pases": 1
           },
           {
             "nombre": "Javier Emiliano",
@@ -384,29 +402,9 @@ var DEFAULT_LAYOUT = {
           {
             "nombre": "Josthin Erubiel",
             "pases": 1
-          },
-          {
-            "nombre": "Ulises Jair",
-            "pases": 1
-          },
-          {
-            "nombre": "Esteban Fabian",
-            "pases": 2
-          },
-          {
-            "nombre": "Manuel Gonzalez",
-            "pases": 5
-          },
-          {
-            "nombre": "Stefany Toledo",
-            "pases": 4
-          },
-          {
-            "nombre": "Alvania Ronces",
-            "pases": 4
           }
         ],
-        "capacidadMax": 40,
+        "capacidadMax": 18,
         "caminoAcomodo": "diagonal",
         "cristal2": "ninguno",
         "arregloFloralTipo": "bajo",
@@ -424,14 +422,14 @@ var DEFAULT_LAYOUT = {
       "id": "el_1782334148512_21",
       "type": "table_imperial",
       "category": "mobiliario",
-      "name": "Mesa Imperial",
-      "x": 24,
-      "y": 33.2,
-      "w": 15,
-      "h": 1.6,
-      "rotation": 0,
+      "name": "Mesa Imperial (Familiar Roque)",
+      "x": 19.400000000000002,
+      "y": 18.900000000000002,
+      "w": 11.0,
+      "h": 2.3,
+      "rotation": 270,
       "color": "#5c3d2e",
-      "chairs": 37,
+      "chairs": 24,
       "tablones": 4,
       "editable": true,
       "removable": true,
@@ -461,10 +459,6 @@ var DEFAULT_LAYOUT = {
             "pases": 6
           },
           {
-            "nombre": "Pamela Díaz",
-            "pases": 3
-          },
-          {
             "nombre": "Mariana Saldívar",
             "pases": 3
           },
@@ -483,207 +477,9 @@ var DEFAULT_LAYOUT = {
           {
             "nombre": "Bertha Garcia",
             "pases": 2
-          },
-          {
-            "nombre": "Cinthia Maldonado",
-            "pases": 3
-          },
-          {
-            "nombre": "Jaeson Díaz",
-            "pases": 2
-          },
-          {
-            "nombre": "Priscila Hernandez",
-            "pases": 3
-          },
-          {
-            "nombre": "Jesus Guillen",
-            "pases": 2
           }
         ],
-        "capacidadMax": 40,
-        "caminoAcomodo": "diagonal",
-        "cristal2": "ninguno",
-        "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal",
-        "ensambleTipo": "angosto",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco",
-        "servilletaColor_corazon": "dorado",
-        "servilletaColor_corbata": "champagne",
-        "servilletaColor_default": "blanco"
-      }
-    },
-    {
-      "id": "el_1782334149150_22",
-      "type": "table_imperial",
-      "category": "mobiliario",
-      "name": "Mesa Imperial",
-      "x": 40.900000000000006,
-      "y": 33,
-      "w": 15,
-      "h": 1.6,
-      "rotation": 0,
-      "color": "#5c3d2e",
-      "chairs": 31,
-      "tablones": 4,
-      "editable": true,
-      "removable": true,
-      "layer": "mobiliario",
-      "mesaConfig": {
-        "mantelColor": "blanco",
-        "caminoColor": "dorado",
-        "servilletaDoblez": [
-          "corazon",
-          "corbata"
-        ],
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "cubero",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "mesaNum": 5,
-        "invitados": [
-          {
-            "nombre": "Beny Téllez",
-            "pases": 2
-          },
-          {
-            "nombre": "Nelly Ochoa",
-            "pases": 4
-          },
-          {
-            "nombre": "Ximena Ochoa",
-            "pases": 3
-          },
-          {
-            "nombre": "Yildis Ochoa",
-            "pases": 5
-          },
-          {
-            "nombre": "Sotelo Bahena",
-            "pases": 4
-          },
-          {
-            "nombre": "Mercedes Salgado",
-            "pases": 4
-          },
-          {
-            "nombre": "Villalvazo Cortes",
-            "pases": 2
-          },
-          {
-            "nombre": "Karla Diaz",
-            "pases": 4
-          },
-          {
-            "nombre": "Francisco Diaz",
-            "pases": 2
-          },
-          {
-            "nombre": "Mtro. Vals",
-            "pases": 1
-          }
-        ],
-        "capacidadMax": 40,
-        "caminoAcomodo": "diagonal",
-        "cristal2": "ninguno",
-        "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal",
-        "ensambleTipo": "angosto",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco",
-        "servilletaColor_corazon": "dorado",
-        "servilletaColor_corbata": "champagne",
-        "servilletaColor_default": "blanco"
-      }
-    },
-    {
-      "id": "el_1782334178156_23",
-      "type": "table_imperial",
-      "category": "mobiliario",
-      "name": "Mesa Imperial",
-      "x": 40.900000000000006,
-      "y": 23.700000000000003,
-      "w": 15,
-      "h": 1.6,
-      "rotation": 0,
-      "color": "#5c3d2e",
-      "chairs": 37,
-      "tablones": 4,
-      "editable": true,
-      "removable": true,
-      "layer": "mobiliario",
-      "mesaConfig": {
-        "mantelColor": "blanco",
-        "caminoColor": "dorado",
-        "servilletaDoblez": [
-          "corazon",
-          "corbata"
-        ],
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "cubero",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "mesaNum": 3,
-        "invitados": [
-          {
-            "nombre": "José Hilario Roque",
-            "pases": 2
-          },
-          {
-            "nombre": "Braulio Roque",
-            "pases": 2
-          },
-          {
-            "nombre": "Ángeles Roque",
-            "pases": 3
-          },
-          {
-            "nombre": "Patricia Sanchez",
-            "pases": 1
-          },
-          {
-            "nombre": "Gabriela Medina",
-            "pases": 2
-          },
-          {
-            "nombre": "Paulina Medina",
-            "pases": 2
-          },
-          {
-            "nombre": "Carlos Sanchez",
-            "pases": 4
-          },
-          {
-            "nombre": "Fernanda Sanchez",
-            "pases": 5
-          },
-          {
-            "nombre": "Andrea Sanchez",
-            "pases": 5
-          },
-          {
-            "nombre": "Alejandra Sanchez",
-            "pases": 4
-          },
-          {
-            "nombre": "Luis Sanchez",
-            "pases": 2
-          },
-          {
-            "nombre": "Ángel Vargas",
-            "pases": 5
-          }
-        ],
-        "capacidadMax": 40,
+        "capacidadMax": 24,
         "caminoAcomodo": "diagonal",
         "cristal2": "ninguno",
         "arregloFloralTipo": "bajo",
@@ -726,7 +522,8 @@ var DEFAULT_LAYOUT = {
         "menu": "",
         "servilletaColorCorazon": "dorado",
         "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco"
+        "servilletaColorOtros": "blanco",
+        "invitados": []
       }
     },
     {
@@ -734,10 +531,10 @@ var DEFAULT_LAYOUT = {
       "type": "dancefloor",
       "category": "entretenimiento",
       "name": "Pista de Baile",
-      "x": 32.1,
-      "y": 12.6,
-      "w": 31.3,
-      "h": 12.6,
+      "x": 32.2,
+      "y": 12.5,
+      "w": 20.1,
+      "h": 11.8,
       "rotation": 0,
       "color": "#820ad1",
       "chairs": 0,
@@ -750,8 +547,8 @@ var DEFAULT_LAYOUT = {
       "type": "cart_esquites",
       "category": "proveedores",
       "name": "Carrito de Esquites",
-      "x": 9.1,
-      "y": 15.3,
+      "x": 41.800000000000004,
+      "y": 38.400000000000006,
       "w": 3.1,
       "h": 3.8,
       "rotation": 0,
@@ -766,8 +563,8 @@ var DEFAULT_LAYOUT = {
       "type": "vendor_paletas",
       "category": "proveedores",
       "name": "Paletas La Princesa",
-      "x": 8.9,
-      "y": 21.8,
+      "x": 35.6,
+      "y": 44.400000000000006,
       "w": 2.8,
       "h": 3.4,
       "rotation": 0,
@@ -776,6 +573,728 @@ var DEFAULT_LAYOUT = {
       "editable": true,
       "removable": true,
       "layer": "proveedores"
+    },
+    {
+      "id": "el_1783050187579_1782334332717",
+      "type": "kids_area",
+      "category": "estructuras",
+      "name": "Área Infantil",
+      "x": 4.6000000000000005,
+      "y": 13.700000000000001,
+      "w": 9.9,
+      "h": 7.1,
+      "rotation": 269,
+      "color": "#7c3aed",
+      "chairs": 0,
+      "editable": true,
+      "removable": true,
+      "layer": "estructuras"
+    },
+    {
+      "id": "el_1783050976029_1782334332718",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 45.300000000000004,
+      "y": 9.5,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 6,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Fernanda Sanchez",
+            "pases": 5
+          },
+          {
+            "nombre": "Andrea Sanchez",
+            "pases": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051039492_1782334332719",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 45.300000000000004,
+      "y": 14.700000000000001,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 7,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Carlos Sanchez",
+            "pases": 4
+          },
+          {
+            "nombre": "Alejandra Sanchez",
+            "pases": 4
+          },
+          {
+            "nombre": "Luis Sanchez",
+            "pases": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051043159_1782334332720",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 45.400000000000006,
+      "y": 20.200000000000003,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 8,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Ángeles Roque",
+            "pases": 3
+          },
+          {
+            "nombre": "Braulio Roque",
+            "pases": 2
+          },
+          {
+            "nombre": "José Hilario Roque",
+            "pases": 2
+          },
+          {
+            "nombre": "Paulina Medina",
+            "pases": 2
+          },
+          {
+            "nombre": "Patricia Sanchez",
+            "pases": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051045622_1782334332721",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 45.400000000000006,
+      "y": 25.700000000000003,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 9,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Ángel Vargas",
+            "pases": 5
+          },
+          {
+            "nombre": "Gabriela Medina",
+            "pases": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051047858_1782334332722",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 45.400000000000006,
+      "y": 30.700000000000003,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 10,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Ximena Ochoa",
+            "pases": 3
+          },
+          {
+            "nombre": "Yildhis Ochoa",
+            "pases": 5
+          },
+          {
+            "nombre": "Villalvazo Cortes",
+            "pases": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051388570_1782334332723",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 19.400000000000002,
+      "y": 30.200000000000003,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 11,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Manuel Gonzalez",
+            "pases": 5
+          },
+          {
+            "nombre": "Alvania Ronces",
+            "pases": 4
+          },
+          {
+            "nombre": "Mtro. Vals",
+            "pases": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051397021_1782334332724",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 19.5,
+      "y": 25.5,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 12,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Cinthia Maldonado",
+            "pases": 3
+          },
+          {
+            "nombre": "Jaeson Díaz",
+            "pases": 2
+          },
+          {
+            "nombre": "Priscila Hernandez",
+            "pases": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051402673_1782334332725",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 19.400000000000002,
+      "y": 8.700000000000001,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 13,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Gabriel Ledesma",
+            "pases": 3
+          },
+          {
+            "nombre": "Yessica Ladrón de Guevara",
+            "pases": 3
+          },
+          {
+            "nombre": "Heriberto Avelar",
+            "pases": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783051405165_1782334332726",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 19.400000000000002,
+      "y": 12.4,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 14,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Isabel Basurto",
+            "pases": 3
+          },
+          {
+            "nombre": "Stefany Toledo",
+            "pases": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783052771353_1782334332727",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 11.700000000000001,
+      "y": 27,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 5,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Nelly Ochoa",
+            "pases": 4
+          },
+          {
+            "nombre": "Sotelo Bahena",
+            "pases": 4
+          },
+          {
+            "nombre": "Francisco Diaz",
+            "pases": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783053808854_1782334332728",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 11.600000000000001,
+      "y": 9.1,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mesaNum": 3,
+        "capacidadMax": 10,
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "caminoAcomodo": "diagonal",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "cristal2": "ninguno",
+        "copasColor2": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "invitados": [
+          {
+            "nombre": "Ulises Jair",
+            "pases": 1
+          },
+          {
+            "nombre": "Esteban Fabian",
+            "pases": 2
+          },
+          {
+            "nombre": "Jesus Guillen",
+            "pases": 2
+          },
+          {
+            "nombre": "Sobrino de esta loca",
+            "pases": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "el_1783054123456_mesa16",
+      "type": "table_square",
+      "category": "mobiliario",
+      "name": "Mesa Cuadrada (10p)",
+      "x": 32.2,
+      "y": 25.5,
+      "w": 2.7,
+      "h": 2.9,
+      "rotation": 0,
+      "color": "#92400e",
+      "chairs": 10,
+      "editable": true,
+      "removable": true,
+      "layer": "mobiliario",
+      "mesaConfig": {
+        "mantelColor": "blanco",
+        "caminoColor": "dorado",
+        "servilletaDoblez": [
+          "corazon",
+          "corbata"
+        ],
+        "cubiertos": "plateado",
+        "platoBase": "ninguno",
+        "platoTrinche": "redondo_blanco",
+        "cristal": "cubero",
+        "copasColor": "transparente",
+        "tipoSilla": "tiffany",
+        "menu": "",
+        "mesaNum": 15,
+        "invitados": [
+          {
+            "nombre": "Mercedes Salgado",
+            "pases": 4
+          },
+          {
+            "nombre": "Karla Diaz",
+            "pases": 4
+          },
+          {
+            "nombre": "Beny Téllez",
+            "pases": 2
+          }
+        ],
+        "capacidadMax": 10,
+        "caminoAcomodo": "diagonal",
+        "cristal2": "ninguno",
+        "arregloFloralTipo": "bajo",
+        "arregloFloralAcomodo": "diagonal",
+        "ensambleTipo": "angosto",
+        "servilletaColorCorazon": "dorado",
+        "servilletaColorCorbata": "champagne",
+        "servilletaColorOtros": "blanco",
+        "servilletaColor_corazon": "dorado",
+        "servilletaColor_corbata": "champagne",
+        "servilletaColor_default": "blanco"
+      }
+    },
+    {
+      "id": "el_1783054123456_vestidor",
+      "type": "dressing_room",
+      "category": "estructuras",
+      "name": "Vestidor (2do Piso)",
+      "x": 4.0,
+      "y": 51.0,
+      "w": 4.0,
+      "h": 3.0,
+      "rotation": 0,
+      "color": "#475569",
+      "chairs": 0,
+      "editable": true,
+      "removable": true,
+      "layer": "estructuras"
+    },
+    {
+      "id": "el_1783054123456_arcomadera",
+      "type": "flower_arch_wood",
+      "category": "decoracion",
+      "name": "Arco de Madera Floral",
+      "x": 32.3,
+      "y": 35.35,
+      "w": 3.5,
+      "h": 0.8,
+      "rotation": 0,
+      "color": "#854d0e",
+      "chairs": 0,
+      "editable": true,
+      "removable": true,
+      "layer": "decoracion"
     }
   ],
   "layers": {

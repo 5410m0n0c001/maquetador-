@@ -1780,7 +1780,9 @@ window.Visualizer3D = (function () {
     var w = elem.w;
     var h = elem.h;
     var colorNum = parseColor(elem.color, elem.type);
-    var isCircle = elem.shape === 'circle';
+    var cat = window.getCatalogEntry ? window.getCatalogEntry(elem.type) : null;
+    var shape = elem.shape || (cat && cat.shape) || 'rect';
+    var isCircle = shape === 'circle';
     var numChairs = elem.chairs || 0;
 
     // A) Table top (rendered with tablecloth or custom natural material)
@@ -1840,7 +1842,7 @@ window.Visualizer3D = (function () {
       // Radial chairs
       _addChairsRadial(group, w/2 + 0.18, numChairs, 0.75);
 
-    } else if (elem.shape === 'square' || elem.shape === 'rect') {
+    } else if (shape === 'square' || shape === 'rect') {
       tableTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, h), clothMat);
       tableTop.position.y = 0.75;
       tableTop.castShadow = true;
@@ -1878,7 +1880,7 @@ window.Visualizer3D = (function () {
         if (elem.mesaConfig) {
           _addTablewareLine(group, -h/2 + 0.12, w, numChairs, elem.mesaConfig, Math.PI);
         }
-      } else if (elem.shape === 'square' && numChairs === 10) {
+      } else if (shape === 'square' && numChairs === 10) {
         // Configuration: 3 chairs on left/right sides (Z axis), 2 chairs on top/bottom sides (X axis)
         // Cabeceras (X axis): 2 top (Z axis negative) and 2 bottom (Z axis positive)
         _addChairsLine(group, -h/2 - 0.18, w - 0.4, 2, 0.75, Math.PI); // Top (facing South/table center)

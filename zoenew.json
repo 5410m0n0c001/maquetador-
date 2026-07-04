@@ -242,7 +242,20 @@
         "servilletaColor_corazon": "dorado",
         "servilletaColor_corbata": "champagne",
         "servilletaColor_default": "blanco",
-        "invitados": []
+        "invitados": [
+          {
+            "nombre": "Zoe (Quinceañera)",
+            "pases": 1
+          },
+          {
+            "nombre": "Papás de Zoe",
+            "pases": 2
+          },
+          {
+            "nombre": "Hermano de Zoe",
+            "pases": 1
+          }
+        ]
       }
     },
     {
@@ -291,7 +304,8 @@
       "chairs": 0,
       "editable": true,
       "removable": true,
-      "layer": "entretenimiento"
+      "layer": "entretenimiento",
+      "mesaConfig": {}
     },
     {
       "id": "el_1782333947644_19",
@@ -313,7 +327,7 @@
       "id": "el_1782334027164_20",
       "type": "table_imperial",
       "category": "mobiliario",
-      "name": "Mesa Imperial",
+      "name": "Mesa Imperial (Terraza Zoe)",
       "x": 11.8,
       "y": 17.1,
       "w": 8,
@@ -366,7 +380,7 @@
             "pases": 1
           },
           {
-            "nombre": "Dulce Valdes",
+            "nombre": "Dulce Valdez",
             "pases": 1
           },
           {
@@ -408,7 +422,7 @@
       "id": "el_1782334148512_21",
       "type": "table_imperial",
       "category": "mobiliario",
-      "name": "Mesa Imperial",
+      "name": "Mesa Imperial (Familiar Roque)",
       "x": 19.400000000000002,
       "y": 18.900000000000002,
       "w": 11.0,
@@ -1092,7 +1106,7 @@
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mesaNum": 15,
+        "mesaNum": 5,
         "capacidadMax": 10,
         "mantelColor": "blanco",
         "caminoColor": "dorado",
@@ -1148,7 +1162,7 @@
       "removable": true,
       "layer": "mobiliario",
       "mesaConfig": {
-        "mesaNum": 15,
+        "mesaNum": 3,
         "capacidadMax": 10,
         "mantelColor": "blanco",
         "caminoColor": "dorado",
@@ -1221,7 +1235,7 @@
         "copasColor": "transparente",
         "tipoSilla": "tiffany",
         "menu": "",
-        "mesaNum": 16,
+        "mesaNum": 15,
         "invitados": [
           {
             "nombre": "Mercedes Salgado",
