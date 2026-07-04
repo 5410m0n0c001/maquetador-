@@ -420,23 +420,23 @@
     AppState.elements.forEach(function (elem) {
       var t = elem.type;
       
-      // Calculate capacity and occupancy
       var isTable = t.startsWith('table_') || t === 'lounge_set';
       var isDecorativeTable = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet'].indexOf(t) !== -1;
+      
       if (isTable && !isDecorativeTable) {
-        if (elem.chairs) totalGuests += elem.chairs;
-        
-        var cap = 10;
-        if (elem.mesaConfig && elem.mesaConfig.capacidadMax !== undefined && elem.mesaConfig.capacidadMax !== null && elem.mesaConfig.capacidadMax !== '') {
-          cap = parseInt(elem.mesaConfig.capacidadMax, 10);
-        } else if (t === 'table_imperial') {
-          var tablones = elem.tablones || Math.max(2, Math.round(elem.w / 2.4));
-          cap = tablones * 10;
+        if (elem.chairs) totalCapacity += elem.chairs;
+        if (elem.mesaConfig && elem.mesaConfig.invitados) {
+          elem.mesaConfig.invitados.forEach(function (g) {
+            totalGuests += (g.pases || 0);
+          });
         }
-        totalCapacity += cap;
-      } else if (elem.chairs) {
-        totalGuests += elem.chairs;
+      } else if (elem.chairs && t !== 'terrain' && t !== 'salon') {
         totalCapacity += elem.chairs;
+        if (elem.mesaConfig && elem.mesaConfig.invitados) {
+          elem.mesaConfig.invitados.forEach(function (g) {
+            totalGuests += (g.pases || 0);
+          });
+        }
       }
       
       tableCounts[t] = (tableCounts[t] || 0) + 1;
@@ -450,7 +450,7 @@
     var tableEl = document.getElementById('counter-tables');
     if (tableEl) {
       var tableTotal = 0;
-      var excludedTables = ['table_gifts', 'table_candy', 'table_shots', 'table_buffet'];
+      var excludedTables = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet'];
       Object.keys(tableCounts).forEach(function (k) {
         if ((k.startsWith('table_') || k === 'lounge_set') && excludedTables.indexOf(k) === -1) {
           tableTotal += tableCounts[k];
@@ -1917,7 +1917,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-07-04-v29';
+  var CURRENT_LAYOUT_VERSION = '2026-07-04-v30';
 
   function loadFromLocalStorage() {
     try {
