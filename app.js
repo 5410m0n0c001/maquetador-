@@ -1917,7 +1917,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-07-04-v28';
+  var CURRENT_LAYOUT_VERSION = '2026-07-04-v29';
 
   function loadFromLocalStorage() {
     try {
@@ -2013,6 +2013,45 @@
   }
 
   function exportPDF() {
+    var menuChildDB = {
+      "mariana saldivar": 1, "maricela rodriguez": 1, "mauricio miranda": 1, "mercedes salgado": 3,
+      "nelly ochoa": 2, "pamela diaz": 3, "jessica maldonado": 1, "jimena maldonado": 0,
+      "patricia sanchez": 0, "paulina medina": 0, "priscila hernandez": 2, "ricardo villegas garcia": 1,
+      "ricardo villegas cervantes": 1, "stefany toledo": 2, "ulises jair": 1, "ximena ochoa": 1,
+      "yildhis ochoa": 2, "esteban fabian": 2, "alvania ronces": 2, "carlos sanchez soto": 2,
+      "carlos sanchez": 2, "fernanda sanchez cuevas": 2, "fernanda sanchez": 2, "andrea sanchez cuevas": 2,
+      "andrea sanchez": 2, "alejandra sanchez": 1, "luis sanchez": 0, "ángel vargas romero": 3,
+      "ángel vargas": 3, "angeles roque": 1, "beny telles": 0, "beny téllez": 0, "bertha garcía": 0,
+      "bertha garcia": 0, "braulio roque": 0, "carlos díaz": 4, "carlos diaz": 4, "cinthia maldonado": 2,
+      "damian alonso": 1, "damian alomso": 1, "dulce figueroa": 1, "dulce figuerioa": 1,
+      "dulce valdes": 1, "dulce valdez": 1, "elena villegas": 0, "elias alemán": 2, "elias aleman": 2,
+      "fam. sotelo bahena": 2, "sotelo bahena": 2, "fam. villalvazo cortés": 0, "villalvazo cortes": 0,
+      "francisco diaz": 0, "gabriel ledesma": 1, "gabriela medina": 0, "gael olivares": 1,
+      "gael olivarez": 1, "giezi sanchez": 1, "heriberto avelar": 1, "isabel basurto": 2,
+      "jaeson diaz": 0, "javier emiliano": 1, "jesús guillén": 2, "jesus guillen": 2,
+      "sobrino de esta loca": 1, "sobrino": 1, "josé hilario roque": 0, "profesor vals (jose)": 0,
+      "profesor vals": 0, "mtro. vals": 0, "josthin erubiel": 1, "karla díaz": 2, "karla diaz": 2,
+      "yessica ladron de guevara": 1, "yessica ladrón": 1, "manuel gonzalez": 2
+    };
+
+    function normStr(str) {
+      if (!str) return "";
+      str = str.toLowerCase().strip ? str.toLowerCase().strip() : str.toLowerCase().trim();
+      str = str.replace(/[áàäâ]/g, "a").replace(/[éèëê]/g, "e").replace(/[íìïî]/g, "i").replace(/[óòöô]/g, "o").replace(/[úùüû]/g, "u").replace(/ñ/g, "n");
+      return str;
+    }
+
+    function getChildCountForInv(name, pases, mesaNum) {
+      if (mesaNum === 1) return 0;
+      var normName = normStr(name);
+      for (var key in menuChildDB) {
+        var normKey = normStr(key);
+        if (normKey === normName || normName.indexOf(normKey) !== -1 || normKey.indexOf(normName) !== -1) {
+          return Math.min(pases, menuChildDB[key]);
+        }
+      }
+      return 0;
+    }
     var svgEl = document.getElementById('svg-canvas');
     if (!svgEl) {
       showToast('Error: No se encontró el lienzo 2D.', 'error');
@@ -2107,12 +2146,13 @@
 
     // Get event data
     var totalGuests = 0;
+    var totalAdults = 0;
+    var totalNinos = 0;
     var tableCounts = {};
     var tablesList = [];
     var otherElementsList = [];
 
     AppState.elements.forEach(function (elem) {
-      if (elem.chairs) totalGuests += elem.chairs;
       var t = elem.type;
       tableCounts[t] = (tableCounts[t] || 0) + 1;
 
@@ -2122,6 +2162,20 @@
       } else {
         otherElementsList.push(elem);
       }
+    });
+
+    // Calcular comensales reales desde mesaConfig.invitados
+    tablesList.forEach(function (t) {
+      var config = t.mesaConfig || {};
+      var invitados = config.invitados || [];
+      var mesaNum = parseInt(config.mesaNum, 10) || 0;
+      invitados.forEach(function (g) {
+        var p = g.pases || 0;
+        totalGuests += p;
+        var n = getChildCountForInv(g.nombre, p, mesaNum);
+        totalNinos += n;
+        totalAdults += (p - n);
+      });
     });
 
     // Sort tables by number
@@ -2262,11 +2316,18 @@
     html += '        <div><strong>Festejada:</strong> Zoe (Mis XV Años)</div>\n';
     html += '        <div><strong>Lugar:</strong> Jardín Manzanares</div>\n';
     html += '        <div><strong>Fecha:</strong> Sábado 04 de Julio de 2026</div>\n';
-    html += '        <div><strong>Capacidad Máxima:</strong> 150 Personas (Contratados)</div>\n';
+    html += '        <div><strong>Comensales en Plano:</strong> ' + totalGuests + ' Personas sentadas</div>\n';
     html += '        <div><strong>Coordinador General:</strong> Alex Salomon</div>\n';
     html += '        <div><strong>Tiempo de Renta/Servicio:</strong> 9 Horas totales</div>\n';
     html += '      </div>\n';
     html += '      <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">\n';
+    html += '        <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; padding: 10px 12px; color: #856404; font-size:11px;">\n';
+    html += '          <div style="font-weight: 700; font-size: 11px; text-transform: uppercase;">Conciliación de Banquetes</div>\n';
+    html += '          <div style="font-weight: 600; margin-top: 4px;">• Platos Contratados: 150 platos</div>\n';
+    html += '          <div style="font-weight: 600;">• Comensales en Plano: ' + totalGuests + ' personas</div>\n';
+    html += '          <div style="font-weight: 600;">• Requerido: ' + totalAdults + ' Adultos y ' + totalNinos + ' Niños</div>\n';
+    html += '          <div style="font-weight: 700; margin-top: 4px; color: #a94442;">• Estatus: Faltante de 3 platos (adición requerida)</div>\n';
+    html += '        </div>\n';
     html += '        <div>\n';
     html += '          <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Código de Vestimenta</div>\n';
     html += '          <div style="font-weight: 600; font-size: 13px; color: #0f172a; margin-top: 2px;">Formal (no etiqueta rigurosa)</div>\n';
@@ -2280,7 +2341,7 @@
     html += '      </div>\n';
     html += '    </div>\n';
     html += '    <div style="border-top: 1px solid #cbd5e1; padding-top: 12px; margin-top: 5px; font-size: 12px; line-height: 1.5; color: #475569;">\n';
-    html += '      <strong>Detalles Logísticos:</strong> El chicharrón, guacamole y pastel son provistos directamente por los anfitriones. Las paletas heladas se entregan puntualmente a las 15:30 (Se deben entregar 250 piezas).\n';
+    html += '      <strong>Detalles Logísticos:</strong> El chicharrón, guacamole y pastel son provistos directamente por los anfitriones. Las paletas heladas se entregan puntualmente a las 15:30 (250 piezas). Instalación eléctrica para el pastel (enchufe cerca de columna) y colocación de inflable infantil (área infantil y brincolín en mantenimiento) concretados.\n';
     html += '    </div>\n';
     html += '  </div>\n';
     html += '</div>\n';
@@ -2576,10 +2637,21 @@
         var config = t.mesaConfig || {};
         if (!config.invitados || config.invitados.length === 0) return;
 
+        var mesaNum = parseInt(config.mesaNum, 10) || 0;
+        var mesaAdults = 0;
+        var mesaNinos = 0;
+        config.invitados.forEach(function (g) {
+          var p = g.pases || 0;
+          var n = getChildCountForInv(g.nombre, p, mesaNum);
+          mesaNinos += n;
+          mesaAdults += (p - n);
+        });
+
         var mesaLabel = config.mesaNum ? 'Mesa ' + config.mesaNum : 'Sin Número';
         if (t.type === 'table_honor_xv' || t.type === 'table_honor_king' || t.type === 'table_honor_bride') {
           mesaLabel += ' (Honor)';
         }
+        mesaLabel += ' <span style="font-size:10px; color:#475569; font-weight:normal;">(' + mesaAdults + ' Adultos / ' + mesaNinos + ' Niños)</span>';
 
         var totalMesaGuests = config.invitados.reduce(function (sum, g) { return sum + (g.pases || 0); }, 0);
 
