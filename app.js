@@ -2025,7 +2025,29 @@
 
     // Helper to generate clean SVG for a given mode
     function getSvgForMode(mode) {
-      // Preserve layout unchanged for new Zoe layout
+      AppState.elements.forEach(function (elem) {
+        if (elem.type === 'table_imperial' && elem.mesaConfig) {
+          var num = parseInt(elem.mesaConfig.mesaNum, 10);
+          if (mode === 'vertical') {
+            elem.rotation = 90;
+            elem.w = 15.0;
+            elem.h = 1.6;
+            if (num === 2) { elem.x = 19.3; elem.y = 28.0; }
+            else if (num === 3) { elem.x = 28.3; elem.y = 28.1; }
+            else if (num === 4) { elem.x = 36.9; elem.y = 28.1; }
+            else if (num === 5) { elem.x = 45.4; elem.y = 28.2; }
+          } else {
+            elem.rotation = 0;
+            elem.w = 15.0;
+            elem.h = 1.6;
+            if (num === 2) { elem.x = 23.8; elem.y = 23.8; }
+            else if (num === 3) { elem.x = 40.9; elem.y = 23.7; }
+            else if (num === 4) { elem.x = 24.0; elem.y = 33.2; }
+            else if (num === 5) { elem.x = 40.9; elem.y = 33.0; }
+          }
+        }
+      });
+      
       if (window.Editor2D) window.Editor2D.update(AppState.elements);
 
       var svgElForMode = document.getElementById('svg-canvas');
@@ -2494,50 +2516,84 @@
       html += '      <th style="width: 20%;">Dimensiones</th>\n';
       html += '      <th style="width: 30%;">Configuración / Ubicación</th>\n';
       html += '    </tr>\n';
-        // Section 5: Cruce de Pendientes y Menús (Hoja de Control)
-    var ninosMapeo = {
-      "Mariana Saldívar": 1, "Mariana Saldivar": 1, "Maricela Rodriguez": 1, "Mauricio Miranda": 1,
-      "Mercedes Salgado": 3, "Nelly Ochoa": 2, "Pamela Díaz": 3, "Pamela Diaz": 3,
-      "Priscila Hernandez": 2, "Ricardo Villegas Garcia": 1, "Ricardo Villegas Cervantes": 1,
-      "Stefany Toledo": 2, "Ulises Jair": 1, "Ximena Ochoa": 1, "Yildhis Ochoa": 2,
-      "Yildhis Ochoa": 2, "Esteban Fabian": 2, "Alvania Ronces": 2, "Carlos Sanchez": 2,
-      "Carlos Sanchez Soto": 2, "Fernanda Sanchez": 2, "Fernanda Sanchez Cuevas": 2,
-      "Andrea Sanchez": 2, "Andrea Sanchez Cuevas": 2, "Alejandra Sanchez": 1,
-      "Ángel Vargas": 3, "Angel Vargas Romero": 3, "Ángeles Roque": 1, "Beny Téllez": 0,
-      "Beny Telles": 0, "Bertha Garcia": 0, "Braulio Roque": 0, "Carlos Díaz": 4, "Carlos Diaz": 4,
-      "Cinthia Maldonado": 2, "Damián Alonso": 1, "Damian Alonso": 1, "Dulce Figueroa": 1,
-      "Dulce Valdes": 1, "Dulce Valdez": 1, "Elena Villegas": 0, "Elías Alemán": 2, "Elias Aleman": 2,
-      "Sotelo Bahena": 2, "Fam. Sotelo Bahena": 2, "Villalvazo Cortes": 0, "Fam. Villalvazo Cortes": 0,
-      "Francisco Diaz": 0, "Gabriel Ledesma": 1, "Gabriela Medina": 0, "Gael Olivares": 1, "Gael Olivares": 1,
-      "Giezi Sanchez": 1, "Heriberto Avelar": 1, "Isabel Basurto": 2, "Jaeson Díaz": 0, "Jaeson Diaz": 0,
-      "Javier Emiliano": 1, "Jesus Guillen": 2, "José Hilario Roque": 0, "Jose Hilario Roque": 0,
-      "Mtro. Vals": 0, "Profesor vals (Jose)": 0, "Josthin Erubiel": 1, "Karla Diaz": 2,
-      "Yessica Ladrón de Guevara": 1, "Yessica Ladron de Guevara": 1, "Manuel Gonzalez": 2,
-      "jessica Maldonado": 1, "Sobrino de esta loca": 1, "Jimena Maldonado": 1
-    };
+      html += '  </thead>\n';
+      html += '  <tbody>\n';
 
-    var totalNinosAsignados = 0;
-    var totalAdultosAsignados = 0;
-    var totalMenuesSuma = 0;
+      otherElementsList.forEach(function (e) {
+        var cat = window.getCatalogEntry ? window.getCatalogEntry(e.type) : null;
+        var typeName = cat ? cat.name : e.type;
+        var categoryName = cat ? cat.category.charAt(0).toUpperCase() + cat.category.slice(1) : '-';
+        var nameLabel = e.name || typeName;
+        
+        var dimText = (e.w && e.h) ? e.w + ' x ' + e.h + ' m' : '-';
+        var configItems = [];
+        configItems.push('<strong>Posición:</strong> X: ' + parseFloat(e.x).toFixed(1) + 'm, Y: ' + parseFloat(e.y).toFixed(1) + 'm');
+        if (e.elevation) configItems.push('<strong>Elevación:</strong> ' + e.elevation + ' m');
+        if (e.color) configItems.push('<strong>Color:</strong> <span style="display:inline-block; width:10px; height:10px; border-radius:20%; background:' + e.color + '; border:1px solid #ccc; vertical-align:middle; margin-right:3px;"></span>' + e.color);
+        if (e.salonType) configItems.push('<strong>Estilo:</strong> ' + e.salonType);
+        
+        html += '    <tr>\n';
+        html += '      <td><strong>' + nameLabel + '</strong></td>\n';
+        html += '      <td>' + categoryName + '</td>\n';
+        html += '      <td>' + dimText + '</td>\n';
+        html += '      <td>' + configItems.join('<br>') + '</td>\n';
+        html += '    </tr>\n';
+      });
 
-    AppState.elements.forEach(function (e) {
-      if (e.mesaConfig && e.mesaConfig.invitados) {
-        e.mesaConfig.invitados.forEach(function (g) {
-          if (g.nombre === 'Jimena Maldonado') {
-            totalNinosAsignados += 1;
-            totalAdultosAsignados += 1;
-            totalMenuesSuma += 2;
-          } else {
-            var ninos = ninosMapeo[g.nombre] || 0;
-            if (ninos > g.pases) ninos = g.pases;
-            totalNinosAsignados += ninos;
-            totalAdultosAsignados += (g.pases - ninos);
-            totalMenuesSuma += g.pases;
-          }
-        });
-      }
+      html += '  </tbody>\n';
+      html += '</table>\n';
+    }
+
+    // Montage reference image section
+    html += '<div class="page-break"></div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-image" style="margin-right: 6px; color:#f43f5e;"></i> Referencia Visual de Montaje</div>\n';
+    html += '<div style="display: flex; justify-content: center; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 30px;">\n';
+    html += '  <img src="montaje xvzoe.jpeg" style="max-width: 100%; max-height: 600px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);" alt="Montaje XV Zoe" />\n';
+    html += '</div>\n';
+
+    // Section 4: Guest List by Table
+    var hasAnyGuests = tablesList.some(function (t) {
+      return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length > 0;
     });
 
+    if (hasAnyGuests) {
+      html += '<div class="page-break"></div>\n';
+      html += '<div class="section-title"><i class="fa-solid fa-users" style="margin-right: 6px; color:#f43f5e;"></i> Distribución de Invitados por Mesa</div>\n';
+      html += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; font-size: 12px; margin-bottom: 30px;">\n';
+
+      tablesList.forEach(function (t) {
+        var config = t.mesaConfig || {};
+        if (!config.invitados || config.invitados.length === 0) return;
+
+        var mesaLabel = config.mesaNum ? 'Mesa ' + config.mesaNum : 'Sin Número';
+        if (t.type === 'table_honor_xv' || t.type === 'table_honor_king' || t.type === 'table_honor_bride') {
+          mesaLabel += ' (Honor)';
+        }
+
+        var totalMesaGuests = config.invitados.reduce(function (sum, g) { return sum + (g.pases || 0); }, 0);
+
+        html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; page-break-inside: avoid; display: flex; flex-direction: column;">\n';
+        html += '    <div style="font-weight: 700; font-size: 14px; color: #0f172a; border-bottom: 2px solid #f43f5e; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">\n';
+        html += '      <span>' + mesaLabel + '</span>\n';
+        html += '      <span style="font-size: 11px; background: #ffe4e6; color: #f43f5e; padding: 2px 8px; border-radius: 20px;">' + totalMesaGuests + ' asignados</span>\n';
+        html += '    </div>\n';
+        html += '    <div style="column-count: 2; column-gap: 15px;">\n';
+
+        config.invitados.forEach(function (g) {
+          html += '      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding: 3px 0; break-inside: avoid; font-size: 11px;">\n';
+          html += '        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">' + g.nombre + '</span>\n';
+          html += '        <span style="font-weight: 600; color: #f43f5e; margin-left: 4px;">' + g.pases + 'p</span>\n';
+          html += '      </div>\n';
+        });
+
+        html += '    </div>\n';
+        html += '  </div>\n';
+      });
+
+      html += '</div>\n';
+    }
+
+    // Section 5: Cruce de Pendientes y Menús (Hoja de Control)
     html += '<div class="page-break"></div>\n';
     html += '<div class="section-title"><i class="fa-solid fa-clipboard-check" style="margin-right: 6px; color:#f43f5e;"></i> Ficha de Control y Conciliación de Pendientes</div>\n';
     html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
@@ -2550,26 +2606,26 @@
     html += '        <tr><th>Tipo de Menú</th><th style="text-align:center;">Contratado</th><th style="text-align:center;">Asignado</th></tr>\n';
     html += '      </thead>\n';
     html += '      <tbody>\n';
-    html += '        <tr><td><strong>Menú Adultos (2 Tiempos)</strong></td><td style="text-align:center; font-weight:700;">85</td><td style="text-align:center; font-weight:700; color:#0f172a;">' + totalAdultosAsignados + '</td></tr>\n';
-    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong><br><small style="color:#64748b;">Hamburguesa con papas y espagueti</small></td><td style="text-align:center; font-weight:700;">65</td><td style="text-align:center; font-weight:700; color:#0f172a;">' + totalNinosAsignados + '</td></tr>\n';
-    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#f43f5e; font-size:14px;">150</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalMenuesSuma + '</td></tr>\n';
+    html += '        <tr><td><strong>Menú Adultos (2 Tiempos)</strong></td><td style="text-align:center; font-weight:700;">85</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
+    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong><br><small style="color:#64748b;">Hamburguesa con papas y espagueti</small></td><td style="text-align:center; font-weight:700;">65</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
+    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#f43f5e; font-size:14px;">150</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalGuests + '</td></tr>\n';
     html += '      </tbody>\n';
     html += '    </table>\n';
     html += '    <p style="font-size: 11px; color: #475569; margin-top: 12px; line-height: 1.4;">\n';
-    html += '      <strong>Nota de Control:</strong> Se cuenta con un total de <strong>' + totalGuests + '</strong> invitados sentados en las mesas (149 pases/asientos en el plano de invitados + 4 de la mesa de honor). Los menús solicitados suman <strong>' + totalMenuesSuma + '</strong> platos debido a que Jimena Maldonado requiere 2 menús (adulto + niño) con 1 solo pase de asiento. El total de platillos coincide exactamente con el paquete contratado de 150 menús, requiriendo reajustar con el banquete a 83 menús de adultos y 67 infantiles.\n';
+    html += '      <strong>Nota de Control:</strong> Contamos con una lista de <strong>' + totalGuests + '</strong> invitados asignados a las mesas imperiales en el plano, dejando un margen de <strong>' + (150 - totalGuests) + '</strong> platillos del paquete contratado de 150 para invitados de última hora o ajustes del Hostess.\n';
     html += '    </p>\n';
     html += '  </div>\n';
     
-    // Right column: Pending checklist & Changes list
+    // Right column: Pending checklist
     html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:#f43f5e; margin-right: 6px;"></i> Estatus de Tareas y Cambios Recientes</h4>\n';
-    html += '    <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px; display: flex; flex-direction: column; gap: 8px;">\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 6px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Mesa 16 (Nueva)</strong>: Mesa cuadrada de 10p agregada al salón para expandir capacidad.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 6px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Mesa 4 (Familiar Roque)</strong>: Mesa imperial del salón expandida a 24 asientos y alargada a 11.0m.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 6px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Vestidor (2do Piso) y Arco Floral</strong>: Agregados al catálogo y colocados correctamente en el plano.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 6px;"><i class="fa-solid fa-user-plus" style="color:#2563eb; margin-top:3px;"></i> <div><strong>Pamela Díaz</strong>: Pases aumentados a 5 (2 adultos, 3 niños) y reubicada en la Terraza.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 6px;"><i class="fa-solid fa-user-plus" style="color:#2563eb; margin-top:3px;"></i> <div><strong>Nuevas Adiciones</strong>: Jessica Maldonado (2p, 1 niño), Jimena Maldonado (1p, 1ad/1niñ) y Sobrino (1p, niño) conciliados en la Terraza.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 6px;"><i class="fa-solid fa-user-minus" style="color:#dc2626; margin-top:3px;"></i> <div><strong>Giezi Sánchez</strong>: Reducido a 1 pase (1 niño) reubicado en la Terraza.</div></li>\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:#f43f5e; margin-right: 6px;"></i> Estatus de Tareas y Pendientes Logísticos</h4>\n';
+    html += '    <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Cronograma y Minuto a Minuto</strong>: Itinerario oficial completado con las 16 actividades y coordinado con los proveedores.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Ficha de Menú y Montaje General</strong>: Sopa de tortilla, lomo/pechuga (50/50), menú infantil, tornaesquites y mesa principal especial validados.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Paletas La Princesa</strong>: Confirmado a las 15:30 HRS junto con 3 vitroleros de agua de Jamaica.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Área Infantil / Brincolín</strong>: Área infantil sigue en mantenimiento; se validará inflables para compensar. Cabina inflable contratada (17:00-19:00).</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Instalación Eléctrica (Pastel)</strong>: Pendiente checar contactos para chisperos y velas de brillo en la mesa de pastel.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Servicios Especiales</strong>: Pendiente confirmar hostess, meseros y si el Valet Parking está incluido.</div></li>\n';
     html += '    </ul>\n';
     html += '  </div>\n';
     html += '</div>\n';
