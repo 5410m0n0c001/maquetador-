@@ -24,6 +24,20 @@ window.ELEMENTS_CATALOG = [
     planoOnly: false
   },
   {
+    type: 'dressing_room',
+    name: 'Vestidor (2do Piso)',
+    category: 'estructuras',
+    icon: 'fa-user-tie',
+    defaultW: 4,
+    defaultH: 3,
+    shape: 'rect',
+    color: '#475569',
+    defaultChairs: 0,
+    description: 'Área de vestidor (segundo piso).',
+    layer: 'estructuras',
+    planoOnly: false
+  },
+  {
     type: 'salon',
     name: 'Salón Techado',
     category: 'estructuras',
@@ -34,6 +48,20 @@ window.ELEMENTS_CATALOG = [
     color: '#1e293b',
     defaultChairs: 0,
     description: 'Área cubierta / salón cerrado.',
+    layer: 'estructuras',
+    planoOnly: false
+  },
+  {
+    type: 'salon_carpa',
+    name: 'Carpa para Eventos',
+    category: 'estructuras',
+    icon: 'fa-campground',
+    defaultW: 20,
+    defaultH: 30,
+    shape: 'rect',
+    color: '#f8fafc',
+    defaultChairs: 0,
+    description: 'Estructura de carpa abierta con postes y techo piramidal.',
     layer: 'estructuras',
     planoOnly: false
   },
@@ -946,6 +974,20 @@ window.ELEMENTS_CATALOG = [
     color: '#f472b6',
     defaultChairs: 0,
     description: 'Arco floral decorativo.',
+    layer: 'decoracion',
+    planoOnly: false
+  },
+  {
+    type: 'flower_arch_wood',
+    name: 'Arco de Madera Floral',
+    category: 'decoracion',
+    icon: 'fa-archway',
+    defaultW: 3.5,
+    defaultH: 0.8,
+    shape: 'arch',
+    color: '#854d0e',
+    defaultChairs: 0,
+    description: 'Arco de madera rústica decorado con flores.',
     layer: 'decoracion',
     planoOnly: false
   },

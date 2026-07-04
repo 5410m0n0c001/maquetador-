@@ -633,22 +633,62 @@ window.Editor2D = (function () {
     if (chairs <= 0) return;
     var cat = window.getCatalogEntry ? window.getCatalogEntry(elem.type) : null;
     var color = elem.color || (cat ? cat.color : '#888');
-    var tableR = radius;
-    var chairGap = mToPx(0.08);
-    var chairDist = tableR + chairGap + mToPx(CHAIR_R_M);
 
-    for (var i = 0; i < chairs; i++) {
-      var angle = (i / chairs) * 2 * Math.PI - Math.PI / 2;
-      var cX = cx + Math.cos(angle) * chairDist;
-      var cY = cy + Math.sin(angle) * chairDist;
-      var chair = svgEl('circle', {
-        cx: cX, cy: cY, r: mToPx(CHAIR_R_M),
-        fill: lighten(color, 0.45),
-        stroke: 'rgba(255,255,255,0.25)',
-        'stroke-width': 0.5,
-        'pointer-events': 'none'
-      });
-      g.appendChild(chair);
+    if (shape === 'square' && chairs === 10) {
+      var pw = mToPx(elem.w);
+      var ph = mToPx(elem.h);
+      var chairR = mToPx(CHAIR_R_M);
+      var offset = chairR + mToPx(0.08); // distancia al borde de la mesa
+
+      function addChair2D(x, y) {
+        var chair = svgEl('circle', {
+          cx: x, cy: y, r: chairR,
+          fill: lighten(color, 0.45),
+          stroke: 'rgba(255,255,255,0.25)',
+          'stroke-width': 0.5,
+          'pointer-events': 'none'
+        });
+        g.appendChild(chair);
+      }
+
+      // 3 sillas lado izquierdo (X constante, Y variable)
+      var stepY = (ph - chairR * 2) / 2;
+      for (var i = 0; i < 3; i++) {
+        addChair2D(cx - pw / 2 - offset, cy - ph / 2 + chairR + i * stepY);
+      }
+
+      // 3 sillas lado derecho
+      for (var i = 0; i < 3; i++) {
+        addChair2D(cx + pw / 2 + offset, cy - ph / 2 + chairR + i * stepY);
+      }
+
+      // 2 sillas cabecera superior (Y constante, X variable)
+      var stepX = (pw - chairR * 2) / 3;
+      addChair2D(cx - pw / 2 + chairR + stepX, cy - ph / 2 - offset);
+      addChair2D(cx + pw / 2 - chairR - stepX, cy - ph / 2 - offset);
+
+      // 2 sillas cabecera inferior
+      addChair2D(cx - pw / 2 + chairR + stepX, cy + ph / 2 + offset);
+      addChair2D(cx + pw / 2 - chairR - stepX, cy + ph / 2 + offset);
+
+    } else {
+      var tableR = radius;
+      var chairGap = mToPx(0.08);
+      var chairDist = tableR + chairGap + mToPx(CHAIR_R_M);
+
+      for (var i = 0; i < chairs; i++) {
+        var angle = (i / chairs) * 2 * Math.PI - Math.PI / 2;
+        var cX = cx + Math.cos(angle) * chairDist;
+        var cY = cy + Math.sin(angle) * chairDist;
+        var chair = svgEl('circle', {
+          cx: cX, cy: cY, r: mToPx(CHAIR_R_M),
+          fill: lighten(color, 0.45),
+          stroke: 'rgba(255,255,255,0.25)',
+          'stroke-width': 0.5,
+          'pointer-events': 'none'
+        });
+        g.appendChild(chair);
+      }
     }
   }
 

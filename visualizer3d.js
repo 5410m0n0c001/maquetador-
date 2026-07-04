@@ -500,6 +500,148 @@ window.Visualizer3D = (function () {
     }
   }
 
+  function _addChairsLineZ(group, offsetX, totalHeight, numChairs, tableHeight, chairRotY) {
+    if (numChairs <= 0) return;
+
+    var seatGeom = new THREE.BoxGeometry(0.36, 0.08, 0.36);
+    var seatMat = new THREE.MeshStandardMaterial({ color: COLORS.chairSeat, roughness: 0.6 });
+    var backGeom = new THREE.BoxGeometry(0.36, 0.42, 0.06);
+    var legGeom = new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8);
+    var woodMat = new THREE.MeshStandardMaterial({ color: COLORS.chairWood, roughness: 0.8 });
+
+    var chairHeight = 0.42;
+
+    var step = totalHeight / numChairs;
+    for (var i = 0; i < numChairs; i++) {
+      var cz = -totalHeight/2 + step * (i + 0.5);
+
+      var cg = new THREE.Group();
+      cg.position.set(offsetX, 0, cz);
+      cg.rotation.y = chairRotY;
+
+      var seat = new THREE.Mesh(seatGeom, seatMat);
+      seat.position.y = chairHeight;
+      seat.castShadow = true;
+      cg.add(seat);
+
+      var back = new THREE.Mesh(backGeom, woodMat);
+      back.position.set(0, chairHeight + 0.21, 0.15);
+      back.castShadow = true;
+      cg.add(back);
+
+      var legOffs = [
+        { x: -0.15, z: -0.15 }, { x: 0.15, z: -0.15 },
+        { x: -0.15, z: 0.15 }, { x: 0.15, z: 0.15 }
+      ];
+      legOffs.forEach(function (off) {
+        var leg = new THREE.Mesh(legGeom, woodMat);
+        leg.position.set(off.x, 0.2, off.z);
+        leg.castShadow = true;
+        cg.add(leg);
+      });
+
+      group.add(cg);
+    }
+  }
+
+  function _addTablewareLineZ(group, offsetX, totalHeight, numSeats, config, plateRotY) {
+    if (numSeats <= 0) return;
+
+    var baseMat = _getPlatoBaseMaterial(config.platoBase);
+    var trincheMat = _getPlatoTrincheMaterial(config.platoTrinche);
+    var cutleryMat = _getCutleryMaterial(config.cubiertos);
+    var glassMat = _getGlasswareMaterial(config.cristal, config.copasColor);
+    var glassMat2 = (config.cristal2 && config.cristal2 !== 'ninguno')
+      ? _getGlasswareMaterial(config.cristal2, config.copasColor2 || 'transparente')
+      : null;
+    var napkinMat = _getNapkinMaterial(config.servilletaColor);
+
+    var tableSurfaceY = 0.775;
+    var step = totalHeight / numSeats;
+
+    for (var i = 0; i < numSeats; i++) {
+      var cz = -totalHeight/2 + step * (i + 0.5);
+
+      var tablewareGroup = new THREE.Group();
+      tablewareGroup.position.set(offsetX, tableSurfaceY, cz);
+      tablewareGroup.rotation.y = plateRotY;
+
+      var currentY = 0.003;
+      if (config.platoBase && config.platoBase !== 'ninguno') {
+        var baseGeom = new THREE.CylinderGeometry(0.14, 0.14, 0.006, 16);
+        var baseMesh = new THREE.Mesh(baseGeom, baseMat);
+        baseMesh.position.y = currentY;
+        baseMesh.castShadow = true;
+        tablewareGroup.add(baseMesh);
+        currentY += 0.006;
+      }
+
+      if (config.platoTrinche && config.platoTrinche !== 'ninguno') {
+        var trincheGeom = (config.platoTrinche === 'cuadrado_blanco')
+          ? new THREE.BoxGeometry(0.2, 0.006, 0.2)
+          : new THREE.CylinderGeometry(0.1, 0.1, 0.006, 16);
+        var trincheMesh = new THREE.Mesh(trincheGeom, trincheMat);
+        trincheMesh.position.y = currentY;
+        trincheMesh.castShadow = true;
+        tablewareGroup.add(trincheMesh);
+        currentY += 0.006;
+      }
+
+      if (config.servilletaColor) {
+        var napkinGeom;
+        var napkinMesh;
+        var ny = currentY;
+        if (config.servilletaDoblez === 'loto') {
+          napkinGeom = new THREE.ConeGeometry(0.04, 0.06, 6);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'abanico') {
+          napkinGeom = new THREE.BoxGeometry(0.08, 0.06, 0.015);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'piramide') {
+          napkinGeom = new THREE.ConeGeometry(0.04, 0.06, 4);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.03;
+        } else if (config.servilletaDoblez === 'capullo') {
+          napkinGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.05, 8);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.025;
+        } else {
+          napkinGeom = new THREE.BoxGeometry(0.07, 0.004, 0.07);
+          napkinMesh = new THREE.Mesh(napkinGeom, napkinMat);
+          napkinMesh.position.y = ny + 0.002;
+        }
+        napkinMesh.castShadow = true;
+        tablewareGroup.add(napkinMesh);
+      }
+
+      var forkGeom = new THREE.BoxGeometry(0.012, 0.003, 0.14);
+      var fork = new THREE.Mesh(forkGeom, cutleryMat);
+      fork.position.set(-0.13, 0.0015, 0);
+      fork.castShadow = true;
+      tablewareGroup.add(fork);
+
+      var knifeGeom = new THREE.BoxGeometry(0.01, 0.003, 0.14);
+      var knife = new THREE.Mesh(knifeGeom, cutleryMat);
+      knife.position.set(0.13, 0.0015, 0);
+      knife.castShadow = true;
+      tablewareGroup.add(knife);
+
+      var glassGroup = _create3DGlassware(config.cristal, glassMat);
+      glassGroup.position.set(0.12, 0, -0.12);
+      tablewareGroup.add(glassGroup);
+
+      if (glassMat2) {
+        var glassGroup2 = _create3DGlassware(config.cristal2, glassMat2);
+        glassGroup2.position.set(0.17, 0, -0.07);
+        tablewareGroup.add(glassGroup2);
+      }
+
+      group.add(tablewareGroup);
+    }
+  }
+
   // ─── Init Three.js ────────────────────────────────────────
   function init(containerElement, initialElements, getState) {
     _container = containerElement;
@@ -982,8 +1124,8 @@ window.Visualizer3D = (function () {
     var colorNum = parseColor(elem.color, elem.type);
     var showTechos = _getLayerVisibility('techos');
 
-    if (elem.type === 'salon') {
-      var salonType = elem.salonType || 'muros';
+    if (elem.type === 'salon' || elem.type === 'salon_carpa') {
+      var salonType = elem.type === 'salon_carpa' ? 'sin_muros' : (elem.salonType || 'muros');
 
       // Floor slab
       var floor = new THREE.Mesh(
@@ -1139,6 +1281,29 @@ window.Visualizer3D = (function () {
         }
       }
       
+    } else if (elem.type === 'dressing_room') {
+      // Dressing Room structure (2nd floor)
+      var wallMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
+      var room = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 2.8, h),
+        wallMat
+      );
+      room.position.y = 1.4;
+      room.castShadow = true;
+      room.receiveShadow = true;
+      group.add(room);
+
+      // Glass door facade
+      var doorMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.1, transparent: true, opacity: 0.5 });
+      var door = new THREE.Mesh(new THREE.BoxGeometry(w * 0.4, 2.0, 0.1), doorMat);
+      door.position.set(0, 1.0, h/2 - 0.05);
+      group.add(door);
+
+      // Label sign on top of door
+      var sign = new THREE.Mesh(new THREE.BoxGeometry(w * 0.5, 0.3, 0.12), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+      sign.position.set(0, 2.2, h/2 - 0.02);
+      group.add(sign);
+
     } else if (elem.type === 'garden') {
       // Grass patch
       var grass = new THREE.Mesh(
@@ -1712,6 +1877,21 @@ window.Visualizer3D = (function () {
         _addChairsLine(group, -h/2 - 0.18, w, numChairs, 0.75, Math.PI); // facing South/table center
         if (elem.mesaConfig) {
           _addTablewareLine(group, -h/2 + 0.12, w, numChairs, elem.mesaConfig, Math.PI);
+        }
+      } else if (elem.shape === 'square' && numChairs === 10) {
+        // Configuration: 3 chairs on left/right sides (Z axis), 2 chairs on top/bottom sides (X axis)
+        // Cabeceras (X axis): 2 top (Z axis negative) and 2 bottom (Z axis positive)
+        _addChairsLine(group, -h/2 - 0.18, w - 0.4, 2, 0.75, Math.PI); // Top (facing South/table center)
+        _addChairsLine(group, h/2 + 0.18, w - 0.4, 2, 0.75, 0); // Bottom (facing North/table center)
+        // Costados (Z axis): 3 left (X axis negative) and 3 right (X axis positive)
+        _addChairsLineZ(group, -w/2 - 0.18, h - 0.4, 3, 0.75, -Math.PI / 2); // Left (facing East/table center)
+        _addChairsLineZ(group, w/2 + 0.18, h - 0.4, 3, 0.75, Math.PI / 2); // Right (facing West/table center)
+
+        if (elem.mesaConfig) {
+          _addTablewareLine(group, -h/2 + 0.12, w - 0.4, 2, elem.mesaConfig, Math.PI);
+          _addTablewareLine(group, h/2 - 0.12, w - 0.4, 2, elem.mesaConfig, 0);
+          _addTablewareLineZ(group, -w/2 + 0.12, h - 0.4, 3, elem.mesaConfig, -Math.PI / 2);
+          _addTablewareLineZ(group, w/2 - 0.12, h - 0.4, 3, elem.mesaConfig, Math.PI / 2);
         }
       } else {
         // Standard rectangular table chairs & tableware on long edges
@@ -2792,6 +2972,56 @@ window.Visualizer3D = (function () {
       );
       flowers.position.set(0, 1.2, 0);
       group.add(flowers);
+
+    } else if (elem.type === 'flower_arch_wood') {
+      // Wooden Floral Arch (Archway)
+      var woodMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 }); // Dark wood
+      var leafMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.95 }); // Foliage green
+      var flowerMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.9 }); // Pink flowers
+      
+      var archWidth = w;
+      var archHeight = 3.0; // 3m tall
+
+      // 2 square pillars (wooden columns)
+      var pillarGeom = new THREE.BoxGeometry(0.18, archHeight, 0.18);
+      var pillarL = new THREE.Mesh(pillarGeom, woodMat);
+      pillarL.position.set(-archWidth / 2, archHeight / 2, 0);
+      pillarL.castShadow = true;
+      group.add(pillarL);
+
+      var pillarR = new THREE.Mesh(pillarGeom, woodMat);
+      pillarR.position.set(archWidth / 2, archHeight / 2, 0);
+      pillarR.castShadow = true;
+      group.add(pillarR);
+
+      // Top crossbeam
+      var beamGeom = new THREE.BoxGeometry(archWidth + 0.36, 0.18, 0.18);
+      var crossbeam = new THREE.Mesh(beamGeom, woodMat);
+      crossbeam.position.set(0, archHeight - 0.09, 0);
+      crossbeam.castShadow = true;
+      group.add(crossbeam);
+
+      // Floral decorations (foliage blocks on top corners)
+      var foliageGeom = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+      var foliageL = new THREE.Mesh(foliageGeom, leafMat);
+      foliageL.position.set(-archWidth / 2, archHeight, 0);
+      group.add(foliageL);
+
+      var foliageR = new THREE.Mesh(foliageGeom, leafMat);
+      foliageR.position.set(archWidth / 2, archHeight, 0);
+      group.add(foliageR);
+
+      // Some flowers spheres on corners
+      var flGeom = new THREE.SphereGeometry(0.12, 6, 6);
+      for (var fIdx = 0; fIdx < 3; fIdx++) {
+        var flL = new THREE.Mesh(flGeom, flowerMat);
+        flL.position.set(-archWidth / 2 + (fIdx - 1) * 0.15, archHeight + 0.1, 0.1);
+        group.add(flL);
+
+        var flR = new THREE.Mesh(flGeom, flowerMat);
+        flR.position.set(archWidth / 2 + (fIdx - 1) * 0.15, archHeight + 0.1, 0.1);
+        group.add(flR);
+      }
 
     } else if (elem.type.indexOf('arch') > -1) {
       // Flower arch archway
