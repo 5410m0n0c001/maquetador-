@@ -1917,7 +1917,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-06-30-v25';
+  var CURRENT_LAYOUT_VERSION = '2026-07-04-v26';
 
   function loadFromLocalStorage() {
     try {
@@ -2091,9 +2091,8 @@
       return new XMLSerializer().serializeToString(clonedSvg);
     }
 
-    // Generate both layouts
-    var verticalSvgString = getSvgForMode('vertical');
-    var horizontalSvgString = getSvgForMode('horizontal');
+    // Generate the single actual layout
+    var currentSvgString = getSvgForMode('current');
 
     // Restore original state
     AppState.elements = originalElements;
@@ -2281,18 +2280,11 @@
     html += '  </div>\n';
     html += '</div>\n';
 
-    // Section 1: Plano Map (Acomodo Vertical) - Renders on Page 2
+    // Section 1: Plano Map (Croquis de Distribución del Evento) - Renders on Page 2
     html += '<div class="page-break"></div>\n';
     html += '<div class="print-section-wrapper">\n';
-    html += '  <div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 1: Acomodo Vertical (Fila Única)</div>\n';
-    html += '  <div class="map-container">\n' + verticalSvgString + '\n</div>\n';
-    html += '</div>\n';
-
-    // Section 1.5: Plano Map (Acomodo Horizontal) - Renders on Page 3
-    html += '<div class="page-break"></div>\n';
-    html += '<div class="print-section-wrapper">\n';
-    html += '  <div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Distribución del Evento - Opción 2: Acomodo Horizontal (2x2 Pasillo Central)</div>\n';
-    html += '  <div class="map-container">\n' + horizontalSvgString + '\n</div>\n';
+    html += '  <div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Plano y Croquis de Distribución del Evento</div>\n';
+    html += '  <div class="map-container">\n' + currentSvgString + '\n</div>\n';
     html += '</div>\n';
 
     // Section: Minuto a Minuto & Información Relevante
@@ -2306,16 +2298,16 @@
     var timelineEvents = [
       { time: '13:00 - 13:45 HRS', title: 'Ceremonia Religiosa (Misa)', desc: 'Lugar: Parroquia de San Francisco de Asís.' },
       { time: '13:45 - 14:00 HRS', title: 'Sesión Fotográfica', desc: 'Proveedor: Alfred Fotografic (Festejada y Padrinos).' },
-      { time: '15:00 - 15:45 HRS', title: 'Recepción / Cóctel', desc: 'Lugar: Jardín Manzanares. Entrada y trago de bienvenida.' },
+      { time: '15:00 - 15:45 HRS', title: 'Recepción / Cóctel', desc: 'Lugar: Jardín Manzanares. Entrada, Snacks (Guacamole y chicharrón en cazuelas) y trago de bienvenida (se sirve únicamente cerveza y agua).' },
       { time: '15:30 HRS', title: 'Entrega de Paletas Heladas', desc: 'Servicio de Paletas La Princesa (250 piezas), Vitroleros de Jamaica y Refrescos.' },
-      { time: '15:45 - 16:00 HRS', title: 'Asignación de Mesas', desc: 'Hostess realiza acomodo de invitados y servicio de trago largo.' },
+      { time: '15:45 - 16:00 HRS', title: 'Asignación de Mesas', desc: 'Hostess realiza acomodo de invitados y servicio de trago largo (cerveza/agua).' },
       { time: '16:00 - 16:10 HRS', title: 'Entrada Triunfal', desc: 'Ingreso oficial de la festejada (Zoe) con fotos y pirotecnia.' },
-      { time: '16:10 - 17:10 HRS', title: 'Banquete (Servicio)', desc: 'Degustación del menú formal a 2 tiempos para adultos y niños.' },
+      { time: '16:10 - 17:10 HRS', title: 'Banquete (Servicio)', desc: 'Degustación del menú formal a 2 tiempos para adultos y niños. Acompañar únicamente con cerveza y agua.' },
       { time: '16:15 - 17:15 HRS', title: 'Cantante Raudel Carmona', desc: 'Presentación musical en vivo durante la comida.' },
       { time: '17:00 - 19:00 HRS', title: 'Apertura Cabina Inflable', desc: 'Cabina de fotos inflable y carrito de esquites activados.' },
-      { time: '17:30 HRS', title: 'Abrir Pista de Baile', desc: 'DJ Alfred da inicio oficial a la fiesta y baile general.' },
+      { time: '17:30 HRS', title: 'Abrir Pista de Baile', desc: 'DJ Alfred da inicio al baile general. Comienza distribución de licores (Tequila Centenario, Bacardí Blanco y Whisky).' },
       { time: '18:00 HRS', title: 'Inauguración Mesa de Dulces', desc: 'Apertura oficial por Zoe y sus Padrinos.' },
-      { time: '19:20 HRS', title: 'Partida de Pastel', desc: 'Pastel tradicional con chisperos y velas de brillo.' },
+      { time: '19:20 HRS', title: 'Partida de Pastel', desc: 'Corte de pastel tradicional en base principal de la pista (Primer corte simbólico, luego se retira a la cocina para porcionado y emplatado con platos y cubiertos de postre).' },
       { time: '19:30 - 20:20 HRS', title: 'Vals de la Festejada', desc: 'Vals familiar con Zoe, sus padres, padrinos y coreografía.' },
       { time: '20:20 HRS', title: 'Baile General / Animación', desc: 'Show de luces y mezclas de DJ Alfred.' },
       { time: '21:30 - 22:30 HRS', title: 'Torna Fiesta', desc: 'Servicio de Barra de Esquites, Elotes y Tamales (120 pzas: 40 pzas de c/u) por los meseros.' },
@@ -2359,17 +2351,31 @@
     
     // Right column: Beverages & Services
     html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-bottle-water" style="color:#f43f5e; margin-right:6px;"></i> Bebidas y Suministros</h4>\n';
-    html += '    <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">\n';
-    html += '      <div><strong>Por parte del Salón / Servicio:</strong><br><span style="color:#475569; padding-left:10px; display:inline-block;">Refrescos ilimitados y hielo de servicio.</span></div>\n';
-    html += '      <div><strong>Proporcionado por el Anfitrión:</strong><br>\n';
-    html += '        <ul style="margin: 4px 0 0 0; padding-left: 20px; color:#475569;">\n';
-    html += '          <li>Bebidas: Tequila, Whisky y Cerveza.</li>\n';
-    html += '          <li>Tornafiesta, pastel de XV Años.</li>\n';
-    html += '          <li>3 Vitroleros de Agua de Jamaica.</li>\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-bottle-water" style="color:#f43f5e; margin-right:6px;"></i> Logística de Bebidas, Alimentos y Montaje</h4>\n';
+    html += '    <div style="font-size: 11px; line-height: 1.5; display: flex; flex-direction: column; gap: 8px;">\n';
+    html += '      <div><strong>Inventario de Alcohol Entregado:</strong>\n';
+    html += '        <ul style="margin: 2px 0 0 0; padding-left: 15px; color:#475569;">\n';
+    html += '          <li>Tequila Centenario: 6 botellas</li>\n';
+    html += '          <li>Bacardí Blanco: 6 botellas</li>\n';
+    html += '          <li>Whisky: 5 botellas</li>\n';
+    html += '          <li>Cerveza: Abundante (para consumo desde la recepción y comida)</li>\n';
     html += '        </ul>\n';
     html += '      </div>\n';
-    html += '      <div><strong>Montaje de Mesa Principal (Zoe):</strong><br><span style="color:#475569; padding-left:10px; display:inline-block;">Sillón de Princesa Especial, 4 sillas Tiffany, mesa especial y back decorativo con telas. Centro de mesa grande.</span></div>\n';
+    html += '      <div><strong>Reglas de Distribución de Bebidas:</strong><br><span style="color:#475569; padding-left:5px; display:inline-block;">Durante la recepción y banquete se servirá únicamente cerveza y agua/refrescos. Los licores destilados (Tequila Centenario, Bacardí Blanco, Whisky) se empezarán a distribuir exclusivamente a partir de la apertura de la pista de baile (17:30 HRS).</span></div>\n';
+    html += '      <div><strong>Snacks de Bienvenida:</strong><br><span style="color:#475569; padding-left:5px; display:inline-block;">Guacamole con chicharrón en cazuelas (provisto por los anfitriones) colocado en mesas desde el inicio de la recepción.</span></div>\n';
+    html += '      <div><strong>Logística del Pastel & Brindis:</strong>\n';
+    html += '        <ul style="margin: 2px 0 0 0; padding-left: 15px; color:#475569;">\n';
+    html += '          <li>El portacopas y las copas de brindis se colocarán en la misma base del pastel.</li>\n';
+    html += '          <li>Pastel provisto con su base, nota de recepción y caja recolectora de sobres para regalos ($) al lado.</li>\n';
+    html += '          <li>Corte de pastel se realiza en la mesa/base principal; luego se retira a la cocina para porcionado.</li>\n';
+    html += '        </ul>\n';
+    html += '      </div>\n';
+    html += '      <div><strong>Pendientes por Confirmar (A&B):</strong>\n';
+    html += '        <ul style="margin: 2px 0 0 0; padding-left: 15px; color:#b45309; font-weight: 600;">\n';
+    html += '          <li>Confirmar platos de postre para pastel y cucharas o tenedores correspondientes.</li>\n';
+    html += '          <li>Asegurar enfriamiento de cerveza y refrescos con la barra de hielo inmediatamente al recibirla.</li>\n';
+    html += '        </ul>\n';
+    html += '      </div>\n';
     html += '    </div>\n';
     html += '  </div>\n';
     html += '</div>\n';

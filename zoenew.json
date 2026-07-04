@@ -810,6 +810,10 @@
           {
             "nombre": "Gabriela Medina",
             "pases": 2
+          },
+          {
+            "nombre": "Priscila Hernandez",
+            "pases": 3
           }
         ]
       }
@@ -976,8 +980,8 @@
             "pases": 2
           },
           {
-            "nombre": "Priscila Hernandez",
-            "pases": 3
+            "nombre": "Mercedes Salgado",
+            "pases": 4
           }
         ]
       }
@@ -1086,6 +1090,10 @@
           {
             "nombre": "Stefany Toledo",
             "pases": 4
+          },
+          {
+            "nombre": "Beny Téllez",
+            "pases": 2
           }
         ]
       }
@@ -1202,66 +1210,12 @@
           {
             "nombre": "Sobrino de esta loca",
             "pases": 1
-          }
-        ]
-      }
-    },
-    {
-      "id": "el_1783054123456_mesa16",
-      "type": "table_square",
-      "category": "mobiliario",
-      "name": "Mesa Cuadrada (10p)",
-      "x": 32.2,
-      "y": 25.5,
-      "w": 2.7,
-      "h": 2.9,
-      "rotation": 0,
-      "color": "#92400e",
-      "chairs": 10,
-      "editable": true,
-      "removable": true,
-      "layer": "mobiliario",
-      "mesaConfig": {
-        "mantelColor": "blanco",
-        "caminoColor": "dorado",
-        "servilletaDoblez": [
-          "corazon",
-          "corbata"
-        ],
-        "cubiertos": "plateado",
-        "platoBase": "ninguno",
-        "platoTrinche": "redondo_blanco",
-        "cristal": "cubero",
-        "copasColor": "transparente",
-        "tipoSilla": "tiffany",
-        "menu": "",
-        "mesaNum": 15,
-        "invitados": [
-          {
-            "nombre": "Mercedes Salgado",
-            "pases": 4
           },
           {
             "nombre": "Karla Diaz",
             "pases": 4
-          },
-          {
-            "nombre": "Beny Téllez",
-            "pases": 2
           }
-        ],
-        "capacidadMax": 10,
-        "caminoAcomodo": "diagonal",
-        "cristal2": "ninguno",
-        "arregloFloralTipo": "bajo",
-        "arregloFloralAcomodo": "diagonal",
-        "ensambleTipo": "angosto",
-        "servilletaColorCorazon": "dorado",
-        "servilletaColorCorbata": "champagne",
-        "servilletaColorOtros": "blanco",
-        "servilletaColor_corazon": "dorado",
-        "servilletaColor_corbata": "champagne",
-        "servilletaColor_default": "blanco"
+        ]
       }
     },
     {
