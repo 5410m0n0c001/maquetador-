@@ -1917,7 +1917,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-07-04-v31';
+  var CURRENT_LAYOUT_VERSION = '2026-07-05-v32';
 
   function loadFromLocalStorage() {
     try {
@@ -2757,15 +2757,126 @@
     var btn = document.getElementById('btn-clear');
     if (!btn) return;
     btn.onclick = function () {
-      if (!confirm('¿Eliminar todos los elementos? Esta acción no se puede deshacer.')) return;
+      if (!confirm('¿Deseas iniciar desde cero? Se mantendrán las estructuras principales (salón, baños, vestidor, escaleras y rampa) pero se eliminarán todas las mesas, sillas y elementos decorativos.')) return;
       saveHistory();
-      AppState.elements = [];
+      
+      // smart clear: keep structural assets
+      var structuralTypes = ['terrain', 'salon', 'bathroom', 'dressing_room', 'stairs', 'ramp', 'gate'];
+      AppState.elements = AppState.elements.filter(function (elem) {
+        return structuralTypes.indexOf(elem.type) !== -1;
+      });
+      
       _tableCounter = 0;
       deselectAll();
       _refresh();
       updateCounters();
-      showToast('Plano limpiado.', 'warning');
+      showToast('Plano de mesas e invitados limpiado. Estructuras base conservadas.', 'success');
     };
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // ALIGN & IMPORT SIDEBAR
+  // ══════════════════════════════════════════════════════════
+  function _wireAlign() {
+    var btn = document.getElementById('btn-align');
+    if (!btn) return;
+    btn.onclick = function () {
+      saveHistory();
+
+      var elements = AppState.elements;
+      var threshold = 0.8; // Tolerancia en metros para agrupar en filas/columnas
+
+      // 1. Alinear en columnas (coordenada X cercana)
+      for (var i = 0; i < elements.length; i++) {
+        var elA = elements[i];
+        if (elA.type.indexOf('table') === -1 && elA.type !== 'lounge_set') continue;
+        
+        var groupX = [elA];
+        for (var j = i + 1; j < elements.length; j++) {
+          var elB = elements[j];
+          if (elB.type.indexOf('table') === -1 && elB.type !== 'lounge_set') continue;
+          
+          if (Math.abs(elA.x - elB.x) < threshold) {
+            groupX.push(elB);
+          }
+        }
+        
+        if (groupX.length > 1) {
+          var sumX = 0;
+          groupX.forEach(function (e) { sumX += e.x; });
+          var avgX = Math.round((sumX / groupX.length) * 10) / 10;
+          groupX.forEach(function (e) {
+            e.x = avgX;
+          });
+        }
+      }
+
+      // 2. Alinear en filas (coordenada Y cercana)
+      for (var i = 0; i < elements.length; i++) {
+        var elA = elements[i];
+        if (elA.type.indexOf('table') === -1 && elA.type !== 'lounge_set') continue;
+        
+        var groupY = [elA];
+        for (var j = i + 1; j < elements.length; j++) {
+          var elB = elements[j];
+          if (elB.type.indexOf('table') === -1 && elB.type !== 'lounge_set') continue;
+          
+          if (Math.abs(elA.y - elB.y) < threshold) {
+            groupY.push(elB);
+          }
+        }
+        
+        if (groupY.length > 1) {
+          var sumY = 0;
+          groupY.forEach(function (e) { sumY += e.y; });
+          var avgY = Math.round((sumY / groupY.length) * 10) / 10;
+          groupY.forEach(function (e) {
+            e.y = avgY;
+          });
+        }
+      }
+
+      // 3. Redondear coordenadas X, Y, W, H y rotaciones
+      elements.forEach(function (elem) {
+        elem.x = Math.round(elem.x * 10) / 10;
+        elem.y = Math.round(elem.y * 10) / 10;
+        elem.w = Math.round(elem.w * 10) / 10;
+        elem.h = Math.round(elem.h * 10) / 10;
+        
+        if (elem.rotation !== undefined) {
+          var r = elem.rotation % 360;
+          if (r < 0) r += 360;
+          
+          var angles = [0, 90, 180, 270, 360];
+          for (var a = 0; a < angles.length; a++) {
+            if (Math.abs(r - angles[a]) < 10) {
+              elem.rotation = angles[a] % 360;
+              break;
+            }
+          }
+        }
+      });
+
+      deselectAll();
+      _refresh();
+      updateCounters();
+      
+      if (_currentViewMode === '3d' && window.Visualizer3D) {
+        window.Visualizer3D.syncWithData(AppState.elements);
+      }
+      
+      showToast('Plano alineado simétricamente.', 'success');
+    };
+  }
+
+  function _wireImportSidebar() {
+    var btn = document.getElementById('btn-import-json-sidebar');
+    var fileInput = document.getElementById('import-file-input');
+    if (btn && fileInput) {
+      btn.onclick = function () {
+        fileInput.click();
+      };
+    }
   }
 
   // ══════════════════════════════════════════════════════════
@@ -2990,6 +3101,8 @@
     _wireInspector();
     _wireExportButtons();
     _wireClear();
+    _wireAlign();
+    _wireImportSidebar();
     _wireKeyboard();
 
     // Init Supabase Connection

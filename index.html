@@ -29,7 +29,7 @@
 <script>
   (function() {
     var LS_KEY = 'primavera_layout_state';
-    var CURRENT_VERSION = '2026-07-04-v31';
+    var CURRENT_VERSION = '2026-07-05-v32';
     try {
       var savedVersion = localStorage.getItem(LS_KEY + '_version');
       if (savedVersion !== CURRENT_VERSION) {
@@ -170,6 +170,21 @@
       <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
         El plano se guarda automáticamente en tu navegador. Si ejecutas el servidor en tu PC, se guardará como archivo JSON en el proyecto.
       </p>
+
+      <!-- Quick Actions (Align, Clean smart, Import) -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-align" class="btn-primary half" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 11px; padding: 8px 6px;" title="Alinear mesas y elementos del plano simétricamente">
+            <i class="fa-solid fa-arrows-to-dot"></i> Alinear Plano
+          </button>
+          <button id="btn-clear" class="btn-danger half" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 11px; padding: 8px 6px;" title="Limpiar todas las mesas e iniciar plano desde cero">
+            <i class="fa-solid fa-trash-can"></i> Iniciar desde Cero
+          </button>
+        </div>
+        <button id="btn-import-json-sidebar" class="btn-primary full-width" style="background: linear-gradient(135deg, #10b981, #047857); font-size: 11px; padding: 8px 12px;" title="Importar plano desde archivo JSON local">
+          <i class="fa-solid fa-file-import"></i> Importar Plano (JSON)
+        </button>
+      </div>
 
       <!-- Local Plan Operations -->
       <div class="form-group" id="local-layouts-group">
@@ -943,11 +958,11 @@
 
 
 <!-- SCRIPTS (order matters) -->
-<script src="elements-db.js?v=20260704_06"></script>
-<script src="default-layout.js?v=20260704_06"></script>
-<script src="editor2d.js?v=20260704_06"></script>
-<script src="visualizer3d.js?v=20260704_06"></script>
-<script src="app.js?v=20260704_06"></script>
+<script src="elements-db.js?v=20260705_01"></script>
+<script src="default-layout.js?v=20260705_01"></script>
+<script src="editor2d.js?v=20260705_01"></script>
+<script src="visualizer3d.js?v=20260705_01"></script>
+<script src="app.js?v=20260705_01"></script>
 
 </body>
 </html>
