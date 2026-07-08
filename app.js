@@ -2755,12 +2755,12 @@
   // ══════════════════════════════════════════════════════════
   function _wireClear() {
     var btn = document.getElementById('btn-clear');
-    if (!btn) return;
-    btn.onclick = function () {
+    var btnFab = document.getElementById('btn-clear-fab');
+    
+    var onClearClick = function () {
       if (!confirm('¿Deseas iniciar desde cero? Se mantendrán las estructuras principales (salón, baños, vestidor, escaleras y rampa) pero se eliminarán todas las mesas, sillas y elementos decorativos.')) return;
       saveHistory();
       
-      // smart clear: keep structural assets
       var structuralTypes = ['terrain', 'salon', 'bathroom', 'dressing_room', 'stairs', 'ramp', 'gate'];
       AppState.elements = AppState.elements.filter(function (elem) {
         return structuralTypes.indexOf(elem.type) !== -1;
@@ -2772,6 +2772,9 @@
       updateCounters();
       showToast('Plano de mesas e invitados limpiado. Estructuras base conservadas.', 'success');
     };
+
+    if (btn) btn.onclick = onClearClick;
+    if (btnFab) btnFab.onclick = onClearClick;
   }
 
   // ══════════════════════════════════════════════════════════
@@ -2779,8 +2782,9 @@
   // ══════════════════════════════════════════════════════════
   function _wireAlign() {
     var btn = document.getElementById('btn-align');
-    if (!btn) return;
-    btn.onclick = function () {
+    var btnFab = document.getElementById('btn-align-fab');
+
+    var onAlignClick = function () {
       saveHistory();
 
       var elements = AppState.elements;
@@ -2867,6 +2871,9 @@
       
       showToast('Plano alineado simétricamente.', 'success');
     };
+
+    if (btn) btn.onclick = onAlignClick;
+    if (btnFab) btnFab.onclick = onAlignClick;
   }
 
   function _wireImportSidebar() {
