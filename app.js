@@ -2758,19 +2758,20 @@
     var btnFab = document.getElementById('btn-clear-fab');
     
     var onClearClick = function () {
-      if (!confirm('¿Deseas iniciar desde cero? Se mantendrán las estructuras principales (salón, baños, vestidor, escaleras y rampa) pero se eliminarán todas las mesas, sillas y elementos decorativos.')) return;
+      if (!confirm('¿Deseas iniciar desde cero? Se eliminarán absolutamente TODOS los elementos del plano (terreno, construcción, mesas, sillas y decoración) para dejar el lienzo 100% vacío.')) return;
       saveHistory();
       
-      var structuralTypes = ['terrain', 'salon', 'bathroom', 'dressing_room', 'stairs', 'ramp', 'gate'];
-      AppState.elements = AppState.elements.filter(function (elem) {
-        return structuralTypes.indexOf(elem.type) !== -1;
-      });
-      
+      AppState.elements = [];
       _tableCounter = 0;
       deselectAll();
       _refresh();
       updateCounters();
-      showToast('Plano de mesas e invitados limpiado. Estructuras base conservadas.', 'success');
+
+      if (_currentViewMode === '3d' && window.Visualizer3D) {
+        window.Visualizer3D.syncWithData(AppState.elements);
+      }
+      
+      showToast('Plano limpiado por completo. Lienzo 100% vacío.', 'success');
     };
 
     if (btn) btn.onclick = onClearClick;
