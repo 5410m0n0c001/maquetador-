@@ -362,25 +362,53 @@ window.Editor2D = (function () {
       }
 
     } else if (shape === 'door') {
+      var doorH = Math.max(ph, mToPx(0.35));
+      // Thick colored bar (door body)
       var doorRect = svgEl('rect', {
-        x: px - pw / 2, y: py - ph / 2,
-        width: pw, height: Math.max(ph, mToPx(0.3)),
+        x: px - pw / 2, y: py - doorH / 2,
+        width: pw, height: doorH,
         fill: color,
-        stroke: isSelected ? '#f0c040' : colorLight,
-        'stroke-width': isSelected ? 2 : 1
+        stroke: isSelected ? '#f0c040' : color,
+        'stroke-width': isSelected ? 3 : 2.5,
+        rx: mToPx(0.05)
       });
       g.appendChild(doorRect);
-      // Door arc
-      var arcR = Math.min(pw * 0.4, mToPx(1));
+      // Diagonal hatch lines to visually distinguish from plain walls
+      var hatchGroup = svgEl('g', { 'clip-path': 'none', 'pointer-events': 'none' });
+      var hatchSpacing = Math.max(mToPx(0.15), 4);
+      for (var hi = -pw; hi < pw + doorH; hi += hatchSpacing) {
+        var hx1 = px - pw / 2 + hi;
+        var hx2 = hx1 + doorH;
+        var hl = svgEl('line', {
+          x1: Math.max(px - pw / 2, hx1), y1: py - doorH / 2,
+          x2: Math.min(px + pw / 2, hx2), y2: py + doorH / 2,
+          stroke: 'rgba(255,255,255,0.25)', 'stroke-width': 1, 'pointer-events': 'none'
+        });
+        hatchGroup.appendChild(hl);
+      }
+      g.appendChild(hatchGroup);
+      // Door swing arc
+      var arcR = Math.min(pw * 0.5, mToPx(1.2));
       var arc = svgEl('path', {
-        d: 'M ' + (px - pw / 2) + ' ' + (py + ph / 2) + ' A ' + arcR + ' ' + arcR + ' 0 0 1 ' + (px - pw / 2 + arcR) + ' ' + (py + ph / 2 - arcR),
+        d: 'M ' + (px - pw / 2) + ' ' + (py + doorH / 2) + ' A ' + arcR + ' ' + arcR + ' 0 0 1 ' + (px - pw / 2 + arcR) + ' ' + (py + doorH / 2 - arcR),
         fill: 'none',
         stroke: colorLight,
-        'stroke-width': 1,
-        'stroke-dasharray': '3 2',
+        'stroke-width': 1.5,
+        'stroke-dasharray': '4 3',
         'pointer-events': 'none'
       });
       g.appendChild(arc);
+      // Direction arrow (pointing inward)
+      var arrowSize = Math.min(pw * 0.15, mToPx(0.4));
+      var ax = px, ay = py - doorH / 2 - arrowSize * 0.5;
+      var arrowPath = 'M ' + ax + ' ' + (ay - arrowSize) +
+        ' L ' + (ax - arrowSize * 0.6) + ' ' + ay +
+        ' L ' + (ax + arrowSize * 0.6) + ' ' + ay + ' Z';
+      var arrow = svgEl('path', {
+        d: arrowPath, fill: colorLight,
+        opacity: 0.85, 'pointer-events': 'none'
+      });
+      g.appendChild(arrow);
 
     } else if (shape === 'imperial') {
       var tablones = elem.tablones || 3;
@@ -592,6 +620,10 @@ window.Editor2D = (function () {
       labelY = py + 18;
     }
     
+    // For door shapes: shift label upward (outside the wall) so it's always readable
+    if (shape === 'door') {
+      labelY = py - Math.max(ph, mToPx(0.35)) / 2 - labelFontSize * 1.2;
+    }
     var labelEl = svgEl('text', {
       x: px,
       y: labelY + (shape === 'arch' ? ph * 0.15 : 0),

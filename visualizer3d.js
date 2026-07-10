@@ -1648,29 +1648,50 @@ window.Visualizer3D = (function () {
     var showTechos = _getLayerVisibility('techos');
 
     if (elem.type.indexOf('door') === 0) {
-      // Simple gate pillars
-      var pilGeom = new THREE.BoxGeometry(0.4, 2.2, 0.4);
-      var pilMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
-      
+      // Taller pillars (above wall height of 3m)
+      var pilGeom = new THREE.BoxGeometry(0.45, 3.4, 0.45);
+      var pilMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5, metalness: 0.15 });
+
       var pilL = new THREE.Mesh(pilGeom, pilMat);
-      pilL.position.set(-w/2, 1.1, 0);
+      pilL.position.set(-w/2, 1.7, 0);
       pilL.castShadow = true;
       group.add(pilL);
 
       var pilR = new THREE.Mesh(pilGeom, pilMat);
-      pilR.position.set(w/2, 1.1, 0);
+      pilR.position.set(w/2, 1.7, 0);
       pilR.castShadow = true;
       group.add(pilR);
 
-      // Translucent gate door
+      // Pillar caps (colored tops to distinguish door type)
+      var capGeom = new THREE.BoxGeometry(0.55, 0.18, 0.55);
+      var capMat = new THREE.MeshStandardMaterial({ color: colorNum, emissive: colorNum, emissiveIntensity: 0.35, roughness: 0.3 });
+      var capL = new THREE.Mesh(capGeom, capMat);
+      capL.position.set(-w/2, 3.49, 0);
+      group.add(capL);
+      var capR = new THREE.Mesh(capGeom, capMat);
+      capR.position.set(w/2, 3.49, 0);
+      group.add(capR);
+
+      // Horizontal beam across top (lintel) — visually connects pillars and frames the door
+      var lintelGeom = new THREE.BoxGeometry(w + 0.45, 0.18, 0.3);
+      var lintelMat = new THREE.MeshStandardMaterial({ color: colorNum, emissive: colorNum, emissiveIntensity: 0.25, roughness: 0.35 });
+      var lintel = new THREE.Mesh(lintelGeom, lintelMat);
+      lintel.position.set(0, 2.5, 0);
+      lintel.castShadow = true;
+      group.add(lintel);
+
+      // Translucent gate door (more visible)
       var gateMat = new THREE.MeshStandardMaterial({
         color: colorNum,
+        emissive: colorNum,
+        emissiveIntensity: 0.15,
         transparent: true,
-        opacity: 0.4,
-        roughness: 0.2
+        opacity: 0.55,
+        roughness: 0.15,
+        metalness: 0.1
       });
-      var gate = new THREE.Mesh(new THREE.BoxGeometry(w - 0.4, 1.8, 0.06), gateMat);
-      gate.position.set(0, 0.9, 0);
+      var gate = new THREE.Mesh(new THREE.BoxGeometry(w - 0.45, 2.28, 0.07), gateMat);
+      gate.position.set(0, 1.14, 0);
       group.add(gate);
 
     } else if (elem.type === 'bathroom') {
@@ -1889,6 +1910,30 @@ window.Visualizer3D = (function () {
         _addChairsLine(group, -h/2 - 0.18, w, numChairs, 0.75, Math.PI); // facing South/table center
         if (elem.mesaConfig) {
           _addTablewareLine(group, -h/2 + 0.12, w, numChairs, elem.mesaConfig, Math.PI);
+        }
+      } else if (elem.type === 'table_marble_square' && numChairs === 12) {
+        // Marble rectangular 12p: 4 per long side + 2 per short side (headboard)
+        _addChairsLine(group, -h/2 - 0.18, w - 0.2, 4, 0.75, Math.PI); // Top long side
+        _addChairsLine(group, h/2 + 0.18, w - 0.2, 4, 0.75, 0);        // Bottom long side
+        _addChairsLineZ(group, -w/2 - 0.18, h - 0.3, 2, 0.75, -Math.PI / 2); // Left headboard
+        _addChairsLineZ(group, w/2 + 0.18, h - 0.3, 2, 0.75, Math.PI / 2);   // Right headboard
+        if (elem.mesaConfig) {
+          _addTablewareLine(group, -h/2 + 0.12, w - 0.2, 4, elem.mesaConfig, Math.PI);
+          _addTablewareLine(group, h/2 - 0.12, w - 0.2, 4, elem.mesaConfig, 0);
+          _addTablewareLineZ(group, -w/2 + 0.12, h - 0.3, 2, elem.mesaConfig, -Math.PI / 2);
+          _addTablewareLineZ(group, w/2 - 0.12, h - 0.3, 2, elem.mesaConfig, Math.PI / 2);
+        }
+      } else if (elem.type === 'table_marble_square' && numChairs === 10) {
+        // Marble rectangular 10p: 3 per long side + 2 per short side (headboard)
+        _addChairsLine(group, -h/2 - 0.18, w - 0.2, 3, 0.75, Math.PI); // Top long side
+        _addChairsLine(group, h/2 + 0.18, w - 0.2, 3, 0.75, 0);        // Bottom long side
+        _addChairsLineZ(group, -w/2 - 0.18, h - 0.3, 2, 0.75, -Math.PI / 2); // Left headboard
+        _addChairsLineZ(group, w/2 + 0.18, h - 0.3, 2, 0.75, Math.PI / 2);   // Right headboard
+        if (elem.mesaConfig) {
+          _addTablewareLine(group, -h/2 + 0.12, w - 0.2, 3, elem.mesaConfig, Math.PI);
+          _addTablewareLine(group, h/2 - 0.12, w - 0.2, 3, elem.mesaConfig, 0);
+          _addTablewareLineZ(group, -w/2 + 0.12, h - 0.3, 2, elem.mesaConfig, -Math.PI / 2);
+          _addTablewareLineZ(group, w/2 - 0.12, h - 0.3, 2, elem.mesaConfig, Math.PI / 2);
         }
       } else if (shape === 'square' && numChairs === 10) {
         // Configuration: 3 chairs on left/right sides (Z axis), 2 chairs on top/bottom sides (X axis)
@@ -3518,35 +3563,37 @@ window.Visualizer3D = (function () {
     } else {
       switch (category) {
         case 'estructuras':
-          heightOffset = 4.0;
-          if (type === 'salon') heightOffset = 5.2;
-          if (type === 'pool') { heightOffset = 1.5; subtitle = 'Alberca'; }
-          if (type === 'terrace') { heightOffset = 1.5; subtitle = 'Terraza'; }
+          heightOffset = 4.5;
+          if (type === 'salon') heightOffset = 5.5;
+          if (type === 'pool') { heightOffset = 4.0; subtitle = 'Alberca'; }
+          if (type === 'terrace') { heightOffset = 4.0; subtitle = 'Terraza'; }
           if (elem.w && elem.h) {
             subtitle = subtitle || (elem.w + 'x' + elem.h + 'm');
           }
           break;
         case 'decoracion':
-          heightOffset = 3.5;
-          if (type === 'tree_decor') { heightOffset = 4.5; subtitle = 'Árbol Decorativo'; }
+          heightOffset = 4.0;
+          if (type === 'tree_decor') { heightOffset = 5.0; subtitle = 'Árbol Decorativo'; }
           else { subtitle = 'Decoración'; }
           break;
         case 'entretenimiento':
-          heightOffset = 2.8;
-          if (type === 'stage') { heightOffset = 3.5; subtitle = 'Escenario'; }
+          heightOffset = 4.0;
+          if (type === 'stage') { heightOffset = 4.5; subtitle = 'Escenario'; }
           else if (type === 'dj_booth') { subtitle = 'Cabina DJ'; }
           else { subtitle = 'Entretenimiento'; }
           break;
         case 'accesos':
-          heightOffset = 2.2;
+          // Above perimeter walls (3.0m height) so labels are always visible
+          heightOffset = 4.5;
+          if (type === 'street') heightOffset = 2.5;
           subtitle = 'Acceso';
           break;
         case 'proveedores':
-          heightOffset = 2.5;
+          heightOffset = 4.0;
           subtitle = 'Servicio';
           break;
         default:
-          heightOffset = 2.0;
+          heightOffset = 4.0;
           subtitle = 'Elemento';
           break;
       }

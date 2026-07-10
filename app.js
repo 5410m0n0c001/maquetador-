@@ -928,9 +928,10 @@
         var elem = AppState.elements.find(function (e) { return e.id === id; });
         if (elem) {
           var isTable = elem.type.startsWith('table_') || elem.type === 'lounge_set';
-          if (isTable && elem.type !== 'table_imperial' && v > 10) {
-            v = 10;
-            el.value = 10;
+          var maxChairs = (elem.type === 'table_marble_square') ? 12 : 10;
+          if (isTable && elem.type !== 'table_imperial' && v > maxChairs) {
+            v = maxChairs;
+            el.value = maxChairs;
           }
           saveHistory();
           updateElement(id, { chairs: v });
@@ -1917,7 +1918,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-07-05-v32';
+  var CURRENT_LAYOUT_VERSION = '2026-07-10-v33';
 
   function loadFromLocalStorage() {
     try {
@@ -2937,8 +2938,16 @@
       onMove: function (id, x, y) {
         var elem = AppState.elements.find(function (e) { return e.id === id; });
         if (!elem) return;
-        elem.x = Math.max(0, Math.min(x, AppState.terrain.w));
-        elem.y = Math.max(0, Math.min(y, AppState.terrain.h));
+        // Allow street/avenida to be placed outside terrain (up to 20m margin)
+        var outsideAllowed = (elem.type === 'street');
+        var margin = 20;
+        if (outsideAllowed) {
+          elem.x = Math.max(-margin, Math.min(x, AppState.terrain.w + margin));
+          elem.y = Math.max(-margin, Math.min(y, AppState.terrain.h + margin));
+        } else {
+          elem.x = Math.max(0, Math.min(x, AppState.terrain.w));
+          elem.y = Math.max(0, Math.min(y, AppState.terrain.h));
+        }
         if (window.Editor2D) window.Editor2D.update(AppState.elements);
         if (window.Visualizer3D) window.Visualizer3D.sync(AppState.elements);
         // Live-update inspector position fields
