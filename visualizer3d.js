@@ -1648,17 +1648,37 @@ window.Visualizer3D = (function () {
     var showTechos = _getLayerVisibility('techos');
 
     if (elem.type.indexOf('door') === 0) {
+      // Detect if door is near a terrain edge and push geometry inward so it
+      // isn't buried inside the perimeter wall (wallT=0.25m, wallH=3.0m).
+      var wallT = 0.25;
+      var terrainH = _terrain ? _terrain.h : 60;
+      var terrainW = _terrain ? _terrain.w : 50;
+      // Determine closest edge and compute how much to push inward (Z local axis)
+      var distNorth = elem.y;               // distance to north wall (Z=0)
+      var distSouth = terrainH - elem.y;    // distance to south wall
+      var distWest  = elem.x;               // distance to west wall (X=0)
+      var distEast  = terrainW - elem.x;    // distance to east wall
+      var minDist = Math.min(distNorth, distSouth, distWest, distEast);
+      // If the door center is within 1m of a wall, push geometry inward by wallT+0.1
+      var wallPush = (minDist < 1.0) ? (wallT + 0.15) : 0;
+      // For north/south walls (small y or near terrainH) push along Z; handled via group Z offset below
+      // We apply the push along local Z (the element's forward axis before rotation)
+      var zOff = 0;
+      if (distNorth < 1.0 && distNorth <= distSouth) zOff =  wallPush; // push south (into terrain)
+      if (distSouth < 1.0 && distSouth <  distNorth) zOff = -wallPush; // push north
+      // (west/east handled by rotation — when rotated 90° local Z becomes world X)
+
       // Taller pillars (above wall height of 3m)
       var pilGeom = new THREE.BoxGeometry(0.45, 3.4, 0.45);
       var pilMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5, metalness: 0.15 });
 
       var pilL = new THREE.Mesh(pilGeom, pilMat);
-      pilL.position.set(-w/2, 1.7, 0);
+      pilL.position.set(-w/2, 1.7, zOff);
       pilL.castShadow = true;
       group.add(pilL);
 
       var pilR = new THREE.Mesh(pilGeom, pilMat);
-      pilR.position.set(w/2, 1.7, 0);
+      pilR.position.set(w/2, 1.7, zOff);
       pilR.castShadow = true;
       group.add(pilR);
 
@@ -1666,17 +1686,17 @@ window.Visualizer3D = (function () {
       var capGeom = new THREE.BoxGeometry(0.55, 0.18, 0.55);
       var capMat = new THREE.MeshStandardMaterial({ color: colorNum, emissive: colorNum, emissiveIntensity: 0.35, roughness: 0.3 });
       var capL = new THREE.Mesh(capGeom, capMat);
-      capL.position.set(-w/2, 3.49, 0);
+      capL.position.set(-w/2, 3.49, zOff);
       group.add(capL);
       var capR = new THREE.Mesh(capGeom, capMat);
-      capR.position.set(w/2, 3.49, 0);
+      capR.position.set(w/2, 3.49, zOff);
       group.add(capR);
 
-      // Horizontal beam across top (lintel) — visually connects pillars and frames the door
+      // Horizontal beam across top (lintel)
       var lintelGeom = new THREE.BoxGeometry(w + 0.45, 0.18, 0.3);
       var lintelMat = new THREE.MeshStandardMaterial({ color: colorNum, emissive: colorNum, emissiveIntensity: 0.25, roughness: 0.35 });
       var lintel = new THREE.Mesh(lintelGeom, lintelMat);
-      lintel.position.set(0, 2.5, 0);
+      lintel.position.set(0, 2.5, zOff);
       lintel.castShadow = true;
       group.add(lintel);
 
@@ -1691,7 +1711,7 @@ window.Visualizer3D = (function () {
         metalness: 0.1
       });
       var gate = new THREE.Mesh(new THREE.BoxGeometry(w - 0.45, 2.28, 0.07), gateMat);
-      gate.position.set(0, 1.14, 0);
+      gate.position.set(0, 1.14, zOff);
       group.add(gate);
 
     } else if (elem.type === 'bathroom') {
