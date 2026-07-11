@@ -2207,7 +2207,7 @@
       'table_kids': 'Mesa Infantil',
       'table_campirana': 'Mesa Campirana',
       'table_marble_round': 'Mesa Mármol Redonda',
-      'table_marble_square': 'Mesa Mármol Cuadrada',
+      'table_marble_square': 'Mesa Mármol Rectangular',
       'table_umbrella': 'Mesa con Sombrilla',
       'table_cake': 'Mesa de Pastel',
       'table_gifts': 'Mesa de Regalos',
@@ -2308,41 +2308,46 @@
     html += '  <div class="meta-card"><div class="meta-val" style="font-size: 13px; font-weight: 600; padding: 6px 0;">' + formattedDate + '</div><div class="meta-lbl">Fecha Reporte</div></div>\n';
     html += '</div>\n';
 
-    // Ficha Técnica General Card (renders on Page 1)
+    // Ficha Técnica General Card — GRADUACIÓN PRIMARIA BURGOS DE ANA MARÍA
+    // Color palette: azul marino (#1e3a5f) y dorado/champagne (#c9a96e)
+    var NAVY = '#1e3a5f';
+    var GOLD = '#c9a96e';
+    var CHAMPAGNE = '#f5e6c8';
     html += '<div class="print-section-wrapper" style="margin-bottom: 0;">\n';
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px 25px; display: flex; flex-direction: column; gap: 15px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #f43f5e; padding-bottom: 8px; font-size:16px;"><i class="fa-solid fa-circle-info" style="color:#f43f5e; margin-right: 8px;"></i> Ficha Técnica General</h4>\n';
-    html += '    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">\n';
-    html += '      <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">\n';
-    html += '        <div><strong>Festejada:</strong> Zoe (Mis XV Años)</div>\n';
-    html += '        <div><strong>Lugar:</strong> Jardín Manzanares</div>\n';
-    html += '        <div><strong>Fecha:</strong> Sábado 04 de Julio de 2026</div>\n';
-    html += '        <div><strong>Comensales en Plano:</strong> ' + totalGuests + ' Personas sentadas</div>\n';
-    html += '        <div><strong>Coordinador General:</strong> Alex Salomon</div>\n';
-    html += '        <div><strong>Tiempo de Renta/Servicio:</strong> 9 Horas totales</div>\n';
+    html += '  <div style="background: #f0f4f8; border: 2px solid ' + NAVY + '; border-radius: 8px; padding: 20px 25px; display: flex; flex-direction: column; gap: 15px;">\n';
+    html += '    <div style="display:flex; align-items:center; gap:12px; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 10px; margin-bottom: 4px;">\n';
+    html += '      <div style="font-size:28px;">🎓</div>\n';
+    html += '      <div>\n';
+    html += '        <h4 style="margin:0; color: ' + NAVY + '; font-size:16px; font-weight:700;">GRADUACIÓN PRIMARIA BURGOS DE ANA MARÍA</h4>\n';
+    html += '        <div style="color:' + GOLD + '; font-size:12px; font-weight:600; margin-top:2px; font-style:italic;">✨ Por un futuro maravilloso... • Clase 2026</div>\n';
     html += '      </div>\n';
-    html += '      <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">\n';
-    html += '        <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 6px; padding: 10px 12px; color: #856404; font-size:11px;">\n';
-    html += '          <div style="font-weight: 700; font-size: 11px; text-transform: uppercase;">Conciliación de Banquetes</div>\n';
-    html += '          <div style="font-weight: 600; margin-top: 4px;">• Platos Contratados: 150 platos</div>\n';
-    html += '          <div style="font-weight: 600;">• Comensales en Plano: ' + totalGuests + ' personas</div>\n';
-    html += '          <div style="font-weight: 600;">• Requerido: ' + totalAdults + ' Adultos y ' + totalNinos + ' Niños</div>\n';
-    html += '          <div style="font-weight: 700; margin-top: 4px; color: #a94442;">• Estatus: Faltante de 3 platos (adición requerida)</div>\n';
+    html += '    </div>\n';
+    html += '    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">\n';
+    html += '      <div style="font-size: 13px; line-height: 1.8; display: flex; flex-direction: column; gap: 6px;">\n';
+    html += '        <div><strong>Evento:</strong> Graduación Primaria Burgos de Ana María</div>\n';
+    html += '        <div><strong>Fecha:</strong> Sábado 10 de Julio de 2026</div>\n';
+    html += '        <div><strong>Horario:</strong> 13:00 – 22:00 HRS (9 horas)</div>\n';
+    html += '        <div><strong>Coordinador:</strong> Alex Salomon / Primavera Eventos</div>\n';
+    html += '        <div><strong>Comensales en Plano:</strong> ' + totalGuests + ' personas</div>\n';
+    html += '      </div>\n';
+    html += '      <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">\n';
+    html += '        <div style="background:' + CHAMPAGNE + '; border: 1px solid ' + GOLD + '; border-radius: 6px; padding: 10px 12px;">\n';
+    html += '          <div style="font-weight: 700; font-size: 11px; text-transform: uppercase; color:' + NAVY + ';">🎨 Paleta de Colores del Montaje</div>\n';
+    html += '          <div style="display:flex; gap:10px; margin-top:6px; align-items:center;">\n';
+    html += '            <div style="display:flex;align-items:center;gap:5px;"><div style="width:18px;height:18px;border-radius:4px;background:#1e3a5f;border:1px solid #ccc;"></div><span style="font-size:12px;font-weight:600;color:#1e3a5f;">Azul Marino</span></div>\n';
+    html += '            <div style="display:flex;align-items:center;gap:5px;"><div style="width:18px;height:18px;border-radius:4px;background:#c9a96e;border:1px solid #ccc;"></div><span style="font-size:12px;font-weight:600;color:#92712a;">Dorado</span></div>\n';
+    html += '            <div style="display:flex;align-items:center;gap:5px;"><div style="width:18px;height:18px;border-radius:4px;background:#f5e6c8;border:1px solid #ccc;"></div><span style="font-size:12px;font-weight:600;color:#a07840;">Champagne</span></div>\n';
+    html += '          </div>\n';
     html += '        </div>\n';
-    html += '        <div>\n';
-    html += '          <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Código de Vestimenta</div>\n';
-    html += '          <div style="font-weight: 600; font-size: 13px; color: #0f172a; margin-top: 2px;">Formal (no etiqueta rigurosa)</div>\n';
-    html += '          <div style="font-size: 11px; color: #b45309; font-weight: 600; margin-top: 2px;">* Se reserva el color beige y dorado exclusivamente para la festejada (Zoe).</div>\n';
-    html += '        </div>\n';
-    html += '        <div>\n';
-    html += '          <div style="font-weight: 700; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Mesa de Regalos</div>\n';
-    html += '          <div style="font-weight: 600; font-size: 13px; color: #0f172a; margin-top: 2px;">Regalos pequeños o Sobres ($)</div>\n';
-    html += '          <div style="font-size: 11px; color: #475569; margin-top: 2px;">* Se proveerán 100 sobres para los invitados adultos.</div>\n';
+    html += '        <div style="background:#e8f0fe; border:1px solid #93b4f0; border-radius:6px; padding:10px 12px;">\n';
+    html += '          <div style="font-weight:700; font-size:11px; text-transform:uppercase; color:' + NAVY + ';">📋 Menú</div>\n';
+    html += '          <div style="font-size:12px; color:#b45309; font-weight:600; margin-top:4px;">⚠️ Menú: PENDIENTE DE CONFIRMAR</div>\n';
+    html += '          <div style="font-size:11px; color:#475569; margin-top:2px;">Banquete Primavera (formato por definir)</div>\n';
     html += '        </div>\n';
     html += '      </div>\n';
     html += '    </div>\n';
-    html += '    <div style="border-top: 1px solid #cbd5e1; padding-top: 12px; margin-top: 5px; font-size: 12px; line-height: 1.5; color: #475569;">\n';
-    html += '      <strong>Detalles Logísticos:</strong> El chicharrón, guacamole y pastel son provistos directamente por los anfitriones. Las paletas heladas se entregan puntualmente a las 15:30 (250 piezas). Instalación eléctrica para el pastel (enchufe cerca de columna) y colocación de inflable infantil (área infantil y brincolín en mantenimiento) concretados.\n';
+    html += '    <div style="border-top: 1px solid ' + GOLD + '; padding-top: 10px; margin-top: 2px; font-size: 11px; line-height: 1.5; color: #475569;">\n';
+    html += '      <strong>Cabina de Fotos:</strong> Apertura 18:00 – 20:00 HRS (horario pendiente de confirmar definitivamente). &nbsp;|&nbsp; <strong>Sección Baile/Albercada:</strong> Clase 2026 · Calv. F. a partir de las 16:00 HRS.\n';
     html += '    </div>\n';
     html += '  </div>\n';
     html += '</div>\n';
@@ -2359,33 +2364,27 @@
     html += '<div class="print-section-wrapper">\n';
     html += '  <div class="section-title"><i class="fa-solid fa-clock" style="margin-right: 6px; color:#f43f5e;"></i> Cronograma y Minuto a Minuto del Evento</div>\n';
     html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px 25px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; font-size:14px;"><i class="fa-solid fa-calendar-day" style="color:#f43f5e; margin-right: 6px;"></i> Itinerario del Gran Día (04 de Julio de 2026)</h4>\n';
-    html += '    <div style="position: relative; padding-left: 20px; border-left: 2px solid #cbd5e1; font-size: 11px;">\n';
-    
+    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 8px; font-size:14px;"><i class="fa-solid fa-calendar-day" style="color:' + NAVY + '; margin-right: 6px;"></i> 🎓 Itinerario — Graduación Primaria Burgos de Ana María (Clase 2026)</h4>\n';
+    html += '    <div style="position: relative; padding-left: 20px; border-left: 2px solid ' + GOLD + '; font-size: 11px;">\n';
+
     var timelineEvents = [
-      { time: '13:00 - 13:45 HRS', title: 'Ceremonia Religiosa (Misa)', desc: 'Lugar: Parroquia de San Francisco de Asís.' },
-      { time: '13:45 - 14:00 HRS', title: 'Sesión Fotográfica', desc: 'Proveedor: Alfred Fotografic (Festejada y Padrinos).' },
-      { time: '15:00 - 15:45 HRS', title: 'Recepción / Cóctel', desc: 'Lugar: Jardín Manzanares. Entrada, Snacks (Guacamole y chicharrón en cazuelas) y trago de bienvenida (se sirve únicamente cerveza y agua).' },
-      { time: '15:30 HRS', title: 'Entrega de Paletas Heladas', desc: 'Servicio de Paletas La Princesa (250 piezas), Vitroleros de Jamaica y Refrescos.' },
-      { time: '15:45 - 16:00 HRS', title: 'Asignación de Mesas', desc: 'Hostess realiza acomodo de invitados y servicio de trago largo (cerveza/agua).' },
-      { time: '16:00 - 16:10 HRS', title: 'Entrada Triunfal', desc: 'Ingreso oficial de la festejada (Zoe) con fotos y pirotecnia.' },
-      { time: '16:10 - 17:10 HRS', title: 'Banquete (Servicio)', desc: 'Degustación del menú formal a 2 tiempos para adultos y niños. Acompañar únicamente con cerveza y agua.' },
-      { time: '16:15 - 17:15 HRS', title: 'Cantante Raudel Carmona', desc: 'Presentación musical en vivo durante la comida.' },
-      { time: '17:00 - 19:00 HRS', title: 'Apertura Cabina Inflable', desc: 'Cabina de fotos inflable y carrito de esquites activados.' },
-      { time: '17:30 HRS', title: 'Abrir Pista de Baile', desc: 'DJ Alfred da inicio al baile general. Comienza distribución de licores (Tequila Centenario, Bacardí Blanco y Whisky).' },
-      { time: '18:00 HRS', title: 'Inauguración Mesa de Dulces', desc: 'Apertura oficial por Zoe y sus Padrinos.' },
-      { time: '19:20 HRS', title: 'Partida de Pastel', desc: 'Corte de pastel tradicional en base principal de la pista (Primer corte simbólico, luego se retira a la cocina para porcionado y emplatado con platos y cubiertos de postre).' },
-      { time: '19:30 - 20:20 HRS', title: 'Vals de la Festejada', desc: 'Vals familiar con Zoe, sus padres, padrinos y coreografía.' },
-      { time: '20:20 HRS', title: 'Baile General / Animación', desc: 'Show de luces y mezclas de DJ Alfred.' },
-      { time: '21:30 - 22:30 HRS', title: 'Torna Fiesta', desc: 'Servicio de Barra de Esquites, Elotes y Tamales (120 pzas: 40 pzas de c/u) por los meseros.' },
-      { time: '23:00 - 23:30 HRS', title: 'Fin del Evento', desc: 'Cierre de servicio y agradecimientos de los anfitriones.' }
+      { time: '13:00 HRS', title: 'Recepción de Invitados', desc: 'Graduados y familias. Bienvenida en el área de entrada.', pending: false },
+      { time: '14:00 HRS', title: 'Inicio Formal — Bienvenida', desc: 'Apertura oficial del programa. Palabras de bienvenida a graduados y familias.', pending: false },
+      { time: '14:30 HRS', title: 'Fotos Familiares', desc: 'Sesión fotográfica con graduados y sus familias. Palabras de padres.', pending: false },
+      { time: '14:45 HRS', title: 'Pase de Lista — Entrega Simbólica', desc: 'Ceremonia de pase de lista y entrega simbólica de reconocimientos a la Clase 2026.', pending: false },
+      { time: '15:00 HRS', title: 'Comida — Banquete Primavera', desc: '⚠️ MENÚ PENDIENTE DE CONFIRMAR. Servicio de banquete para graduados y familias.', pending: true },
+      { time: '16:00 HRS', title: 'Baile / Albercada — Clase 2026', desc: 'Apertura de pista de baile y área de albercada para los graduados. Animación Clase 2026 · Calv. F.', pending: false },
+      { time: '18:00 – 20:00 HRS', title: 'Apertura Cabina de Fotos', desc: '⚠️ Horario PENDIENTE DE CONFIRMAR (6:00 – 8:00 pm aprox.). Cabina inflable de fotos para los asistentes.', pending: true },
+      { time: '22:00 HRS', title: 'Cierre / Despedida', desc: 'Fin del evento. Agradecimientos y cierre oficial de la celebración.', pending: false }
     ];
     
     timelineEvents.forEach(function (ev) {
-      html += '      <div style="margin-bottom: 7px; position: relative;">\n';
-      html += '        <div style="position: absolute; left: -26px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: #f43f5e; border: 2px solid #fff;"></div>\n';
-      html += '        <div style="font-weight: 700; font-size: 10px; color: #f43f5e; margin-bottom: 0px;">' + ev.time + '</div>\n';
-      html += '        <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-bottom: 0px;">' + ev.title + '</div>\n';
+      var dotColor = ev.pending ? '#b45309' : NAVY;
+      var timeColor = ev.pending ? '#b45309' : GOLD;
+      html += '      <div style="margin-bottom: 8px; position: relative;">\n';
+      html += '        <div style="position: absolute; left: -26px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: ' + dotColor + '; border: 2px solid #fff;"></div>\n';
+      html += '        <div style="font-weight: 700; font-size: 10px; color: ' + timeColor + '; margin-bottom: 1px;">' + ev.time + '</div>\n';
+      html += '        <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-bottom: 0px;">' + ev.title + (ev.pending ? ' <span style="background:#fff3cd;color:#b45309;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:700;">PENDIENTE</span>' : '') + '</div>\n';
       html += '        <div style="font-size: 10px; color: #475569; line-height: 1.3;">' + ev.desc + '</div>\n';
       html += '      </div>\n';
     });
@@ -2395,52 +2394,41 @@
     
     html += '</div>\n';
 
-    // Section 1.8: Menú del Evento y Servicio A&B
+    // Section 1.8: Menú del Evento y Servicio A&B — GRADUACIÓN BURGOS
     html += '<div class="page-break"></div>\n';
-    html += '<div class="section-title"><i class="fa-solid fa-utensils" style="margin-right: 6px; color:#f43f5e;"></i> Ficha de Menú y Servicios de Alimentos & Bebidas</div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-utensils" style="margin-right: 6px; color:' + NAVY + ';"></i> Ficha de Menú y Logística del Evento</div>\n';
     html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
-    
-    // Left column: Menu
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-plate-wheat" style="color:#f43f5e; margin-right:6px;"></i> Menú Seleccionado</h4>\n';
-    html += '    <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px;">\n';
-    html += '      <div><strong>Entrada:</strong><br><span style="color:#475569; font-style:italic; padding-left:10px; display:inline-block;">Sopa de Tortilla clásica.</span></div>\n';
-    html += '      <div><strong>Plato Fuerte Adultos (50% / 50%):</strong><br>\n';
-    html += '        <ul style="margin: 4px 0 0 0; padding-left: 20px; color:#475569; font-style:italic;">\n';
-    html += '          <li><strong>Opción Lomo (50%):</strong> Lomo en adobo a los 3 chiles, papa horneada y atado de verduras.</li>\n';
-    html += '          <li><strong>Opción Pechuga (50%):</strong> Pechuga en salsa de pimiento asado rellena de espinaca con queso gouda, calabacita rellena y atado de verduras.</li>\n';
-    html += '        </ul>\n';
-    html += '      </div>\n';
-    html += '      <div><strong>Plato Infantil / Adolescentes:</strong><br><span style="color:#475569; font-style:italic; padding-left:10px; display:inline-block;">Hamburguesa con espagueti y papas chips, servido con golosina.</span></div>\n';
-    html += '      <div><strong>Torna Fiesta (21:30 - 22:30):</strong><br><span style="color:#475569; font-style:italic; padding-left:10px; display:inline-block;">Barra tradicional de esquites y elotes.</span></div>\n';
+
+    // Left column: Menu (PENDIENTE)
+    html += '  <div style="background: #fff8e1; border: 2px dashed #f59e0b; border-radius: 8px; padding: 20px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-plate-wheat" style="color:' + GOLD + '; margin-right:6px;"></i> Menú — Banquete Primavera</h4>\n';
+    html += '    <div style="text-align:center; padding: 20px 0;">\n';
+    html += '      <div style="font-size: 40px; margin-bottom: 8px;">⏳</div>\n';
+    html += '      <div style="font-size: 16px; font-weight: 700; color: #b45309;">MENÚ PENDIENTE</div>\n';
+    html += '      <div style="font-size: 12px; color: #475569; margin-top: 6px; font-style:italic;">El menú del Banquete Primavera para la Graduación<br>está pendiente de confirmación por el cliente.</div>\n';
+    html += '      <div style="margin-top: 12px; background:#fff3cd; border:1px solid #ffc107; border-radius:6px; padding:8px 12px; font-size:11px; color:#856404; font-weight:600;">📞 Pendiente confirmación de menú<br>con Primaria Burgos de Ana María</div>\n';
     html += '    </div>\n';
     html += '  </div>\n';
-    
-    // Right column: Beverages & Services
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-bottle-water" style="color:#f43f5e; margin-right:6px;"></i> Logística de Bebidas, Alimentos y Montaje</h4>\n';
-    html += '    <div style="font-size: 11px; line-height: 1.5; display: flex; flex-direction: column; gap: 8px;">\n';
-    html += '      <div><strong>Inventario de Alcohol Entregado:</strong>\n';
-    html += '        <ul style="margin: 2px 0 0 0; padding-left: 15px; color:#475569;">\n';
-    html += '          <li>Tequila Centenario: 6 botellas</li>\n';
-    html += '          <li>Bacardí Blanco: 6 botellas</li>\n';
-    html += '          <li>Whisky: 5 botellas</li>\n';
-    html += '          <li>Cerveza: Abundante (para consumo desde la recepción y comida)</li>\n';
-    html += '        </ul>\n';
+
+    // Right column: Montaje & Logística
+    html += '  <div style="background: #f0f4f8; border: 1px solid ' + NAVY + '; border-radius: 8px; padding: 15px 20px;">\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-star" style="color:' + GOLD + '; margin-right:6px;"></i> Montaje y Logística del Evento</h4>\n';
+    html += '    <div style="font-size: 11px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">\n';
+    html += '      <div style="background:' + CHAMPAGNE + '; border-left: 3px solid ' + GOLD + '; padding:8px 10px; border-radius:0 4px 4px 0;">\n';
+    html += '        <strong style="color:' + NAVY + ';">🎨 Colores del Montaje:</strong><br>\n';
+    html += '        <span style="color:#1e3a5f;">■ Azul Marino</span> &nbsp;|&nbsp; <span style="color:#92712a;">■ Dorado</span> &nbsp;|&nbsp; <span style="color:#a07840;">■ Champagne</span>\n';
     html += '      </div>\n';
-    html += '      <div><strong>Reglas de Distribución de Bebidas:</strong><br><span style="color:#475569; padding-left:5px; display:inline-block;">Durante la recepción y banquete se servirá únicamente cerveza y agua/refrescos. Los licores destilados (Tequila Centenario, Bacardí Blanco, Whisky) se empezarán a distribuir exclusivamente a partir de la apertura de la pista de baile (17:30 HRS).</span></div>\n';
-    html += '      <div><strong>Snacks de Bienvenida:</strong><br><span style="color:#475569; padding-left:5px; display:inline-block;">Guacamole con chicharrón en cazuelas (provisto por los anfitriones) colocado en mesas desde el inicio de la recepción.</span></div>\n';
-    html += '      <div><strong>Logística del Pastel & Brindis:</strong>\n';
-    html += '        <ul style="margin: 2px 0 0 0; padding-left: 15px; color:#475569;">\n';
-    html += '          <li>El portacopas y las copas de brindis se colocarán en la misma base del pastel.</li>\n';
-    html += '          <li>Pastel provisto con su base, nota de recepción y caja recolectora de sobres para regalos ($) al lado.</li>\n';
-    html += '          <li>Corte de pastel se realiza en la mesa/base principal; luego se retira a la cocina para porcionado.</li>\n';
-    html += '        </ul>\n';
+    html += '      <div><strong>📸 Cabina de Fotos:</strong><br>\n';
+    html += '        <span style="color:#b45309; font-weight:600;">⚠️ Horario pendiente: 18:00 – 20:00 HRS (por confirmar)</span>\n';
     html += '      </div>\n';
-    html += '      <div><strong>Pendientes por Confirmar (A&B):</strong>\n';
-    html += '        <ul style="margin: 2px 0 0 0; padding-left: 15px; color:#b45309; font-weight: 600;">\n';
-    html += '          <li>Confirmar platos de postre para pastel y cucharas o tenedores correspondientes.</li>\n';
-    html += '          <li>Asegurar enfriamiento de cerveza y refrescos con la barra de hielo inmediatamente al recibirla.</li>\n';
+    html += '      <div><strong>🏊 Baile / Albercada:</strong><br>\n';
+    html += '        <span style="color:#475569;">Apertura para Clase 2026 a las 16:00 HRS. Actividad Calv. F. incluida.</span>\n';
+    html += '      </div>\n';
+    html += '      <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:6px; padding:8px 10px;">\n';
+    html += '        <strong style="color:#991b1b;">⚠️ Pendientes por Confirmar:</strong>\n';
+    html += '        <ul style="margin: 4px 0 0 0; padding-left: 15px; color:#b45309; font-weight: 600;">\n';
+    html += '          <li>Menú definitivo del Banquete Primavera</li>\n';
+    html += '          <li>Horario exacto de apertura de cabina (6:00 – 8:00 pm aprox.)</li>\n';
     html += '        </ul>\n';
     html += '      </div>\n';
     html += '    </div>\n';
