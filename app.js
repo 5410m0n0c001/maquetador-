@@ -1916,16 +1916,16 @@
     if (data.terrain) AppState.terrain = data.terrain;
     if (data.layers) Object.assign(AppState.layers, data.layers);
     AppState.elements.forEach(function (e) {
-      // Clean up corrupted characters caused by broken UTF-8 encoding (including half-broken 'í' variants)
+      // Clean up corrupted characters caused by broken UTF-8 encoding
       if (typeof e.name === 'string') {
         var nClean = e.name.trim();
         
         // 1. Árbol Decorativo (\u00C1rbol)
-        if (/[\u00C3\u00EDíÃ]\s*rbol/i.test(nClean)) {
+        if (nClean.indexOf('rbol') > -1) {
           e.name = '\u00C1rbol Decorativo';
         }
         // 2. Área de Barra / Área de Cocina (\u00C1rea)
-        else if (/[\u00C3\u00EDíÃ]\s*rea/i.test(nClean)) {
+        else if (nClean.indexOf('rea') > -1) {
           if (nClean.indexOf('Barra') > -1) {
             e.name = '\u00C1rea de Barra';
           } else if (nClean.indexOf('Cocina') > -1) {
@@ -1934,8 +1934,8 @@
             e.name = '\u00C1rea';
           }
         }
-        // 3. Salón Techado (Sal\u00F3n)
-        else if (/Sal[\u00C3\u00ED\u00F3íÃ]\s*n/i.test(nClean)) {
+        // 3. Salón / Arco Estructural (Sal\u00F3n)
+        else if (nClean.indexOf('Sal') > -1 && (nClean.indexOf('o') > -1 || nClean.indexOf('Ã') > -1 || nClean.indexOf('í') > -1)) {
           if (nClean.indexOf('Arco') > -1) {
             e.name = 'Arco Estructural/Sal\u00F3n';
           } else {
@@ -1943,19 +1943,10 @@
           }
         }
         // 4. Mesa Mármol Rectangular (M\u00E1rmol)
-        else if (/M[\u00C3\u00ED\u00E1íÃ]rmol/i.test(nClean)) {
+        else if (nClean.indexOf('rmol') > -1) {
           e.name = 'Mesa M\u00E1rmol Rectangular';
         }
-        // 5. General fallback cleanups
-        else {
-          e.name = e.name
-            .replace(/\u00C3\u00B3/g, '\u00F3') // ó
-            .replace(/\u00C3\u00A1/g, '\u00E1') // á
-            .replace(/\u00C3\u00A9/g, '\u00E9') // é
-            .replace(/\u00C3\u00BA/g, '\u00FA') // ú
-            .replace(/\u00C3\u00B1/g, '\u00F1') // ñ
-            .replace(/\u00C3\s*/g, '\u00ED');    // í
-        }
+      }
 
         // Auto-update old marble table names from square to rectangular
         if (e.type === 'table_marble_square' && e.name.indexOf('Cuadrada') > -1) {
