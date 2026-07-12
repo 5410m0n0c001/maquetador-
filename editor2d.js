@@ -640,7 +640,8 @@ window.Editor2D = (function () {
     });
     // Shorten long names
     var displayName = elem.name || (cat ? cat.name : elem.type);
-    if (elem.mesaConfig && elem.mesaConfig.mesaNum) {
+    var isRealTable = elem.type.startsWith('table_') || elem.type === 'lounge_set';
+    if (isRealTable && elem.mesaConfig && elem.mesaConfig.mesaNum) {
       displayName = 'Mesa ' + elem.mesaConfig.mesaNum;
     }
     if (displayName.length > 18) displayName = displayName.slice(0, 16) + '…';

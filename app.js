@@ -188,8 +188,10 @@
       return null;
     }
 
-    _tableCounter++;
     var isMesa = cat.defaultChairs > 0 || type.startsWith('table_') || type === 'lounge_set';
+    if (isMesa) {
+      _tableCounter++;
+    }
     var elem = {
       id: uid(),
       type: type,
@@ -380,9 +382,12 @@
     copy.id = uid();
     copy.x = Math.min(src.x + 1.5, AppState.terrain.w - src.w / 2);
     copy.y = Math.min(src.y + 1.5, AppState.terrain.h - src.h / 2);
-    if (copy.mesaConfig) {
+    var isTable = copy.type.startsWith('table_') || copy.type === 'lounge_set';
+    if (copy.mesaConfig && isTable) {
       _tableCounter++;
       copy.mesaConfig.mesaNum = _tableCounter;
+    } else if (copy.mesaConfig) {
+      copy.mesaConfig.mesaNum = 0;
     }
     AppState.elements.push(copy);
     _refresh();
