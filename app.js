@@ -1952,7 +1952,6 @@
         if (e.type === 'table_marble_square' && e.name.indexOf('Cuadrada') > -1) {
           e.name = e.name.replace('Cuadrada', 'Rectangular');
         }
-      }
 
       var n = parseInt((e.id || '').replace('el_', ''), 10);
       if (!isNaN(n) && n >= _idCounter) _idCounter = n + 1;
@@ -1961,7 +1960,7 @@
     updateLayoutModeFromElements();
   }
 
-  var CURRENT_LAYOUT_VERSION = '2026-07-12-v34';
+  var CURRENT_LAYOUT_VERSION = '2026-07-12-v35';
 
   function loadFromLocalStorage() {
     try {
