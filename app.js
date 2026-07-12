@@ -2609,7 +2609,7 @@
     html += '<div class="page-break"></div>\n';
     html += '<div class="section-title"><i class="fa-solid fa-image" style="margin-right: 6px; color:#f43f5e;"></i> Referencia Visual de Montaje</div>\n';
     html += '<div style="display: flex; justify-content: center; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 30px;">\n';
-    html += '  <img src="montaje xvzoe.jpeg" style="max-width: 100%; max-height: 600px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);" alt="Montaje XV Zoe" />\n';
+    html += '  <img src="montaje_graduacion_burgos.jpg" style="max-width: 100%; max-height: 600px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);" alt="Montaje Graduación Burgos" />\n';
     html += '</div>\n';
 
     // Section 4: Guest List by Table
@@ -2667,37 +2667,37 @@
 
     // Section 5: Cruce de Pendientes y Menús (Hoja de Control)
     html += '<div class="page-break"></div>\n';
-    html += '<div class="section-title"><i class="fa-solid fa-clipboard-check" style="margin-right: 6px; color:#f43f5e;"></i> Ficha de Control y Conciliación de Pendientes</div>\n';
+    html += '<div class="section-title"><i class="fa-solid fa-clipboard-check" style="margin-right: 6px; color:' + NAVY + ';"></i> Ficha de Control y Conciliación de Pendientes</div>\n';
     html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
     
     // Left column: Menu counts
     html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-utensils" style="color:#f43f5e; margin-right: 6px;"></i> Conciliación de Menús</h4>\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-utensils" style="color:' + GOLD + '; margin-right: 6px;"></i> Conciliación de Menús</h4>\n';
     html += '    <table style="width: 100%; margin-bottom: 0; font-size: 12px;">\n';
     html += '      <thead>\n';
-    html += '        <tr><th>Tipo de Menú</th><th style="text-align:center;">Contratado</th><th style="text-align:center;">Asignado</th></tr>\n';
+    html += '        <tr><th>Tipo de Menú</th><th style="text-align:center;">Estatus</th><th style="text-align:center;">Asignado</th></tr>\n';
     html += '      </thead>\n';
     html += '      <tbody>\n';
-    html += '        <tr><td><strong>Menú Adultos (2 Tiempos)</strong></td><td style="text-align:center; font-weight:700;">85</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
-    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong><br><small style="color:#64748b;">Hamburguesa con papas y espagueti</small></td><td style="text-align:center; font-weight:700;">65</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
-    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#f43f5e; font-size:14px;">150</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalGuests + '</td></tr>\n';
+    html += '        <tr><td><strong>Menú Adultos (Banquete Primavera)</strong></td><td style="text-align:center; font-weight:700; color:#b45309;">Por Confirmar</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
+    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong></td><td style="text-align:center; font-weight:700; color:#b45309;">Por Confirmar</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
+    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#b45309; font-size:13px;">Pendiente</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalGuests + '</td></tr>\n';
     html += '      </tbody>\n';
     html += '    </table>\n';
     html += '    <p style="font-size: 11px; color: #475569; margin-top: 12px; line-height: 1.4;">\n';
-    html += '      <strong>Nota de Control:</strong> Contamos con una lista de <strong>' + totalGuests + '</strong> invitados asignados a las mesas imperiales en el plano, dejando un margen de <strong>' + (150 - totalGuests) + '</strong> platillos del paquete contratado de 150 para invitados de última hora o ajustes del Hostess.\n';
+    html += '      <strong>Nota de Control:</strong> Actualmente se encuentran <strong>' + totalGuests + '</strong> invitados acomodados y distribuidos en el plano de mesas. Los detalles específicos y cantidad final del paquete de platillos contratados para el Banquete Primavera están pendientes de confirmarse con la administración de la Primaria Burgos de Ana María.\n';
     html += '    </p>\n';
     html += '  </div>\n';
     
     // Right column: Pending checklist
     html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:#f43f5e; margin-right: 6px;"></i> Estatus de Tareas y Pendientes Logísticos</h4>\n';
+    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:' + GOLD + '; margin-right: 6px;"></i> Estatus de Tareas y Pendientes Logísticos</h4>\n';
     html += '    <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Cronograma y Minuto a Minuto</strong>: Itinerario oficial completado con las 16 actividades y coordinado con los proveedores.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Ficha de Menú y Montaje General</strong>: Sopa de tortilla, lomo/pechuga (50/50), menú infantil, tornaesquites y mesa principal especial validados.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Paletas La Princesa</strong>: Confirmado a las 15:30 HRS junto con 3 vitroleros de agua de Jamaica.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Área Infantil / Brincolín</strong>: Área infantil sigue en mantenimiento; se validará inflables para compensar. Cabina inflable contratada (17:00-19:00).</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Instalación Eléctrica (Pastel)</strong>: Pendiente checar contactos para chisperos y velas de brillo en la mesa de pastel.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Servicios Especiales</strong>: Pendiente confirmar hostess, meseros y si el Valet Parking está incluido.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Cronograma de Actividades</strong>: Itinerario oficial para la graduación Burgos cargado y estructurado con recepción, fotos, pase de lista, comida, cabina, albercada y cierre.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Colores y Montaje General</strong>: Confirmado el uso de los colores azul marino, dorado y champagne para el montaje general de mesas.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Mesa de Dulces e Inventario</strong>: Elemento de mesa de dulces/barra mix validado en plano y listo para montaje.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Menú Banquete Primavera</strong>: Pendiente la definición y confirmación del menú para adultos e infantes/adolescentes.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Cabina de Fotos</strong>: Proyectada de 6:00 pm a 8:00 pm (18:00 - 20:00 HRS); pendiente de confirmación de horario exacta.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Programa de Albercada</strong>: Pendiente coordinar y definir el programa específico para el área de la alberca con Clase 2026 · Calv. F.</div></li>\n';
     html += '    </ul>\n';
     html += '  </div>\n';
     html += '</div>\n';
