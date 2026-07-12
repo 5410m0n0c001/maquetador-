@@ -1916,21 +1916,31 @@
     if (data.terrain) AppState.terrain = data.terrain;
     if (data.layers) Object.assign(AppState.layers, data.layers);
     AppState.elements.forEach(function (e) {
-      // Clean up corrupted characters caused by broken UTF-8 encoding
+      // Clean up corrupted characters caused by broken UTF-8 encoding (including half-broken 'í' variants)
       if (typeof e.name === 'string') {
-        e.name = e.name
-          .replace(/Ã\s*rbol/g, 'Árbol')
-          .replace(/Ãrbol/g, 'Árbol')
-          .replace(/SalÃ³n/g, 'Salón')
-          .replace(/Ã\s*rea/g, 'Área')
-          .replace(/Ãrea/g, 'Área')
-          .replace(/MÃ¡rmol/g, 'Mármol')
-          .replace(/Ã³/g, 'ó')
-          .replace(/Ã¡/g, 'á')
-          .replace(/Ã©/g, 'é')
-          .replace(/Ãº/g, 'ú')
-          .replace(/Ã±/g, 'ñ')
-          .replace(/Ã/g, 'í'); // General fallback for í
+        var nameClean = e.name.trim();
+        if (nameClean === 'í rbol Decorativo' || nameClean === 'Ã rbol Decorativo' || nameClean === 'Ãrbol Decorativo' || nameClean === 'írbol Decorativo') {
+          e.name = 'Árbol Decorativo';
+        } else if (nameClean === 'í rea de Barra' || nameClean === 'Ã rea de Barra' || nameClean === 'Ãrea de Barra' || nameClean === 'írea de Barra') {
+          e.name = 'Área de Barra';
+        } else if (nameClean === 'í rea de Cocina' || nameClean === 'Ã rea de Cocina' || nameClean === 'Ãrea de Cocina' || nameClean === 'írea de Cocina') {
+          e.name = 'Área de Cocina';
+        } else {
+          e.name = e.name
+            .replace(/\u00C3\s*rbol/g, 'Árbol')
+            .replace(/í\s*rbol/g, 'Árbol')
+            .replace(/\u00C3\s*rea/g, 'Área')
+            .replace(/í\s*rea/g, 'Área')
+            .replace(/Sal\u00C3\u00B3n/g, 'Salón')
+            .replace(/SalÃ³n/g, 'Salón')
+            .replace(/M\u00C3\u00A1rmol/g, 'Mármol')
+            .replace(/MÃ¡rmol/g, 'Mármol')
+            .replace(/\u00C3\u00B3/g, 'ó')
+            .replace(/\u00C3\u00A1/g, 'á')
+            .replace(/\u00C3\u00A9/g, 'é')
+            .replace(/\u00C3\u00BA/g, 'ú')
+            .replace(/\u00C3\u00B1/g, 'ñ');
+        }
 
         // Auto-update old marble table names from square to rectangular
         if (e.type === 'table_marble_square' && e.name.indexOf('Cuadrada') > -1) {
