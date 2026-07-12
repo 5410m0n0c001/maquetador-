@@ -1916,6 +1916,28 @@
     if (data.terrain) AppState.terrain = data.terrain;
     if (data.layers) Object.assign(AppState.layers, data.layers);
     AppState.elements.forEach(function (e) {
+      // Clean up corrupted characters caused by broken UTF-8 encoding
+      if (typeof e.name === 'string') {
+        e.name = e.name
+          .replace(/Ã\s*rbol/g, 'Árbol')
+          .replace(/Ãrbol/g, 'Árbol')
+          .replace(/SalÃ³n/g, 'Salón')
+          .replace(/Ã\s*rea/g, 'Área')
+          .replace(/Ãrea/g, 'Área')
+          .replace(/MÃ¡rmol/g, 'Mármol')
+          .replace(/Ã³/g, 'ó')
+          .replace(/Ã¡/g, 'á')
+          .replace(/Ã©/g, 'é')
+          .replace(/Ãº/g, 'ú')
+          .replace(/Ã±/g, 'ñ')
+          .replace(/Ã/g, 'í'); // General fallback for í
+
+        // Auto-update old marble table names from square to rectangular
+        if (e.type === 'table_marble_square' && e.name.indexOf('Cuadrada') > -1) {
+          e.name = e.name.replace('Cuadrada', 'Rectangular');
+        }
+      }
+
       var n = parseInt((e.id || '').replace('el_', ''), 10);
       if (!isNaN(n) && n >= _idCounter) _idCounter = n + 1;
       if (e.mesaConfig && e.mesaConfig.mesaNum > _tableCounter) _tableCounter = e.mesaConfig.mesaNum;
