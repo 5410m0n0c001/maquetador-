@@ -2382,9 +2382,9 @@
     html += '          </div>\n';
     html += '        </div>\n';
     html += '        <div style="background:#e8f0fe; border:1px solid #93b4f0; border-radius:6px; padding:10px 12px;">\n';
-    html += '          <div style="font-weight:700; font-size:11px; text-transform:uppercase; color:' + NAVY + ';">📋 Menú</div>\n';
-    html += '          <div style="font-size:12px; color:#b45309; font-weight:600; margin-top:4px;">⚠️ Menú: PENDIENTE DE CONFIRMAR</div>\n';
-    html += '          <div style="font-size:11px; color:#475569; margin-top:2px;">Banquete Primavera (formato por definir)</div>\n';
+    html += '          <div style="font-weight:700; font-size:11px; text-transform:uppercase; color:' + NAVY + ';">📋 Menú del Evento</div>\n';
+    html += '          <div style="font-size:11px; color:#1e293b; font-weight:600; margin-top:4px;">Entradas: Cremas (Champiñones / Pimiento)</div>\n';
+    html += '          <div style="font-size:11px; color:#1e293b; margin-top:2px;">Fuertes: Pechuga Hawaiana / Lomo en Salsa Gravy</div>\n';
     html += '        </div>\n';
     html += '      </div>\n';
     html += '    </div>\n';
@@ -2414,7 +2414,7 @@
       { time: '14:00 HRS', title: 'Inicio Formal — Bienvenida', desc: 'Apertura oficial del programa. Palabras de bienvenida a graduados y familias.', pending: false },
       { time: '14:30 HRS', title: 'Fotos Familiares', desc: 'Sesión fotográfica con graduados y sus familias. Palabras de padres.', pending: false },
       { time: '14:45 HRS', title: 'Pase de Lista — Entrega Simbólica', desc: 'Ceremonia de pase de lista y entrega simbólica de reconocimientos a la Clase 2026.', pending: false },
-      { time: '15:00 HRS', title: 'Comida — Banquete Primavera', desc: '⚠️ MENÚ PENDIENTE DE CONFIRMAR. Servicio de banquete para graduados y familias.', pending: true },
+      { time: '15:00 HRS', title: 'Comida — Banquete Primavera', desc: 'Servicio de banquete. Menú: Cremas (Champiñones/Pimiento), Plato fuerte (Pechuga Hawaiana/Lomo Gravy), Postres.', pending: false },
       { time: '16:00 HRS', title: 'Baile / Albercada — Clase 2026', desc: 'Apertura de pista de baile y área de albercada para los graduados. Animación Clase 2026 · Calv. F.', pending: false },
       { time: '18:00 – 20:00 HRS', title: 'Apertura Cabina de Fotos', desc: '⚠️ Horario PENDIENTE DE CONFIRMAR (6:00 – 8:00 pm aprox.). Cabina inflable de fotos para los asistentes.', pending: true },
       { time: '22:00 HRS', title: 'Cierre / Despedida', desc: 'Fin del evento. Agradecimientos y cierre oficial de la celebración.', pending: false }
@@ -2441,14 +2441,24 @@
     html += '<div class="section-title"><i class="fa-solid fa-utensils" style="margin-right: 6px; color:' + NAVY + ';"></i> Ficha de Menú y Logística del Evento</div>\n';
     html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
 
-    // Left column: Menu (PENDIENTE)
-    html += '  <div style="background: #fff8e1; border: 2px dashed #f59e0b; border-radius: 8px; padding: 20px;">\n';
+    // Left column: Menu (CONFIRMADO)
+    html += '  <div style="background: #e0f2fe; border: 2px solid #0284c7; border-radius: 8px; padding: 20px;">\n';
     html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-plate-wheat" style="color:' + GOLD + '; margin-right:6px;"></i> Menú — Banquete Primavera</h4>\n';
-    html += '    <div style="text-align:center; padding: 20px 0;">\n';
-    html += '      <div style="font-size: 40px; margin-bottom: 8px;">⏳</div>\n';
-    html += '      <div style="font-size: 16px; font-weight: 700; color: #b45309;">MENÚ PENDIENTE</div>\n';
-    html += '      <div style="font-size: 12px; color: #475569; margin-top: 6px; font-style:italic;">El menú del Banquete Primavera para la Graduación<br>está pendiente de confirmación por el cliente.</div>\n';
-    html += '      <div style="margin-top: 12px; background:#fff3cd; border:1px solid #ffc107; border-radius:6px; padding:8px 12px; font-size:11px; color:#856404; font-weight:600;">📞 Pendiente confirmación de menú<br>con Primaria Burgos de Ana María</div>\n';
+    html += '    <div style="font-size: 11px; line-height: 1.6; display: flex; flex-direction: column; gap: 8px; color: #1e293b;">\n';
+    html += '      <div><strong>🍲 Entradas (Cremas):</strong><br>\n';
+    html += '        • Crema de champiñones al ajillo<br>\n';
+    html += '        • Crema de pimiento rojo\n';
+    html += '      </div>\n';
+    html += '      <div><strong>🍗 Platos Fuertes:</strong><br>\n';
+    html += '        • Pechuga hawaiana (rellena de espinacas con jamón y queso gouda)<br>\n';
+    html += '        <span style="font-size:10px; color:#64748b; margin-left: 8px;">Guarniciones: Espagueti Alfredo y Verduras finas hierbas</span><br>\n';
+    html += '        • Lomo en salsa de gravy con cebollita cambray<br>\n';
+    html += '        <span style="font-size:10px; color:#64748b; margin-left: 8px;">Guarniciones: Puré de papa y Verduras finas hierbas</span>\n';
+    html += '      </div>\n';
+    html += '      <div><strong>🍰 Postres:</strong><br>\n';
+    html += '        • Strudel de manzana con helado napolitano<br>\n';
+    html += '        • Cheesecake de queso\n';
+    html += '      </div>\n';
     html += '    </div>\n';
     html += '  </div>\n';
 
@@ -2469,7 +2479,6 @@
     html += '      <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:6px; padding:8px 10px;">\n';
     html += '        <strong style="color:#991b1b;">⚠️ Pendientes por Confirmar:</strong>\n';
     html += '        <ul style="margin: 4px 0 0 0; padding-left: 15px; color:#b45309; font-weight: 600;">\n';
-    html += '          <li>Menú definitivo del Banquete Primavera</li>\n';
     html += '          <li>Horario exacto de apertura de cabina (6:00 – 8:00 pm aprox.)</li>\n';
     html += '        </ul>\n';
     html += '      </div>\n';
@@ -2720,13 +2729,13 @@
     html += '        <tr><th>Tipo de Menú</th><th style="text-align:center;">Estatus</th><th style="text-align:center;">Asignado</th></tr>\n';
     html += '      </thead>\n';
     html += '      <tbody>\n';
-    html += '        <tr><td><strong>Menú Adultos (Banquete Primavera)</strong></td><td style="text-align:center; font-weight:700; color:#b45309;">Por Confirmar</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
-    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong></td><td style="text-align:center; font-weight:700; color:#b45309;">Por Confirmar</td><td style="text-align:center; font-weight:700; color:#64748b;">-</td></tr>\n';
-    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#b45309; font-size:13px;">Pendiente</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalGuests + '</td></tr>\n';
+    html += '        <tr><td><strong>Menú Adultos (Banquete Primavera)</strong></td><td style="text-align:center; font-weight:700; color:#10b981;">Confirmado</td><td style="text-align:center; font-weight:700; color:#0f172a;">' + totalAdults + '</td></tr>\n';
+    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong></td><td style="text-align:center; font-weight:700; color:#10b981;">Confirmado</td><td style="text-align:center; font-weight:700; color:#0f172a;">' + totalNinos + '</td></tr>\n';
+    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#10b981; font-size:13px;">Confirmado</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalGuests + '</td></tr>\n';
     html += '      </tbody>\n';
     html += '    </table>\n';
     html += '    <p style="font-size: 11px; color: #475569; margin-top: 12px; line-height: 1.4;">\n';
-    html += '      <strong>Nota de Control:</strong> Actualmente se encuentran <strong>' + totalGuests + '</strong> invitados acomodados y distribuidos en el plano de mesas. Los detalles específicos y cantidad final del paquete de platillos contratados para el Banquete Primavera están pendientes de confirmarse con la administración de la Primaria Burgos de Ana María.\n';
+    html += '      <strong>Nota de Control:</strong> Actualmente se encuentran <strong>' + totalGuests + '</strong> invitados acomodados en el plano (<strong>' + totalAdults + '</strong> adultos y <strong>' + totalNinos + '</strong> niños). Los detalles específicos del menú de dos opciones y sus guarniciones ya han sido integrados a esta ficha técnica para la coordinación del personal de banquete de la Primaria Burgos de Ana María.\n';
     html += '    </p>\n';
     html += '  </div>\n';
     
@@ -2737,7 +2746,7 @@
     html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Cronograma de Actividades</strong>: Itinerario oficial para la graduación Burgos cargado y estructurado con recepción, fotos, pase de lista, comida, cabina, albercada y cierre.</div></li>\n';
     html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Colores y Montaje General</strong>: Confirmado el uso de los colores azul marino, dorado y champagne para el montaje general de mesas.</div></li>\n';
     html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Mesa de Dulces e Inventario</strong>: Elemento de mesa de dulces/barra mix validado en plano y listo para montaje.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Menú Banquete Primavera</strong>: Pendiente la definición y confirmación del menú para adultos e infantes/adolescentes.</div></li>\n';
+    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Menú Banquete Primavera</strong>: Confirmado el menú de entradas (cremas de champiñones/pimiento), plato fuerte (pechuga hawaiana/lomo de res) y postres.</div></li>\n';
     html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Cabina de Fotos</strong>: Proyectada de 6:00 pm a 8:00 pm (18:00 - 20:00 HRS); pendiente de confirmación de horario exacta.</div></li>\n';
     html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Programa de Albercada</strong>: Pendiente coordinar y definir el programa específico para el área de la alberca con Clase 2026 · Calv. F.</div></li>\n';
     html += '    </ul>\n';
