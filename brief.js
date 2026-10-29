@@ -29,13 +29,13 @@
       { k: 'folio', label: 'Folio' },
       { k: 'fecha_cita', label: 'Fecha de la cita', type: 'date' },
       { k: 'planner', label: 'Planner que atiende' },
-      { k: 'como_nos_conocio', label: '¿Cómo nos conoció?', placeholder: 'Red social / referido' }
+      { k: 'como_nos_conocio', label: '¿Cómo nos conoció?', placeholder: 'Red social / referido', internal: true }
     ] },
     { id: 'cliente', title: 'Datos del cliente', fields: [
       { k: 'cliente_nombre', label: 'Nombre completo' },
-      { k: 'cliente_tel', label: 'WhatsApp / Tel.', type: 'tel' },
-      { k: 'cliente_correo', label: 'Correo electrónico', type: 'email' },
-      { k: 'contacto_preferido', label: 'Contacto preferido', type: 'radio', options: ['WhatsApp', 'Llamada', 'Correo'] },
+      { k: 'cliente_tel', label: 'WhatsApp / Tel.', type: 'tel', internal: true },
+      { k: 'cliente_correo', label: 'Correo electrónico', type: 'email', internal: true },
+      { k: 'contacto_preferido', label: 'Contacto preferido', type: 'radio', options: ['WhatsApp', 'Llamada', 'Correo'], internal: true },
       { k: 'festejados', label: 'Festejado(s) / Nombre del evento' },
       { k: 'parentesco', label: 'Parentesco con el cliente' }
     ] },
@@ -134,7 +134,7 @@
       { k: 'servicios', label: 'Servicios', type: 'checks', options: ['Coordinación día del evento', 'Wedding / Event planner integral', 'Planeación bodas destino', 'Meseros / capitán', 'Bartender', 'Hostess', 'Coordinador general', 'Servicios de emergencia / salud', 'Valet parking', 'Transporte / Limusinas', 'Hospedaje / convenio hotel', 'Maquillaje y peinado', 'Diseño floral', 'Ceremonia civil', 'Ceremonia religiosa / misa', 'Ceremonia simbólica', 'Cruz de madera / arco', 'Tequila personalizado Don Ramón', 'Souvenirs personalizados', 'Merchandising Store', 'Coffee break (corporativo)'] },
       { k: 'servicios_otro', label: 'Otro' }
     ] },
-    { id: 'presupuesto', title: 'Presupuesto y paquete', fields: [
+    { id: 'presupuesto', title: 'Presupuesto y paquete', internal: true, fields: [
       { k: 'presupuesto', label: 'Presupuesto estimado (MXN)' },
       { k: 'rango', label: 'Rango', type: 'radio', options: ['<50k', '50–100k', '100–150k', '150k+'] },
       { k: 'por_persona', label: 'Inversión por persona objetivo' },
@@ -150,11 +150,11 @@
       { k: 'restricciones', label: 'Restricciones del venue / permisos / accesos', type: 'textarea' },
       { k: 'observaciones', label: 'Observaciones / peticiones especiales', type: 'textarea' }
     ] },
-    { id: 'contrato', title: 'Notas para la redacción del contrato', fields: [
+    { id: 'contrato', title: 'Notas para la redacción del contrato', internal: true, fields: [
       { type: 'notice', label: 'Restricción de servicios externos', text: 'Queda prohibido el uso de servicios o proveedores externos que impliquen pirotecnia, show de lumbre/fuego, efectos incandescentes, chisperos ajenos o similares que puedan quemar, dañar o comprometer la integridad del mobiliario, equipo, instalaciones o estructura de la locación. Cualquier daño ocasionado será responsabilidad del contratante. Todo proveedor externo deberá ser autorizado por escrito por Primavera Events Group.' },
       { k: 'clausulas', label: 'Acuerdos / cláusulas especiales a incluir en el contrato', type: 'textarea' }
     ] },
-    { id: 'seguimiento', title: 'Seguimiento del planner', fields: [
+    { id: 'seguimiento', title: 'Seguimiento del planner', internal: true, fields: [
       { k: 'cotizacion_fecha', label: 'Cotización enviada — fecha', type: 'date' },
       { k: 'seguimiento', label: 'Avance', type: 'checks', options: ['Kit Planner entregado', 'Invitación demo enviada', 'Degustación agendada'] },
       { k: 'proxima_accion', label: 'Próxima cita / acción' },
@@ -512,7 +512,8 @@
     if (!_panel || !_event) return;
     var ro = !_isPlanner;
     var d = _event.data;
-    var all = SECTIONS.concat(EXTRA_SECTIONS);
+    // En solo lectura no se muestran las secciones ni los campos internos (presupuesto, contacto, contrato, seguimiento)
+    var all = SECTIONS.concat(EXTRA_SECTIONS).filter(function (s) { return !(ro && s.internal); });
     var html =
       '<div class="brief-shell">' +
         '<header class="brief-head">' +
@@ -532,7 +533,9 @@
       html += '<section class="brief-section" id="brief-' + s.id + '"><h3><span>' + (i + 1) + '</span>' + esc(s.title) + '</h3>';
       if (s.id === 'minuto') html += minutoHtml(d.minuto || [], ro);
       else if (s.id === 'montaje_elegido') html += montajeHtml(d.montaje || { fotos: [] }, ro);
-      else html += '<div class="brief-grid">' + s.fields.map(function (f) { return fieldHtml(f, d.brief, ro); }).join('') + '</div>';
+      else html += '<div class="brief-grid">' + s.fields
+        .filter(function (f) { return !(ro && f.internal); })
+        .map(function (f) { return fieldHtml(f, d.brief, ro); }).join('') + '</div>';
       html += '</section>';
     });
     html += '</div></div>';
