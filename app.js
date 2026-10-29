@@ -2866,7 +2866,23 @@
   }
 
   function _loadVenueTemplate(opt) {
-    var data = JSON.parse(JSON.stringify(opt.layout));
+    _applyLayout(opt.layout);
+    showToast('Plantilla cargada: ' + opt.name, 'success');
+  }
+
+  // Plano actual (lo que se guarda dentro de un evento)
+  function _currentLayout() {
+    return {
+      terrain: AppState.terrain,
+      elements: AppState.elements,
+      flows: AppState.flows,
+      layers: AppState.layers,
+      venueId: AppState.venueId
+    };
+  }
+
+  function _applyLayout(layout) {
+    var data = JSON.parse(JSON.stringify(layout));
     saveHistory();
     _tableCounter = 0;
     _loadLayoutData(data);
@@ -2885,7 +2901,6 @@
     _fit2dOnShow = AppState.activeView !== '2d';
     _refresh();
     updateCounters();
-    showToast('Plantilla cargada: ' + opt.name, 'success');
   }
 
   function _openVenuePicker(isStart) {
@@ -3277,7 +3292,8 @@
     _wireClear();
     _wireAlign();
     _wireImportSidebar();
-    _wireVenuePicker(!hadSaved);
+    // El selector inicial solo aparece si no hay plano guardado, en modo planner y sin abrir un evento compartido
+    _wireVenuePicker(!hadSaved && !(window.PEGEventos && window.PEGEventos.suppressStartPicker()));
     _wireKeyboard();
 
     // Init Supabase Connection
@@ -3368,6 +3384,9 @@
     }
 
     console.log('[App] Ready. Elements loaded:', AppState.elements.length);
+
+    // Eventos (brief, minuto a minuto, montaje, modo planner) — brief.js
+    if (window.PEGEventos) window.PEGEventos.init();
   }
 
   // ─── Boot on DOMContentLoaded ────────────────────────────
@@ -3395,7 +3414,10 @@
     updateCounters: updateCounters,
     refresh: _refresh,
     showToast: showToast,
-    getState: function () { return AppState; }
+    getState: function () { return AppState; },
+    getLayout: _currentLayout,
+    loadLayout: _applyLayout,
+    openVenuePicker: function () { _openVenuePicker(false); }
   };
 
 })();

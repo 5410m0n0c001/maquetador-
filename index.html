@@ -22,7 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- App Styles -->
-  <link rel="stylesheet" href="styles.css?v=20261029_01" />
+  <link rel="stylesheet" href="styles.css?v=20261029_02" />
 </head>
 <body>
 
@@ -461,6 +461,23 @@
       </div>
 
       <div class="topbar-right">
+        <!-- Evento: brief, mis eventos, compartir y modo planner (brief.js) -->
+        <div class="event-bar">
+          <span id="event-name" class="event-name hidden"></span>
+          <span id="event-save-status" class="event-status"></span>
+          <button id="btn-brief" class="event-btn hidden" title="Brief del evento">
+            <i class="fa-solid fa-clipboard-list"></i> <span>Brief</span>
+          </button>
+          <button id="btn-eventos" class="event-btn planner-only" title="Mis eventos">
+            <i class="fa-solid fa-folder-open"></i> <span>Eventos</span>
+          </button>
+          <button id="btn-share-event" class="event-btn hidden" title="Compartir enlace del evento">
+            <i class="fa-solid fa-share-nodes"></i>
+          </button>
+          <button id="btn-planner-mode" class="event-btn" title="Modo planner">
+            <i class="fa-solid fa-lock"></i>
+          </button>
+        </div>
         <div class="zoom-controls">
           <button id="zoom-in" class="zoom-btn" title="Acercar">
             <i class="fa-solid fa-plus"></i>
@@ -985,7 +1002,8 @@
 <script src="templates.js?v=20261029_02" charset="utf-8"></script>
 <script src="editor2d.js?v=20261029_01" charset="utf-8"></script>
 <script src="visualizer3d.js?v=20261029_01" charset="utf-8"></script>
-<script src="app.js?v=20261029_01" charset="utf-8"></script>
+<script src="brief.js?v=20261029_01" charset="utf-8"></script>
+<script src="app.js?v=20261029_02" charset="utf-8"></script>
 
 </body>
 </html>
