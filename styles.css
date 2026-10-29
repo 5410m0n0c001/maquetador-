@@ -2114,3 +2114,15 @@ body.peg-view-only .minuto-row { grid-template-columns: 120px 1fr 200px; }
   color: var(--text-secondary);
 }
 .ro-banner strong { color: var(--gold); }
+
+/* Proveedores externos */
+.prov-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+.prov-card { border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; background: rgba(255, 255, 255, 0.02); font-size: 13px; color: var(--text-secondary); }
+.prov-card > strong { color: var(--peg-ivory); font-size: 14px; }
+.prov-card p { margin: 6px 0 0; }
+.prov-card a { color: var(--gold); }
+.prov-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.prov-head select { flex: 1; min-width: 180px; }
+.prov-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
+.prov-red { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(201, 169, 110, 0.5); border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
+.prov-horario { color: var(--gold); margin-top: 4px; }

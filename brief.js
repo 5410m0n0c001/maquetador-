@@ -57,6 +57,14 @@
   // Venue elegido → plano base sugerido
   var VENUE_A_PLANO = { 'C. Convenciones Presidente': 'Centro de Convenciones Presidente', 'Salón Jardín Yolomecatl': 'Yolomecatl · Versión A', 'Salón Manzanares': 'Salón Manzanares' };
 
+  // Servicios que el cliente contrata por fuera → elemento del inventario para el plano (si existe)
+  var SERVICIOS_EXTERNOS = {
+    'Banda': 'vendor_banda', 'Grupo norteño': 'vendor_banda', 'Mariachi': 'vendor_mariachi', 'Saxofonista': 'vendor_saxo',
+    'Grupo versátil / en vivo': 'vendor_banda', 'DJ': 'dj_booth', 'Fotografía y video': '', 'Cabina de fotos': 'photobooth_mirror',
+    'Pastel / repostería': 'table_cake', 'Mesa de dulces / postres': 'table_candy', 'Banquete / taquiza': 'vendor_taquiza',
+    'Bebidas / barra': '', 'Decoración / flores': '', 'Show / animación': 'showmen_inflatables', 'Pirotecnia / efectos': '', 'Otro': ''
+  };
+
   // Al llenar el campo (clave) se marca sola la opción relacionada [campo, valor]
   var AUTO_MARCA = {
     venue_red: ['tiene_venue', 'Venue de la red Primavera'],
@@ -257,7 +265,8 @@
   // Secciones propias del maquetador (no están en el formato impreso)
   var EXTRA_SECTIONS = [
     { id: 'minuto', title: 'Minuto a minuto' },
-    { id: 'montaje_elegido', title: 'Montaje elegido y álbum de fotos' }
+    { id: 'montaje_elegido', title: 'Montaje elegido y álbum de fotos' },
+    { id: 'proveedores', title: 'Proveedores externos contratados por el cliente' }
   ];
 
   // Pasos del brief (un paso por pantalla); 'generar' es el cierre del planner
@@ -266,7 +275,7 @@
     { title: 'Venue', sections: ['venue'] },
     { title: 'Banquete y bebidas', sections: ['menu', 'bebidas'] },
     { title: 'Montaje y mobiliario', sections: ['mobiliario'] },
-    { title: 'Amenidades', sections: ['amenidades'] },
+    { title: 'Amenidades y proveedores', sections: ['amenidades', 'proveedores'] },
     { title: 'Foto, video y servicios', sections: ['foto', 'servicios'] },
     { title: 'Álbum del montaje', sections: ['montaje_elegido'] },
     { title: 'Minuto a minuto', sections: ['minuto'] },
@@ -304,7 +313,7 @@
     return _sb;
   }
   function emptyData() {
-    return { brief: {}, minuto: [], montaje: { fotos: [] }, layout: null };
+    return { brief: {}, minuto: [], montaje: { fotos: [] }, proveedores: [], layout: null };
   }
 
   // ── Modo planner / solo lectura ───────────────────────────
@@ -414,6 +423,7 @@
       }
       row.data = Object.assign(emptyData(), row.data || {});
       row.data.montaje = Object.assign({ fotos: [] }, row.data.montaje || {});
+      if (!Array.isArray(row.data.proveedores)) row.data.proveedores = [];
       _event = row;
       if (row.data.layout && window.App && window.App.loadLayout) {
         window.App.loadLayout(row.data.layout);
@@ -727,6 +737,60 @@
     return html;
   }
 
+  var PROV_CAMPOS = [
+    { k: 'nombre', label: 'Nombre del proveedor' },
+    { k: 'telefono', label: 'Teléfono / WhatsApp', type: 'tel' },
+    { k: 'llegada', label: 'Llegada / montaje', type: 'time' },
+    { k: 'inicio', label: 'Inicia', type: 'time' },
+    { k: 'fin', label: 'Termina', type: 'time' },
+    { k: 'condiciones', label: 'Condiciones de contratación (horas, pagos, qué incluye)', type: 'textarea' },
+    { k: 'requerimientos', label: 'Requerimientos en el salón (luz, espacio, comida del staff, estacionamiento)', type: 'textarea' }
+  ];
+
+  function proveedoresHtml(list, ro) {
+    var html = '';
+    if (!ro) html += '<p class="panel-hint">Servicios que el cliente contrató por su cuenta (aunque sean de la red Primavera). Sirve para coordinar llegadas y montaje el día del evento.</p>';
+    if (!list.length) html += '<p class="brief-empty">' + (ro ? 'Sin proveedores externos registrados.' : 'Aún no hay proveedores externos.') + '</p>';
+    html += '<div class="prov-list">';
+    list.forEach(function (p, i) {
+      if (ro) {
+        var horario = [p.llegada && 'llega ' + p.llegada, p.inicio && 'inicia ' + p.inicio, p.fin && 'termina ' + p.fin].filter(Boolean).join(' · ');
+        html += '<div class="prov-card"><strong>' + esc(p.servicio || 'Proveedor') + (p.red ? ' <span class="prov-red">Red Primavera</span>' : '') + '</strong>' +
+          (p.nombre ? '<div>' + esc(p.nombre) + (p.telefono ? ' · <a href="tel:' + esc(p.telefono) + '">' + esc(p.telefono) + '</a>' : '') + '</div>' : '') +
+          (horario ? '<div class="prov-horario"><i class="fa-regular fa-clock"></i> ' + esc(horario) + '</div>' : '') +
+          (p.condiciones ? '<p><b>Condiciones:</b> ' + esc(p.condiciones) + '</p>' : '') +
+          (p.requerimientos ? '<p><b>Requerimientos:</b> ' + esc(p.requerimientos) + '</p>' : '') + '</div>';
+        return;
+      }
+      html += '<div class="prov-card" data-pi="' + i + '">' +
+        '<div class="prov-head"><select class="form-input" data-pk="servicio">' +
+          '<option value="">Servicio…</option>' + Object.keys(SERVICIOS_EXTERNOS).map(function (sv) {
+            return '<option' + (p.servicio === sv ? ' selected' : '') + '>' + sv + '</option>';
+          }).join('') + '</select>' +
+        '<label class="prov-check"><input type="checkbox" data-pk="red"' + (p.red ? ' checked' : '') + ' /> Es de la red Primavera</label>' +
+        '<button type="button" class="minuto-del prov-del" title="Quitar proveedor"><i class="fa-solid fa-xmark"></i></button></div>' +
+        (p.servicio === 'Pirotecnia / efectos' ? '<div class="brief-notice"><strong><i class="fa-solid fa-triangle-exclamation"></i> Requiere autorización por escrito</strong><p>Ver la restricción de servicios externos en las notas del contrato.</p></div>' : '') +
+        '<div class="brief-grid">' + PROV_CAMPOS.map(function (f) {
+          var v = p[f.k];
+          return '<div class="brief-field' + (f.type === 'textarea' ? ' wide' : '') + '"><label class="form-label">' + esc(f.label) + '</label>' +
+            (f.type === 'textarea'
+              ? '<textarea class="form-input form-textarea" data-pk="' + f.k + '">' + esc(v) + '</textarea>'
+              : '<input class="form-input" type="' + (f.type || 'text') + '" data-pk="' + f.k + '" value="' + esc(v) + '" />') + '</div>';
+        }).join('') + '</div></div>';
+    });
+    html += '</div>';
+    if (!ro) html += '<button type="button" class="btn-ghost" id="prov-add"><i class="fa-solid fa-plus"></i> Agregar proveedor externo</button>';
+    return html;
+  }
+
+  // Orden del minuto a minuto: lo que pasa antes de las 6:00 es madrugada del día siguiente
+  function minutosDelEvento(h) {
+    if (!h) return 9999;
+    var p = h.split(':'), m = parseInt(p[0], 10) * 60 + (parseInt(p[1], 10) || 0);
+    return m < 360 ? m + 1440 : m;
+  }
+  function porHora(a, b) { return minutosDelEvento(a.hora) - minutosDelEvento(b.hora); }
+
   // Ceremonias, momentos, protocolo y tiempos del banquete con hora → filas del minuto a minuto
   function timedFromBrief(brief) {
     var rows = [];
@@ -1019,6 +1083,11 @@
     if (b.tipo_servicio === 'Buffet') extras.push(['table_buffet', 'Mesa de buffet']);
     if (b.tipo_servicio === 'Taquiza') extras.push(['vendor_taquiza', 'Taquiza']);
     if ((b.bebidas_incluye || []).indexOf('Carrito de shots') > -1 || (b.dulces || []).indexOf('Carrito de shots dulces') > -1) extras.push(['table_shots', 'Carrito de shots']);
+    (_event.data.proveedores || []).forEach(function (p) {
+      var tipo = SERVICIOS_EXTERNOS[p.servicio];
+      if (tipo === 'dj_booth' && nuevos.some(function (e) { return e.type === 'dj_booth'; })) return;
+      if (tipo) extras.push([tipo, (p.nombre || p.servicio) + ' (externo)']);
+    });
     var ex = area.x, ey = fondoMesas + 1.5, altoFila = 0;
     extras.forEach(function (x) {
       var e = mk(x[0], { name: x[1] });
@@ -1096,6 +1165,7 @@
       html += '<section class="brief-section" id="brief-' + sec.id + '"><h3>' + esc(sec.title) + '</h3>';
       if (sec.id === 'minuto') html += minutoHtml(d.minuto || [], ro);
       else if (sec.id === 'montaje_elegido') html += montajeHtml(d.montaje || { fotos: [] }, ro);
+      else if (sec.id === 'proveedores') html += proveedoresHtml(d.proveedores || [], ro);
       else {
         var parts = sec.fields
           .filter(function (f) { return !(ro && f.internal); })
@@ -1229,6 +1299,27 @@
       };
     });
 
+    // Proveedores externos
+    _panel.querySelectorAll('.prov-card[data-pi]').forEach(function (card) {
+      var p = d.proveedores[parseInt(card.getAttribute('data-pi'), 10)];
+      card.querySelectorAll('[data-pk]').forEach(function (el) {
+        var k = el.getAttribute('data-pk');
+        el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input', function () {
+          p[k] = el.type === 'checkbox' ? el.checked : el.value;
+          scheduleSave();
+          if (k === 'servicio') renderPanel(); // muestra/oculta el aviso de pirotecnia
+        });
+      });
+      card.querySelector('.prov-del').onclick = function () {
+        if (!confirm('¿Quitar este proveedor?')) return;
+        d.proveedores.splice(d.proveedores.indexOf(p), 1);
+        scheduleSave();
+        renderPanel();
+      };
+    });
+    var provAdd = $('prov-add');
+    if (provAdd) provAdd.onclick = function () { d.proveedores.push({}); renderPanel(); };
+
     // Minuto a minuto
     _panel.querySelectorAll('.minuto-row').forEach(function (row) {
       var i = parseInt(row.getAttribute('data-i'), 10);
@@ -1236,7 +1327,7 @@
         el.addEventListener('input', function () { d.minuto[i][el.getAttribute('data-m')] = el.value; scheduleSave(); });
       });
       row.querySelector('[data-m="hora"]').addEventListener('change', function () {
-        d.minuto.sort(function (a, b) { return (a.hora || '99').localeCompare(b.hora || '99'); });
+        d.minuto.sort(porHora);
         renderPanel();
       });
       var del = row.querySelector('.minuto-del');
@@ -1246,11 +1337,18 @@
     if (add) add.onclick = function () { d.minuto.push({ hora: '', actividad: '', responsable: '' }); renderPanel(); };
     var imp = $('minuto-import');
     if (imp) imp.onclick = function () {
-      var nuevos = timedFromBrief(d.brief).filter(function (r) {
+      var timed = timedFromBrief(d.brief);
+      (d.proveedores || []).forEach(function (p) {
+        var quien = [p.servicio, p.nombre].filter(Boolean).join(' — ') || 'Proveedor externo';
+        if (p.llegada) timed.push({ hora: p.llegada, actividad: 'Llegada y montaje: ' + quien, responsable: p.telefono || '' });
+        if (p.inicio) timed.push({ hora: p.inicio, actividad: 'Inicia: ' + quien, responsable: p.telefono || '' });
+        if (p.fin) timed.push({ hora: p.fin, actividad: 'Termina: ' + quien, responsable: p.telefono || '' });
+      });
+      var nuevos = timed.filter(function (r) {
         return !d.minuto.some(function (m) { return m.hora === r.hora && m.actividad === r.actividad; });
       });
       if (!nuevos.length) { toast('No hay horarios nuevos en el brief. Marca ceremonias, momentos o tiempos y anota su hora.', 'info'); return; }
-      d.minuto = d.minuto.concat(nuevos).sort(function (a, b) { return (a.hora || '99').localeCompare(b.hora || '99'); });
+      d.minuto = d.minuto.concat(nuevos).sort(porHora);
       scheduleSave();
       renderPanel();
       toast(nuevos.length + ' actividad(es) agregadas al minuto a minuto.', 'success');
