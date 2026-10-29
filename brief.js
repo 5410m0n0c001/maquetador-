@@ -15,7 +15,7 @@
   var BUCKET = 'maquetador-fotos';
   // La contraseña solo evita cambios accidentales: la información del evento es pública por diseño.
   var PLANNER_PASSWORD = 'PrimaveraVIP';
-  var PLANNER_FLAG = 'peg_modo_planner';
+  var PLANNER_FLAG = 'peg_modo_planner'; // ya no se usa: al recargar siempre se entra en solo lectura (se borra si quedó de antes)
   var LOCAL_PREFIX = 'peg_evento_';
   var MAX_FOTOS = 4;
   // Límites del plan gratuito de Supabase (confirmar en el panel de Supabase → Usage)
@@ -268,8 +268,10 @@
     document.body.classList.toggle('peg-view-only', !_isPlanner);
     var btn = $('btn-planner-mode');
     if (btn) {
-      btn.innerHTML = _isPlanner ? '<i class="fa-solid fa-unlock"></i>' : '<i class="fa-solid fa-lock"></i>';
-      btn.title = _isPlanner ? 'Modo planner activo (clic para salir)' : 'Entrar a modo planner';
+      btn.innerHTML = _isPlanner
+        ? '<i class="fa-solid fa-unlock"></i> <b>Modo planner</b>'
+        : '<i class="fa-solid fa-lock"></i> <b>Solo lectura</b>';
+      btn.title = _isPlanner ? 'Modo planner activo (clic para salir)' : 'Solo lectura: clic para entrar como planner';
       btn.classList.toggle('active', _isPlanner);
     }
     updateEventBar();
@@ -280,7 +282,6 @@
     if (_isPlanner) {
       if (!confirm('¿Salir del modo planner? Quedará en modo de solo lectura.')) return;
       _isPlanner = false;
-      try { localStorage.removeItem(PLANNER_FLAG); } catch (e) { /* sin almacenamiento */ }
       applyMode();
       toast('Modo solo lectura.', 'info');
       return;
@@ -289,7 +290,6 @@
     if (pwd === null) return;
     if (pwd !== PLANNER_PASSWORD) { toast('Contraseña incorrecta.', 'error'); return; }
     _isPlanner = true;
-    try { localStorage.setItem(PLANNER_FLAG, '1'); } catch (e) { /* sin almacenamiento */ }
     applyMode();
     toast('Modo planner activado.', 'success');
   }
@@ -377,9 +377,8 @@
       _lastLayoutJson = window.App && window.App.getLayout ? JSON.stringify(window.App.getLayout()) : '';
       saveLocalCopy();
       updateEventBar();
-      setStatus(_isPlanner ? 'Guardado' : 'Solo lectura', _isPlanner ? 'ok' : '');
-      // Quien abre el enlace o el QR ve primero el brief del evento
-      if (!_isPlanner) openPanel();
+      setStatus(_isPlanner ? 'Guardado' : '', _isPlanner ? 'ok' : '');
+      return row;
     });
   }
 
@@ -393,7 +392,7 @@
       data: data
     }).select('id').single().then(function (res) {
       if (res.error) { toast('No se pudo crear el evento: ' + res.error.message, 'error'); return; }
-      location.href = eventUrl(res.data.id) + '&brief=1';
+      goToEvent(res.data.id, function () { openPanel(); });
     });
   }
 
@@ -418,9 +417,51 @@
     if (pwd === null) return;
     if (pwd !== PLANNER_PASSWORD) { toast('Contraseña incorrecta.', 'error'); return; }
     _isPlanner = true;
-    try { localStorage.setItem(PLANNER_FLAG, '1'); } catch (e) { /* sin almacenamiento */ }
     applyMode();
     next();
+  }
+
+  // Abre otro evento sin recargar la página (así no se pierde el modo planner)
+  function goToEvent(id, then) {
+    history.pushState(null, '', eventUrl(id));
+    loadEvent(id).then(function (row) { if (row && then) then(); });
+  }
+
+  function closeModals() {
+    Array.prototype.forEach.call(document.querySelectorAll('.venue-picker-overlay'), function (m) { m.remove(); });
+  }
+
+  // ── Bienvenida al abrir el enlace de un evento: ¿qué quieres ver? ──
+  function openEventWelcome() {
+    var b = _event.data.brief || {};
+    var fecha = b.fecha_evento ? new Date(b.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    var modal = document.createElement('div');
+    modal.className = 'venue-picker-overlay';
+    modal.innerHTML =
+      '<div class="venue-picker">' +
+        '<div class="venue-picker-head"><h2>' + esc(_event.nombre) + '</h2>' +
+        '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
+        '<p>' + (fecha ? esc(fecha.charAt(0).toUpperCase() + fecha.slice(1)) + ' · ' : '') + 'Estás en <strong>solo lectura</strong>. ¿Qué quieres hacer?</p>' +
+        '<div class="venue-grid">' +
+          '<button class="venue-card" data-w="brief"><i class="fa-solid fa-clipboard-list"></i><strong>Ver el brief</strong><span>Datos del evento, minuto a minuto y fotos del montaje.</span></button>' +
+          '<button class="venue-card" data-w="plano"><i class="fa-solid fa-map-location-dot"></i><strong>Ver el plano</strong><span>Distribución del salón en 2D y 3D.</span></button>' +
+          '<button class="venue-card" data-w="editar"><i class="fa-solid fa-unlock"></i><strong>Editar como planner</strong><span>Pide la contraseña de planner.</span></button>' +
+          '<button class="venue-card venue-card-empty" data-w="inicio"><i class="fa-solid fa-house"></i><strong>Ir al inicio</strong><span>Crear otro evento o abrir uno guardado.</span></button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    var close = function () { modal.remove(); };
+    modal.querySelector('.venue-picker-close').onclick = close;
+    modal.onclick = function (e) { if (e.target === modal) close(); };
+    Array.prototype.forEach.call(modal.querySelectorAll('[data-w]'), function (btn) {
+      btn.onclick = function () {
+        var w = btn.getAttribute('data-w');
+        if (w === 'inicio') { location.href = location.pathname; return; }
+        if (w === 'editar') { ensurePlanner(function () { close(); openPanel(); }); return; }
+        close();
+        if (w === 'brief') openPanel();
+      };
+    });
   }
 
   // ── Pantalla de inicio: ¿brief o maquetar? ────────────────
@@ -510,7 +551,7 @@
           card.innerHTML = '<i class="fa-solid fa-champagne-glasses"></i><strong>' + esc(ev.nombre) + '</strong>' +
             '<span>' + esc(fecha) + '</span>' +
             '<small>Editado ' + esc(new Date(ev.updated_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })) + '</small>';
-          card.onclick = function () { location.href = eventUrl(ev.id); };
+          card.onclick = function () { closeModals(); goToEvent(ev.id, function () { openPanel(); }); };
           grid.appendChild(card);
         });
       });
@@ -913,7 +954,8 @@
 
   // ── Arranque ──────────────────────────────────────────────
   function init() {
-    try { _isPlanner = localStorage.getItem(PLANNER_FLAG) === '1'; } catch (e) { _isPlanner = false; }
+    _isPlanner = false;
+    try { localStorage.removeItem(PLANNER_FLAG); } catch (e) { /* sin almacenamiento */ }
     applyMode();
     var bind = function (id, fn) { var el = $(id); if (el) el.onclick = fn; };
     bind('btn-planner-mode', togglePlanner);
@@ -924,9 +966,7 @@
 
     var id = eventIdFromUrl();
     if (id) {
-      loadEvent(id).then(function () {
-        if (new URLSearchParams(location.search).get('brief') === '1') openPanel();
-      });
+      loadEvent(id).then(function (row) { if (row) openEventWelcome(); });
     } else {
       openStartChooser();
     }

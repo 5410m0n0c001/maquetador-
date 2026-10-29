@@ -1986,3 +1986,26 @@ body.peg-view-only .minuto-row { grid-template-columns: 120px 1fr 200px; }
   .detail-sub, .detail-sub:has(> :nth-child(2):last-child) { grid-template-columns: 1fr 1fr; }
   .detail-sub > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
+
+/* ── Barra superior: todo visible, sin desplazamiento lateral; los grupos pasan a otra línea ── */
+.topbar-left, .topbar-center, .topbar-right, .counters-row, .event-bar {
+  flex-wrap: wrap;
+  row-gap: 6px;
+  min-width: 0;
+}
+.topbar-left { flex-shrink: 1; gap: 8px; }
+.topbar-left > .view-toggle { margin-left: 0 !important; }
+.topbar-center { margin: 0; }
+
+@media (max-width: 768px) {
+  .topbar { padding: 6px 8px !important; }
+  .topbar-left, .topbar-center, .topbar-right { justify-content: center !important; }
+  .view-btn { padding: 5px 8px; font-size: 11px; }
+  .counter-badge { padding: 4px 8px; }
+  .counter-lbl { display: none; }
+  .event-name { max-width: 150px; }
+  #topbar-brightness-group { padding: 4px 10px !important; }
+}
+
+/* Etiqueta del modo (siempre visible, también en el teléfono) */
+#btn-planner-mode b { font-weight: 600; }
