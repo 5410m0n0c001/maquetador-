@@ -944,6 +944,8 @@ window.Editor2D = (function () {
 
   function resetZoom() {
     var rect = _svg.getBoundingClientRect();
+    // Con el 2D oculto el lienzo mide 0: no encuadrar (app.js lo hace al mostrarlo)
+    if (!rect.width || !rect.height) return;
     // Add 100px padding around terrain so elements can be placed outside the plan
     var OUTER_PAD = 100;
     var fw = (rect.width - RULER_SIZE * 2 - OUTER_PAD * 2) / mToPx(_terrain.w);

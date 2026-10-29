@@ -207,6 +207,7 @@
       btn.title = _isPlanner ? 'Modo planner activo (clic para salir)' : 'Entrar a modo planner';
       btn.classList.toggle('active', _isPlanner);
     }
+    updateEventBar();
     if (_panel) renderPanel();
   }
 
@@ -338,9 +339,57 @@
       name.textContent = has ? _event.nombre : '';
       name.classList.toggle('hidden', !has);
     }
-    ['btn-brief', 'btn-share-event'].forEach(function (id) {
-      var b = $(id);
-      if (b) b.classList.toggle('hidden', !has);
+    // El planner siempre ve "Brief" (si no hay evento, lo crea); los demás solo dentro de un evento
+    var brief = $('btn-brief');
+    if (brief) brief.classList.toggle('hidden', !has && !_isPlanner);
+    var share = $('btn-share-event');
+    if (share) share.classList.toggle('hidden', !has);
+  }
+
+  // Pide la contraseña si hace falta y luego continúa
+  function ensurePlanner(next) {
+    if (_isPlanner) { next(); return; }
+    var pwd = prompt('Contraseña de planner:');
+    if (pwd === null) return;
+    if (pwd !== PLANNER_PASSWORD) { toast('Contraseña incorrecta.', 'error'); return; }
+    _isPlanner = true;
+    try { localStorage.setItem(PLANNER_FLAG, '1'); } catch (e) { /* sin almacenamiento */ }
+    applyMode();
+    next();
+  }
+
+  // ── Pantalla de inicio: ¿brief o maquetar? ────────────────
+  function openStartChooser() {
+    var modal = document.createElement('div');
+    modal.className = 'venue-picker-overlay';
+    modal.innerHTML =
+      '<div class="venue-picker start-chooser">' +
+        '<div class="venue-picker-head"><h2>¿Qué quieres hacer primero?</h2>' +
+        '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
+        '<p>Puedes empezar por cualquiera: el brief y el plano quedan guardados en el mismo evento.</p>' +
+        '<div class="venue-grid">' +
+          '<button class="venue-card" data-go="brief"><i class="fa-solid fa-clipboard-list"></i>' +
+            '<strong>Llenar el brief</strong><span>Cuestionario del evento con el cliente: datos, menú, montaje, minuto a minuto y fotos.</span></button>' +
+          '<button class="venue-card" data-go="maquetar"><i class="fa-solid fa-map-location-dot"></i>' +
+            '<strong>Maquetar</strong><span>Elige un salón ya maquetado o empieza desde cero.</span></button>' +
+          '<button class="venue-card venue-card-empty" data-go="abrir"><i class="fa-solid fa-folder-open"></i>' +
+            '<strong>Abrir un evento</strong><span>Continúa un evento guardado.</span></button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    var close = function () { modal.remove(); };
+    modal.querySelector('.venue-picker-close').onclick = close;
+    modal.onclick = function (e) { if (e.target === modal) close(); };
+    Array.prototype.forEach.call(modal.querySelectorAll('[data-go]'), function (btn) {
+      btn.onclick = function () {
+        var go = btn.getAttribute('data-go');
+        ensurePlanner(function () {
+          close();
+          if (go === 'brief') createEvent();
+          else if (go === 'maquetar') { if (window.App && window.App.openVenuePicker) window.App.openVenuePicker(); }
+          else openEventsModal();
+        });
+      };
     });
   }
 
@@ -418,7 +467,11 @@
 
   // ── Panel del brief ───────────────────────────────────────
   function openPanel() {
-    if (!_event) return;
+    if (!_event) {
+      // Planner sin evento abierto: se crea el evento con el plano actual y se abre su brief
+      if (_isPlanner) createEvent();
+      return;
+    }
     if (!_panel) {
       _panel = document.createElement('div');
       _panel.id = 'brief-panel';
@@ -678,17 +731,15 @@
       loadEvent(id).then(function () {
         if (new URLSearchParams(location.search).get('brief') === '1') openPanel();
       });
+    } else {
+      openStartChooser();
     }
   }
 
   window.PEGEventos = {
     init: init,
-    // El selector de salón al inicio solo tiene sentido para el planner y sin un evento abierto
-    suppressStartPicker: function () {
-      var planner = false;
-      try { planner = localStorage.getItem(PLANNER_FLAG) === '1'; } catch (e) { planner = false; }
-      return !!eventIdFromUrl() || !planner;
-    },
+    // Al inicio se muestra la pantalla "¿brief o maquetar?" de brief.js en lugar del selector de salón
+    suppressStartPicker: function () { return true; },
     getEvent: function () { return _event; },
     getSchema: function () { return { sections: SECTIONS, montajeFields: MONTAJE_FIELDS }; },
     isPlanner: function () { return _isPlanner; }

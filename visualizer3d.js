@@ -664,7 +664,7 @@ window.Visualizer3D = (function () {
     console.log('[Visualizer3D] Init container size:', cw, 'x', ch);
     var aspect = cw / (ch || 1);
     _camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-    _camera.position.set(_terrain.w / 2, Math.max(_terrain.w, _terrain.h) * 0.75, _terrain.h * 1.1);
+    _camera.position.copy(_fitCameraPosition());
 
     // 3. Renderer
     _renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -682,7 +682,7 @@ window.Visualizer3D = (function () {
     _controls.dampingFactor = 0.05;
     _controls.screenSpacePanning = false;
     _controls.minDistance = 5;
-    _controls.maxDistance = Math.max(_terrain.w, _terrain.h) * 2.5;
+    _controls.maxDistance = Math.max(Math.max(_terrain.w, _terrain.h) * 2.5, _camera.position.distanceTo(new THREE.Vector3(_terrain.w / 2, 0, _terrain.h / 2)) * 1.5);
     _controls.maxPolarAngle = Math.PI / 2 - 0.05; // don't go below ground
     _controls.target.set(_terrain.w / 2, 0, _terrain.h / 2);
     _controls.update();
@@ -732,11 +732,23 @@ window.Visualizer3D = (function () {
     _renderer.setSize(width, height);
   }
 
+  // Posición de cámara que deja ver todo el terreno según el campo de visión y el ancho del lienzo
+  function _fitCameraPosition() {
+    var radius = 0.5 * Math.max(_terrain.w, _terrain.h) * 1.15;
+    var vFov = _camera.fov * Math.PI / 180;
+    var hFov = 2 * Math.atan(Math.tan(vFov / 2) * _camera.aspect);
+    var dist = radius / Math.sin(Math.min(vFov, hFov) / 2);
+    var dir = new THREE.Vector3(0, 0.8, 0.6).normalize(); // vista elevada desde el frente
+    // La niebla se ajusta a la distancia para que un terreno grande no quede cubierto
+    if (_scene && _scene.fog) _scene.fog.density = 0.45 / dist;
+    return new THREE.Vector3(_terrain.w / 2, 0, _terrain.h / 2).add(dir.multiplyScalar(dist));
+  }
+
   function resetCamera() {
     if (!_camera || !_controls) return;
     var startPos = _camera.position.clone();
     var startTarget = _controls.target.clone();
-    var endPos = new THREE.Vector3(_terrain.w / 2, Math.max(_terrain.w, _terrain.h) * 0.75, _terrain.h * 1.1);
+    var endPos = _fitCameraPosition();
     var endTarget = new THREE.Vector3(_terrain.w / 2, 0, _terrain.h / 2);
     
     var t = 0;
@@ -962,6 +974,17 @@ window.Visualizer3D = (function () {
     _currentElements = (typeof elementsArray === 'function') ? elementsArray() : (elementsArray || []);
 
     if (!_scene) return;
+
+    // Si cambió el terreno (otra plantilla u otro evento), rehacer el piso y reencuadrar la cámara
+    var st = _getState ? _getState() : null;
+    if (st && st.terrain && (st.terrain.w !== _terrain.w || st.terrain.h !== _terrain.h)) {
+      setTerrain(st.terrain.w, st.terrain.h);
+      if (_camera) {
+        _camera.position.copy(_fitCameraPosition());
+        _controls.maxDistance = Math.max(_controls.maxDistance, _camera.position.distanceTo(_controls.target) * 1.5);
+        _controls.update();
+      }
+    }
 
     // 1. Remove deleted
     var activeIds = _currentElements.map(function (e) { return e.id; });

@@ -2434,13 +2434,20 @@
     var btn = document.getElementById('btn-clear');
     var btnFab = document.getElementById('btn-clear-fab');
     
-    var onClearClick = function () {
-      if (!confirm('¿Deseas iniciar desde cero? Se eliminarán absolutamente TODOS los elementos del plano (terreno, construcción, mesas, sillas y decoración) para dejar el lienzo 100% vacío.')) return;
-      saveHistory();
+    // Categorías que forman el plano del salón y se conservan en el reinicio parcial
+    var VENUE_CATEGORIES = ['estructuras', 'accesos'];
 
-      AppState.elements = [];
-      AppState.flows = [];
-      AppState.venueId = null;
+    var applyReset = function (total) {
+      saveHistory();
+      if (total) {
+        AppState.elements = [];
+        AppState.flows = [];
+        AppState.venueId = null;
+      } else {
+        AppState.elements = AppState.elements.filter(function (e) {
+          return e.bg2d || VENUE_CATEGORIES.indexOf(e.category) > -1;
+        });
+      }
       _tableCounter = 0;
       deselectAll();
       _refresh();
@@ -2449,8 +2456,39 @@
       if (_currentViewMode === '3d' && window.Visualizer3D) {
         window.Visualizer3D.syncWithData(AppState.elements);
       }
-      
-      showToast('Plano limpiado por completo. Lienzo 100% vacío.', 'success');
+
+      showToast(total
+        ? 'Reinicio total: lienzo 100% vacío.'
+        : 'Reinicio parcial: se conservó el plano del salón; se quitaron mesas, amenidades y decoración.', 'success');
+    };
+
+    var onClearClick = function () {
+      var modal = document.createElement('div');
+      modal.className = 'venue-picker-overlay';
+      modal.innerHTML =
+        '<div class="venue-picker">' +
+          '<div class="venue-picker-head"><h2>Reiniciar el plano</h2>' +
+          '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
+          '<p>Puedes deshacer con Ctrl+Z.</p>' +
+          '<div class="venue-grid">' +
+            '<button class="venue-card" data-reset="parcial"><i class="fa-solid fa-broom"></i>' +
+              '<strong>Reinicio parcial</strong>' +
+              '<span>Conserva el plano del salón (estructuras, accesos, croquis y flujos) y quita mesas, amenidades, entretenimiento, decoración y proveedores.</span></button>' +
+            '<button class="venue-card venue-card-empty" data-reset="total"><i class="fa-solid fa-trash-can"></i>' +
+              '<strong>Reinicio total</strong>' +
+              '<span>Deja el lienzo 100% vacío: sin terreno, construcción, mesas ni flujos.</span></button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(modal);
+      var close = function () { modal.remove(); };
+      modal.querySelector('.venue-picker-close').onclick = close;
+      modal.onclick = function (e) { if (e.target === modal) close(); };
+      Array.prototype.forEach.call(modal.querySelectorAll('[data-reset]'), function (b) {
+        b.onclick = function () {
+          close();
+          applyReset(b.getAttribute('data-reset') === 'total');
+        };
+      });
     };
 
     if (btn) btn.onclick = onClearClick;
@@ -2881,6 +2919,8 @@
         function () { return AppState; },
         _buildEditor2DCallbacks()
       );
+      // Si se arranca en 3D, el 2D se encuadra la primera vez que se muestra
+      _fit2dOnShow = AppState.activeView !== '2d';
     }
 
     // 3D Visualizer is initialized lazily on first view switch to avoid
