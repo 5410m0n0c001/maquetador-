@@ -2612,57 +2612,82 @@
       saveHistory();
 
       var elements = AppState.elements;
-      var threshold = 0.8; // Tolerancia en metros para agrupar en filas/columnas
+      var tables = elements.filter(function (e) {
+        return !e.bg2d && (e.type.indexOf('table') === 0 || e.type === 'lounge_set');
+      });
 
-      // 1. Alinear en columnas (coordenada X cercana)
-      for (var i = 0; i < elements.length; i++) {
-        var elA = elements[i];
-        if (elA.type.indexOf('table') === -1 && elA.type !== 'lounge_set') continue;
-        
-        var groupX = [elA];
-        for (var j = i + 1; j < elements.length; j++) {
-          var elB = elements[j];
-          if (elB.type.indexOf('table') === -1 && elB.type !== 'lounge_set') continue;
-          
-          if (Math.abs(elA.x - elB.x) < threshold) {
-            groupX.push(elB);
-          }
-        }
-        
-        if (groupX.length > 1) {
-          var sumX = 0;
-          groupX.forEach(function (e) { sumX += e.x; });
-          var avgX = Math.round((sumX / groupX.length) * 10) / 10;
-          groupX.forEach(function (e) {
-            e.x = avgX;
-          });
-        }
+      function median(arr) {
+        var s = arr.slice().sort(function (a, b) { return a - b; });
+        var m = Math.floor(s.length / 2);
+        return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
       }
 
-      // 2. Alinear en filas (coordenada Y cercana)
-      for (var i = 0; i < elements.length; i++) {
-        var elA = elements[i];
-        if (elA.type.indexOf('table') === -1 && elA.type !== 'lounge_set') continue;
-        
-        var groupY = [elA];
-        for (var j = i + 1; j < elements.length; j++) {
-          var elB = elements[j];
-          if (elB.type.indexOf('table') === -1 && elB.type !== 'lounge_set') continue;
-          
-          if (Math.abs(elA.y - elB.y) < threshold) {
-            groupY.push(elB);
-          }
-        }
-        
-        if (groupY.length > 1) {
-          var sumY = 0;
-          groupY.forEach(function (e) { sumY += e.y; });
-          var avgY = Math.round((sumY / groupY.length) * 10) / 10;
-          groupY.forEach(function (e) {
-            e.y = avgY;
-          });
-        }
+      var moved = {};
+      // Agrupa valores ordenados: un salto mayor a la tolerancia inicia otro grupo
+      function groupsFor(sorted, axis, tol) {
+        var groups = [];
+        sorted.forEach(function (e) {
+          var g = groups[groups.length - 1];
+          if (g && e[axis] - g[g.length - 1][axis] <= tol) g.push(e); else groups.push([e]);
+        });
+        return groups;
       }
+      // Tolerancia por eje: 40% de la separación típica entre filas (o columnas) del plano
+      function axisTol(sorted, axis) {
+        var lines = groupsFor(sorted, axis, 0.8).map(function (g) { return median(g.map(function (e) { return e[axis]; })); });
+        var gaps = [];
+        for (var i = 1; i < lines.length; i++) gaps.push(lines[i] - lines[i - 1]);
+        return gaps.length ? Math.max(0.8, median(gaps) * 0.4) : 0.8;
+      }
+
+      // Agrupa por eje (columnas en X, filas en Y) y lleva cada grupo a su mediana:
+      // así la mesa desalineada regresa a la línea de las demás sin moverlas a ellas.
+      function alignAxis(axis) {
+        var sorted = tables.slice().sort(function (a, b) { return a[axis] - b[axis]; });
+        var tol = axisTol(sorted, axis);
+        var group = [];
+        var flush = function () {
+          if (group.length > 1) {
+            var target = Math.round(median(group.map(function (e) { return e[axis]; })) * 10) / 10;
+            group.forEach(function (e) {
+              if (Math.abs(e[axis] - target) > 0.05) moved[e.id] = true;
+              e[axis] = target;
+            });
+          }
+          group = [];
+        };
+        sorted.forEach(function (e) {
+          if (group.length && e[axis] - group[group.length - 1][axis] > tol) flush();
+          group.push(e);
+        });
+        flush();
+      }
+      alignAxis('x');
+      alignAxis('y');
+
+      // Espaciado parejo dentro de cada columna (y fila) de 3+ mesas, salvo que haya
+      // un hueco claramente intencional (pasillo, pista): separación > 1.6× la menor.
+      function distribute(lineAxis, alongAxis) {
+        var byLine = {};
+        tables.forEach(function (e) { (byLine[e[lineAxis]] = byLine[e[lineAxis]] || []).push(e); });
+        Object.keys(byLine).forEach(function (k) {
+          var g = byLine[k].sort(function (a, b) { return a[alongAxis] - b[alongAxis]; });
+          if (g.length < 3) return;
+          var gaps = [];
+          for (var i = 1; i < g.length; i++) gaps.push(g[i][alongAxis] - g[i - 1][alongAxis]);
+          var mn = Math.min.apply(null, gaps), mx = Math.max.apply(null, gaps);
+          if (mn <= 0.3 || mx / mn > 1.6) return;
+          var first = g[0][alongAxis];
+          var step = (g[g.length - 1][alongAxis] - first) / (g.length - 1);
+          g.forEach(function (e, idx) {
+            var target = Math.round((first + idx * step) * 10) / 10;
+            if (Math.abs(e[alongAxis] - target) > 0.05) moved[e.id] = true;
+            e[alongAxis] = target;
+          });
+        });
+      }
+      distribute('x', 'y');
+      distribute('y', 'x');
 
       // 3. Redondear coordenadas X, Y, W, H y rotaciones
       elements.forEach(function (elem) {
@@ -2693,7 +2718,8 @@
         window.Visualizer3D.syncWithData(AppState.elements);
       }
       
-      showToast('Plano alineado simétricamente.', 'success');
+      var n = Object.keys(moved).length;
+      showToast(n ? 'Plano alineado: ' + n + ' mesa(s) acomodada(s) en su fila y columna.' : 'Las mesas ya estaban alineadas.', 'success');
     };
 
     if (btn) btn.onclick = onAlignClick;
