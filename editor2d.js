@@ -947,7 +947,7 @@ window.Editor2D = (function () {
     // Con el 2D oculto el lienzo mide 0: no encuadrar (app.js lo hace al mostrarlo)
     if (!rect.width || !rect.height) return;
     // Add 100px padding around terrain so elements can be placed outside the plan
-    var OUTER_PAD = 100;
+    var OUTER_PAD = Math.min(100, rect.width * 0.05); // margen proporcional en pantallas chicas
     var fw = (rect.width - RULER_SIZE * 2 - OUTER_PAD * 2) / mToPx(_terrain.w);
     var fh = (rect.height - RULER_SIZE * 2 - OUTER_PAD * 2) / mToPx(_terrain.h);
     _zoom = Math.min(fw, fh, 1);

@@ -2232,7 +2232,9 @@
       '.block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; }' +
       '.block h3 { font-size: 12.5px; margin-bottom: 4px; }' +
       '.photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }' +
+      '.photos figure { margin: 0; break-inside: avoid; }' +
       '.photos img { width: 100%; height: 210px; object-fit: cover; border-radius: 8px; border: 1px solid var(--gold); }' +
+      '.photos figcaption { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-top: 3px; }' +
       '.guests { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }' +
       '.guest-card { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; break-inside: avoid; }' +
       '.guest-card h3 { font-size: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--pink); padding-bottom: 4px; margin-bottom: 4px; }' +
@@ -2295,7 +2297,7 @@
       }).join('') + '</div>';
       if (fotos.length) {
         html += '<div class="photos">' + fotos.map(function (f, i) {
-          return '<img src="' + esc(f.url) + '" alt="Montaje ' + (i + 1) + '">';
+          return '<figure><img src="' + esc(f.url) + '" alt="Montaje ' + (i + 1) + '">' + (f.etiqueta ? '<figcaption>' + esc(f.etiqueta) + '</figcaption>' : '') + '</figure>';
         }).join('') + '</div>';
       }
       html += '</section>';

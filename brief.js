@@ -17,7 +17,8 @@
   var PLANNER_PASSWORD = 'PrimaveraVIP';
   var PLANNER_FLAG = 'peg_modo_planner'; // ya no se usa: al recargar siempre se entra en solo lectura (se borra si quedó de antes)
   var LOCAL_PREFIX = 'peg_evento_';
-  var MAX_FOTOS = 4;
+  var MAX_FOTOS = 8;
+  var FOTO_ETIQUETAS = ['Montaje', 'Loza', 'Plato', 'Cubertería', 'Cristalería', 'Centro de mesa', 'Mantelería', 'Otro'];
   // Límites del plan gratuito de Supabase (confirmar en el panel de Supabase → Usage)
   var LIMITE_DB = 500 * 1024 * 1024;
   var LIMITE_ARCHIVOS = 1024 * 1024 * 1024;
@@ -50,6 +51,11 @@
     { name: 'Durazno', hex: '#FFCBA4' }, { name: 'Dorado', hex: '#D4AF37' }, { name: 'Plateado', hex: '#C0C0C0' },
     { name: 'Negro', hex: '#1F1F1F' }
   ];
+
+  // Planos ya maquetados (templates.js) + desde cero
+  var PLANOS_BASE = ['Jardín con alberca', 'Yolomecatl · Versión A', 'Yolomecatl · Versión B', 'Centro de Convenciones Presidente', 'Salón Manzanares', 'Empezar desde cero'];
+  // Venue elegido → plano base sugerido
+  var VENUE_A_PLANO = { 'C. Convenciones Presidente': 'Centro de Convenciones Presidente', 'Salón Jardín Yolomecatl': 'Yolomecatl · Versión A', 'Salón Manzanares': 'Salón Manzanares' };
 
   // ── Esquema del brief (formato "Brief de Evento" de PEG) ──
   var SI_NO = ['Sí', 'No'];
@@ -136,7 +142,8 @@
     ] },
     { id: 'venue', title: 'Locación / Venue', fields: [
       { k: 'tiene_venue', label: '¿Ya tiene venue?', type: 'radio', options: ['Sí (propio / externo)', 'Quiere recomendación', 'Venue de la red Primavera'] },
-      { k: 'venue_red', label: 'Venue de la red Primavera', type: 'radio', options: ['C. Convenciones Presidente', 'Finca Las Isabeles', 'Jardín La Flor', 'Jardín Tsu Nuum', 'Quinta Zarabanda', 'Salón & Jardín Solaire', 'Salón Jardín Yolomecatl', 'Salón Los Caballos', 'Salón Los Potrillos', 'Villa Leona'] },
+      { k: 'venue_red', label: 'Venue de la red Primavera', type: 'radio', options: ['C. Convenciones Presidente', 'Finca Las Isabeles', 'Jardín La Flor', 'Jardín Tsu Nuum', 'Quinta Zarabanda', 'Salón & Jardín Solaire', 'Salón Jardín Yolomecatl', 'Salón Los Caballos', 'Salón Los Potrillos', 'Salón Manzanares', 'Villa Leona'] },
+      { k: 'plano_base', label: 'Plano base para el maquetador (se usa al generar el plano)', type: 'radio', options: PLANOS_BASE },
       { k: 'venue_externo', label: 'Venue aliado / externo' },
       { k: 'tipo_espacio', label: 'Tipo de espacio', type: 'radio', options: ['Jardín', 'Salón', 'Mixto'] },
       { k: 'zona', label: 'Zona / municipio' },
@@ -229,10 +236,26 @@
   // Secciones propias del maquetador (no están en el formato impreso)
   var EXTRA_SECTIONS = [
     { id: 'minuto', title: 'Minuto a minuto' },
-    { id: 'montaje_elegido', title: 'Montaje elegido y fotos' }
+    { id: 'montaje_elegido', title: 'Montaje elegido y álbum de fotos' }
+  ];
+
+  // Pasos del brief (un paso por pantalla); 'generar' es el cierre del planner
+  var STEPS = [
+    { title: 'Cliente y evento', sections: ['cita', 'cliente', 'evento', 'especificos'] },
+    { title: 'Venue', sections: ['venue'] },
+    { title: 'Banquete y bebidas', sections: ['menu', 'bebidas'] },
+    { title: 'Montaje y mobiliario', sections: ['mobiliario'] },
+    { title: 'Amenidades', sections: ['amenidades'] },
+    { title: 'Foto, video y servicios', sections: ['foto', 'servicios'] },
+    { title: 'Álbum del montaje', sections: ['montaje_elegido'] },
+    { title: 'Minuto a minuto', sections: ['minuto'] },
+    { title: 'Logística', sections: ['logistica'] },
+    { title: 'Interno del planner', sections: ['presupuesto', 'contrato', 'seguimiento'], internal: true },
+    { title: 'Generar plano', sections: [], generar: true, internal: true }
   ];
 
   // ── Estado ────────────────────────────────────────────────
+  var _step = 0;
   var _sb = null;
   var _event = null;          // { id, nombre, fecha_evento, venue_id, data: { brief, minuto, montaje, layout } }
   var _isPlanner = false;
@@ -585,6 +608,7 @@
       document.body.appendChild(_panel);
     }
     _panel.classList.remove('hidden');
+    _step = 0;
     renderPanel();
   }
 
@@ -723,34 +747,297 @@
 
   function montajeHtml(m, ro) {
     var dis = ro ? ' disabled' : '';
-    var html = '<div class="brief-grid">' + MONTAJE_FIELDS.map(function (f) {
+    var fotos = m.fotos || [];
+    var html = '';
+    // Álbum primero: es lo que se llena en la degustación con el teléfono
+    if (!ro) {
+      html += '<div class="album-actions">' + (fotos.length < MAX_FOTOS
+        ? '<label class="btn-primary album-btn"><i class="fa-solid fa-camera"></i> Tomar foto' +
+            '<input type="file" accept="image/*" capture="environment" class="foto-input" hidden /></label>' +
+          '<label class="btn-ghost album-btn"><i class="fa-solid fa-images"></i> Galería' +
+            '<input type="file" accept="image/*" multiple class="foto-input" hidden /></label>'
+        : '') +
+        '<span class="album-count">' + fotos.length + ' de ' + MAX_FOTOS + ' fotos</span></div>';
+    }
+    html += '<div class="foto-grid">';
+    fotos.forEach(function (f, i) {
+      html += '<figure class="foto-card"><img src="' + esc(f.url) + '" alt="' + esc(f.etiqueta || 'Foto del montaje') + '" loading="lazy" data-zoom="' + i + '" />' +
+        (ro
+          ? (f.etiqueta ? '<figcaption>' + esc(f.etiqueta) + '</figcaption>' : '')
+          : '<select class="foto-tag" data-i="' + i + '">' + ['<option value="">Etiqueta…</option>'].concat(FOTO_ETIQUETAS.map(function (t) {
+              return '<option' + (f.etiqueta === t ? ' selected' : '') + '>' + t + '</option>';
+            })).join('') + '</select>' +
+            '<button type="button" class="foto-del" data-i="' + i + '" title="Quitar foto"><i class="fa-solid fa-xmark"></i></button>') +
+        '</figure>';
+    });
+    if (ro && !fotos.length) html += '<p class="brief-empty">Sin fotos del montaje.</p>';
+    html += '</div>';
+    html += '<div class="brief-grid" style="margin-top:18px">' + MONTAJE_FIELDS.map(function (f) {
       var v = m[f.k];
       return '<div class="brief-field' + (f.type === 'textarea' ? ' wide' : '') + '"><label class="form-label">' + esc(f.label) + '</label>' +
         (f.type === 'textarea'
           ? '<textarea class="form-input form-textarea" data-mt="' + f.k + '"' + dis + '>' + esc(v) + '</textarea>'
           : '<input class="form-input" data-mt="' + f.k + '" value="' + esc(v) + '"' + dis + ' />') + '</div>';
     }).join('') + '</div>';
-    var fotos = m.fotos || [];
-    html += '<div class="foto-grid">';
-    fotos.forEach(function (f, i) {
-      html += '<figure class="foto-card"><img src="' + esc(f.url) + '" alt="Foto del montaje ' + (i + 1) + '" loading="lazy" />' +
-        (ro ? '' : '<button type="button" class="foto-del" data-i="' + i + '" title="Quitar foto"><i class="fa-solid fa-xmark"></i></button>') +
-        '</figure>';
+    return html;
+  }
+
+  // Vista ampliada de una foto del álbum
+  function openLightbox(i) {
+    var fotos = _event.data.montaje.fotos || [];
+    if (!fotos[i]) return;
+    var box = document.createElement('div');
+    box.className = 'lightbox';
+    var show = function () {
+      box.innerHTML = '<button class="lightbox-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button>' +
+        (fotos.length > 1 ? '<button class="lightbox-nav prev"><i class="fa-solid fa-chevron-left"></i></button><button class="lightbox-nav next"><i class="fa-solid fa-chevron-right"></i></button>' : '') +
+        '<figure><img src="' + esc(fotos[i].url) + '" alt="" /><figcaption>' + esc(fotos[i].etiqueta || '') + ' · ' + (i + 1) + ' / ' + fotos.length + '</figcaption></figure>';
+      box.querySelector('.lightbox-close').onclick = function () { box.remove(); };
+      var p = box.querySelector('.prev'), n = box.querySelector('.next');
+      if (p) p.onclick = function (e) { e.stopPropagation(); i = (i - 1 + fotos.length) % fotos.length; show(); };
+      if (n) n.onclick = function (e) { e.stopPropagation(); i = (i + 1) % fotos.length; show(); };
+    };
+    box.onclick = function (e) { if (e.target === box) box.remove(); };
+    show();
+    document.body.appendChild(box);
+  }
+
+  // ── Generar el plano desde el brief ───────────────────────
+  function generarHtml() {
+    var b = _event.data.brief;
+    var adultos = parseInt(b.adultos, 10) || 0, ninos = parseInt(b.ninos, 10) || 0;
+    var total = parseInt(b.invitados, 10) || (adultos + ninos);
+    var falta = [];
+    if (!total) falta.push('# de invitados (paso 1)');
+    if (!b.plano_base) falta.push('plano base (paso 2: Venue)');
+    return '<div class="generar-box">' +
+      '<p>Con lo que se llenó en el brief se arma un <strong>plano de partida</strong>: se carga el plano base, se calculan las mesas, ' +
+      'se colocan la mesa principal, la pista y las amenidades elegidas. Después lo ajustas a mano en el maquetador.</p>' +
+      '<ul class="generar-resumen">' +
+        '<li><b>Plano base:</b> ' + esc(b.plano_base || '—') + '</li>' +
+        '<li><b>Invitados:</b> ' + (total || '—') + (ninos ? ' (' + ninos + ' niños)' : '') + '</li>' +
+        '<li><b>Mesas:</b> ' + esc((b.mesas || []).join(' · ') || 'Redonda (por defecto)') + '</li>' +
+        '<li><b>Amenidades:</b> ' + ((b.amenidades || []).length || 0) + ' elegidas</li>' +
+      '</ul>' +
+      (falta.length ? '<p class="generar-falta"><i class="fa-solid fa-triangle-exclamation"></i> Falta: ' + falta.join(', ') + '</p>' : '') +
+      '<button type="button" class="btn-primary" id="btn-generar-plano"' + (falta.length ? ' disabled' : '') + '>' +
+        '<i class="fa-solid fa-wand-magic-sparkles"></i> Generar plano desde el brief</button>' +
+      '</div>';
+  }
+
+  var AMENIDAD_ELEMENTO = {
+    'DJ profesional': ['dj_booth', 'Cabina de DJ'],
+    'Letra gigante XV (1.10 / 1.80 m)': ['giant_letters', 'Letra gigante XV'],
+    'Letras L-O-V-E': ['giant_letters', 'Letras L-O-V-E'],
+    'Corazón gigante iluminado': ['heart_illuminated', 'Corazón iluminado'],
+    'Set de chisperos en frío (4 inalámbricos)': ['sparklers', 'Chisperos en frío'],
+    'Detonación estelar en frío (6)': ['sparklers', 'Detonación estelar'],
+    'Show men animador (cabezones)': ['showmen_inflatables', 'Show men'],
+    'Cabina inflable de fotos': ['photobooth_inflatable', 'Cabina inflable'],
+    'Espejo selfie / Cabina espejo': ['photobooth_mirror', 'Cabina espejo'],
+    'Cabina 360°': ['photobooth_360', 'Cabina 360°'],
+    'Magazine Cover Booth (portada de revista VOGUE)': ['backdrop', 'Magazine Cover Booth'],
+    'Banda en vivo': ['vendor_banda', 'Banda en vivo'],
+    'Mariachi': ['vendor_mariachi', 'Mariachi'],
+    'Saxofonista': ['vendor_saxo', 'Saxofonista'],
+    'Robot LED': ['robot_led', 'Robot LED'],
+    'Back redondo metálico': ['backdrop', 'Back redondo metálico'],
+    'Alfombra roja': ['red_carpet', 'Alfombra roja'],
+    'Láser / pantallas': ['projector_screen', 'Pantalla / láser']
+  };
+  var MESA_TIPO = {
+    'Redonda': 'table_round', 'Tablón / imperial': 'table_imperial', 'Rect. madera (miel/nogal)': 'table_rectangular',
+    'Tipo mármol': 'table_marble_round', 'Plegable cuadrada': 'table_square'
+  };
+
+  function generarPlano() {
+    var b = _event.data.brief;
+    var cat = window.getCatalogEntry;
+    if (!cat || !window.App) return;
+
+    // 1. Plano base sin mesas ni amenidades (se conserva el salón, accesos, croquis y flujos)
+    var base;
+    var tpl = (window.VENUE_TEMPLATES || []).find(function (t) { return t.name === b.plano_base; });
+    if (tpl) base = tpl.layout;
+    else if (b.plano_base === 'Jardín con alberca' && window.DEFAULT_LAYOUT) base = window.DEFAULT_LAYOUT;
+    else base = { terrain: { w: 50, h: 60 }, elements: [], flows: [] };
+    var layout = JSON.parse(JSON.stringify(base));
+    layout.elements = (layout.elements || []).filter(function (e) {
+      return e.bg2d || e.category === 'estructuras' || e.category === 'accesos';
     });
-    if (!ro && fotos.length < MAX_FOTOS) {
-      html += '<label class="foto-add"><i class="fa-solid fa-camera"></i><span>Agregar foto</span><small>' + fotos.length + ' de ' + MAX_FOTOS + '</small>' +
-        '<input type="file" accept="image/*" id="foto-input" hidden /></label>';
+    layout.venueId = tpl ? tpl.id : null;
+
+    var cur = window.App.getLayout();
+    var tieneMesas = cur.elements.some(function (e) { return !e.bg2d && e.category !== 'estructuras' && e.category !== 'accesos'; });
+    if (tieneMesas && !confirm('Se reemplazarán las mesas y amenidades del plano actual por las del brief. Puedes deshacer con Ctrl+Z. ¿Continuar?')) return;
+
+    // 2. Zona útil: el salón más grande del plano base (o el terreno completo)
+    var zonas = layout.elements.filter(function (e) { return /^(salon|salon_carpa|terrace|garden)$/.test(e.type); })
+      .sort(function (a, c) { return c.w * c.h - a.w * a.h; });
+    var z = zonas[0] && /^salon/.test(zonas[0].type) ? zonas[0] : (zonas[0] || null);
+    var area = z
+      ? { x: z.x - z.w / 2 + 1.5, y: z.y - z.h / 2 + 1.5, w: z.w - 3, h: z.h - 3 }
+      : { x: 2, y: 2, w: layout.terrain.w - 4, h: layout.terrain.h - 4 };
+    // Empezar debajo de escenario, baños o barra que estén en la parte alta del salón
+    layout.elements.forEach(function (e) {
+      if (e === z || !/^(stage|bathroom|bar_area|kitchen|dressing_room|lobby_reception)$/.test(e.type)) return;
+      var top = e.y - e.h / 2, bottom = e.y + e.h / 2;
+      var dentroX = e.x + e.w / 2 > area.x && e.x - e.w / 2 < area.x + area.w;
+      if (dentroX && top < area.y + area.h * 0.35 && bottom > area.y) {
+        var recorte = bottom + 1 - area.y;
+        area.y += recorte;
+        area.h -= recorte;
+      }
+    });
+
+    var n = 0;
+    var mesaNum = 0;
+    var nuevos = [];
+    var silla = (b.sillas || []).join(' ');
+    var tipoSilla = /Crossback/.test(silla) ? 'crossback' : 'tiffany';
+    function mk(type, props) {
+      var c = cat(type);
+      if (!c) return null;
+      var isMesa = c.defaultChairs > 0 || type.indexOf('table_') === 0 || type === 'lounge_set';
+      var e = {
+        id: 'gen_' + Date.now() + '_' + (++n), type: type, category: c.category, name: c.name,
+        x: 0, y: 0, w: c.defaultW, h: c.defaultH, rotation: 0, color: c.color, chairs: c.defaultChairs,
+        editable: true, removable: true, layer: c.layer || c.category
+      };
+      if (isMesa) {
+        var floral = b.centros === 'Altos' ? 'alto' : b.centros === 'Bajos' ? 'bajo' : b.centros === 'Mixtos' ? (mesaNum % 2 ? 'alto' : 'bajo') : 'bajo';
+        e.mesaConfig = {
+          mesaNum: ++mesaNum, capacidadMax: null, mantelColor: 'blanco', caminoColor: 'dorado', caminoAcomodo: 'diagonal',
+          servilletaColorCorazon: 'dorado', servilletaColorCorbata: 'champagne', servilletaColorOtros: 'blanco',
+          servilletaDoblez: ['corazon', 'corbata'], cubiertos: 'plateado', platoBase: 'ninguno', platoTrinche: 'redondo_blanco',
+          cristal: 'cubero', copasColor: 'transparente', cristal2: 'ninguno', copasColor2: 'transparente',
+          tipoSilla: tipoSilla, menu: '', arregloFloralTipo: floral, arregloFloralAcomodo: 'diagonal', ensambleTipo: 'angosto', invitados: []
+        };
+      }
+      Object.keys(props || {}).forEach(function (k) { e[k] = props[k]; });
+      nuevos.push(e);
+      return e;
     }
-    if (ro && !fotos.length) html += '<p class="brief-empty">Sin fotos del montaje.</p>';
-    return html + '</div>';
+
+    var cx = area.x + area.w / 2;
+    var y = area.y;
+
+    // 3. Mesa principal arriba, al centro
+    var tipoEv = b.tipo_evento;
+    var principal = tipoEv === 'XV años' ? b.xv_mesa_principal : tipoEv === 'Boda' ? b.boda_mesa_honor : '';
+    if (principal && !/^Sin /.test(principal)) {
+      var hType = principal === 'Redonda' || principal === 'Mesa de novios (sweetheart)'
+        ? 'table_round' : (tipoEv === 'XV años' ? 'table_honor_xv' : 'table_honor_bride');
+      var h = mk(hType, { name: tipoEv === 'XV años' ? 'Mesa principal XV' : 'Mesa principal novios' });
+      if (h) { h.x = cx; h.y = y + h.h / 2 + 1; y += h.h + 2.5; }
+    }
+
+    // Pastel y dulces a los lados de la mesa principal
+    var lateral = [];
+    if (b.pastel === 'Sí') lateral.push(['table_cake', 'Mesa de pastel']);
+    if ((b.dulces || []).some(function (d) { return d === 'Mesa de postres' || d === 'Candy bar'; })) lateral.push(['table_candy', 'Mesa de dulces']);
+
+    // 4. Pista (LED pixel si se eligió) con DJ al lado
+    var guests = parseInt(b.invitados, 10) || ((parseInt(b.adultos, 10) || 0) + (parseInt(b.ninos, 10) || 0));
+    var amen = (b.amenidades || []).slice();
+    var pixel = amen.indexOf('Pista de baile LED Pixel 5x5') > -1;
+    var lado = pixel ? 5 : Math.max(5, Math.min(12, Math.round(Math.sqrt(guests) * 0.7)));
+    var pista = mk(pixel ? 'dancefloor_pixel' : 'dancefloor', { name: pixel ? 'Pista LED Pixel 5x5' : 'Pista de baile', w: lado, h: lado });
+    pista.x = cx; pista.y = y + lado / 2;
+    var iDj = amen.indexOf('DJ profesional');
+    if (iDj > -1) {
+      amen.splice(iDj, 1);
+      var dj = mk('dj_booth', { name: 'Cabina de DJ' });
+      dj.x = cx + lado / 2 + dj.w / 2 + 1; dj.y = pista.y;
+    }
+    lateral.forEach(function (l, i) {
+      var e = mk(l[0], { name: l[1] });
+      if (e) { e.x = cx + (i % 2 ? 1 : -1) * (lado / 2 + e.w / 2 + 1.5); e.y = pista.y - lado / 4; }
+    });
+    y += lado + 2;
+
+    // 5. Mesas en cuadrícula debajo de la pista
+    var ninos = parseInt(b.ninos, 10) || 0;
+    var kidsAparte = ninos > 0 && ((b.mesas || []).indexOf('Infantil') > -1 || b.menu_infantil === 'Sí');
+    var adultos = kidsAparte ? Math.max(0, guests - ninos) : guests;
+    var tipoMesa = MESA_TIPO[(b.mesas || []).filter(function (m) { return MESA_TIPO[m]; })[0]] || 'table_round';
+    var cMesa = cat(tipoMesa);
+    var porMesa = cMesa.defaultChairs || 10;
+    var lista = [];
+    for (var i = 0; i < Math.ceil(adultos / porMesa); i++) lista.push(tipoMesa);
+    if (kidsAparte) { var ck = cat('table_kids'); for (i = 0; i < Math.ceil(ninos / (ck.defaultChairs || 8)); i++) lista.push('table_kids'); }
+    var cellW = cMesa.defaultW + 2.6, cellH = cMesa.defaultH + 2.6;
+    // Columnas según la proporción del espacio libre, para repartir las mesas a lo ancho y a lo alto
+    var altoDisp = Math.max(cellH, area.y + area.h - y - 4);
+    var maxCols = Math.max(1, Math.floor(area.w / cellW));
+    var cols = Math.max(1, Math.min(maxCols, Math.round(Math.sqrt(lista.length * (area.w / altoDisp) * (cellH / cellW)))));
+    var filas = Math.ceil(lista.length / cols);
+    var pasoX = Math.min(cellW * 1.8, area.w / Math.min(cols, lista.length));
+    var startX = cx - (Math.min(cols, lista.length) - 1) * pasoX / 2;
+    lista.forEach(function (t, idx) {
+      var e = mk(t, { name: (t === 'table_kids' ? 'Mesa infantil ' : 'Mesa ') + (mesaNum + 1) });
+      var col = idx % cols, row = Math.floor(idx / cols);
+      e.x = Math.round((startX + col * pasoX) * 10) / 10;
+      e._fila = row;
+    });
+    // Repartir las filas en el alto disponible (sin separarlas de más)
+    var paso = filas > 1 ? Math.min(cellH * 1.8, Math.max(cellH, altoDisp / filas)) : cellH;
+    nuevos.forEach(function (e) {
+      if (!e._fila && e._fila !== 0) return;
+      e.y = Math.round((y + cellH / 2 + e._fila * paso) * 10) / 10;
+      delete e._fila;
+    });
+    var fondoMesas = y + (filas - 1) * paso + cellH;
+    var desborde = fondoMesas > area.y + area.h;
+
+    // 6. Amenidades y servicios en una fila bajo las mesas
+    var extras = [];
+    amen.forEach(function (a) { if (AMENIDAD_ELEMENTO[a]) extras.push(AMENIDAD_ELEMENTO[a]); });
+    if (b.tipo_servicio === 'Buffet') extras.push(['table_buffet', 'Mesa de buffet']);
+    if (b.tipo_servicio === 'Taquiza') extras.push(['vendor_taquiza', 'Taquiza']);
+    if ((b.bebidas_incluye || []).indexOf('Carrito de shots') > -1 || (b.dulces || []).indexOf('Carrito de shots dulces') > -1) extras.push(['table_shots', 'Carrito de shots']);
+    var ex = area.x, ey = fondoMesas + 1.5, altoFila = 0;
+    extras.forEach(function (x) {
+      var e = mk(x[0], { name: x[1] });
+      if (!e) return;
+      if (ex + e.w > area.x + area.w) { ex = area.x; ey += altoFila + 1.5; altoFila = 0; }
+      e.x = Math.round((ex + e.w / 2) * 10) / 10;
+      e.y = Math.round((ey + e.h / 2) * 10) / 10;
+      ex += e.w + 1.5;
+      altoFila = Math.max(altoFila, e.h);
+    });
+    var noColocadas = (b.amenidades || []).filter(function (a) { return a !== 'DJ profesional' && a !== 'Pista de baile LED Pixel 5x5' && !AMENIDAD_ELEMENTO[a]; });
+
+    // 7. Cargar en el maquetador
+    layout.elements = layout.elements.concat(nuevos);
+    var maxY = Math.max.apply(null, layout.elements.map(function (e) { return e.y + (e.h || 0) / 2; }));
+    if (maxY + 2 > layout.terrain.h) layout.terrain.h = Math.ceil(maxY + 2);
+    window.App.loadLayout(layout);
+    _event.data.brief.plano_generado = new Date().toISOString();
+    scheduleSave();
+    closePanel();
+    var v2 = $('btn-view-2d');
+    if (v2) v2.click();
+    var capacidad = nuevos.reduce(function (s2, e) { return s2 + (e.mesaConfig ? (parseInt(e.chairs, 10) || 0) : 0); }, 0);
+    toast('Plano generado: ' + lista.length + ' mesas (' + capacidad + ' lugares)' +
+      (desborde ? '. Las mesas no caben en el salón: revisa el acomodo.' : '') +
+      (noColocadas.length ? '. Sin elemento en el inventario: ' + noColocadas.join(', ') : '') + '.', desborde ? 'warning' : 'success');
+  }
+
+  function visibleSteps(ro) {
+    return STEPS.filter(function (st) { return !(ro && st.internal); });
   }
 
   function renderPanel() {
     if (!_panel || !_event) return;
     var ro = !_isPlanner;
     var d = _event.data;
-    // En solo lectura no se muestran las secciones ni los campos internos (presupuesto, contacto, contrato, seguimiento)
-    var all = SECTIONS.concat(EXTRA_SECTIONS).filter(function (s) { return !(ro && s.internal); });
+    var steps = visibleSteps(ro);
+    if (_step >= steps.length) _step = steps.length - 1;
+    var step = steps[_step];
+    var byId = {};
+    SECTIONS.concat(EXTRA_SECTIONS).forEach(function (sec) { byId[sec.id] = sec; });
+    var pct = Math.round((_step + 1) / steps.length * 100);
     var html =
       '<div class="brief-shell">' +
         '<header class="brief-head">' +
@@ -763,30 +1050,46 @@
             '<button type="button" class="btn-primary" id="brief-close"><i class="fa-solid fa-map"></i> Ver plano</button>' +
           '</div>' +
         '</header>' +
-        '<nav class="brief-nav">' + all.map(function (s, i) {
-          return '<a href="#brief-' + s.id + '">' + (i + 1) + '. ' + esc(s.title) + '</a>';
+        '<div class="brief-progress"><span style="width:' + pct + '%"></span></div>' +
+        // Pasos: chips en varias líneas (escritorio) y lista desplegable (teléfono)
+        '<nav class="brief-nav">' + steps.map(function (st, i) {
+          return '<a href="#" data-step="' + i + '" class="' + (i === _step ? 'active' : '') + '">' + (i + 1) + '. ' + esc(st.title) + '</a>';
         }).join('') + '</nav>' +
-        // En el teléfono: lista desplegable con todas las secciones
-        '<div class="brief-nav-mobile"><select class="form-input" id="brief-nav-select">' +
-          '<option value="">Ir a la sección…</option>' + all.map(function (s, i) {
-            return '<option value="brief-' + s.id + '">' + (i + 1) + '. ' + esc(s.title) + '</option>';
-          }).join('') + '</select></div>' +
+        '<div class="brief-nav-mobile"><select class="form-input" id="brief-nav-select">' + steps.map(function (st, i) {
+          return '<option value="' + i + '"' + (i === _step ? ' selected' : '') + '>Paso ' + (i + 1) + ' de ' + steps.length + ': ' + esc(st.title) + '</option>';
+        }).join('') + '</select></div>' +
         '<div class="brief-body">';
-    all.forEach(function (s, i) {
-      html += '<section class="brief-section" id="brief-' + s.id + '"><h3><span>' + (i + 1) + '</span>' + esc(s.title) + '</h3>';
-      if (s.id === 'minuto') html += minutoHtml(d.minuto || [], ro);
-      else if (s.id === 'montaje_elegido') html += montajeHtml(d.montaje || { fotos: [] }, ro);
-      else html += '<div class="brief-grid">' + s.fields
+    if (step.generar) {
+      html += '<section class="brief-section"><h3><span>' + (_step + 1) + '</span>' + esc(step.title) + '</h3>' + generarHtml() + '</section>';
+    }
+    step.sections.forEach(function (id) {
+      var sec = byId[id];
+      if (!sec || (ro && sec.internal)) return;
+      html += '<section class="brief-section" id="brief-' + sec.id + '"><h3>' + esc(sec.title) + '</h3>';
+      if (sec.id === 'minuto') html += minutoHtml(d.minuto || [], ro);
+      else if (sec.id === 'montaje_elegido') html += montajeHtml(d.montaje || { fotos: [] }, ro);
+      else html += '<div class="brief-grid">' + sec.fields
         .filter(function (f) { return !(ro && f.internal); })
         .map(function (f) { return fieldHtml(f, d.brief, ro); }).join('') + '</div>';
       html += '</section>';
     });
+    html += '<div class="brief-steps-nav">' +
+      (_step > 0 ? '<button type="button" class="btn-ghost" id="step-prev"><i class="fa-solid fa-arrow-left"></i> Anterior</button>' : '<span></span>') +
+      (_step < steps.length - 1 ? '<button type="button" class="btn-primary" id="step-next">Siguiente: ' + esc(steps[_step + 1].title) + ' <i class="fa-solid fa-arrow-right"></i></button>' : '') +
+      '</div>';
     html += '</div></div>';
     var scroll = _panel.querySelector('.brief-body');
     var top = scroll ? scroll.scrollTop : 0;
+    var sameStep = _panel.getAttribute('data-step') === String(_step);
     _panel.innerHTML = html;
-    if (top) _panel.querySelector('.brief-body').scrollTop = top;
+    _panel.setAttribute('data-step', _step);
+    if (top && sameStep) _panel.querySelector('.brief-body').scrollTop = top;
     wirePanel();
+  }
+
+  function goStep(i) {
+    _step = i;
+    renderPanel();
   }
 
   function wirePanel() {
@@ -795,18 +1098,18 @@
     $('brief-share').onclick = shareEvent;
     $('brief-pdf').onclick = function () { if (window.App && window.App.exportPDF) window.App.exportPDF(); };
     _panel.querySelectorAll('.brief-nav a').forEach(function (a) {
-      a.onclick = function (e) {
-        e.preventDefault();
-        var t = _panel.querySelector(a.getAttribute('href'));
-        if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      };
+      a.onclick = function (e) { e.preventDefault(); goStep(parseInt(a.getAttribute('data-step'), 10)); };
     });
     var navSel = $('brief-nav-select');
-    if (navSel) navSel.onchange = function () {
-      var t = navSel.value && $(navSel.value);
-      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      navSel.value = '';
-    };
+    if (navSel) navSel.onchange = function () { goStep(parseInt(navSel.value, 10)); };
+    var prev = $('step-prev'), next = $('step-next');
+    if (prev) prev.onclick = function () { goStep(_step - 1); };
+    if (next) next.onclick = function () { goStep(_step + 1); };
+    _panel.querySelectorAll('[data-zoom]').forEach(function (img) {
+      img.onclick = function () { openLightbox(parseInt(img.getAttribute('data-zoom'), 10)); };
+    });
+    var gen = $('btn-generar-plano');
+    if (gen) gen.onclick = generarPlano;
     if (!_isPlanner) return;
 
     // Campos con detalle: marcar/desmarcar, editar datos y agregar opciones propias
@@ -858,6 +1161,12 @@
         } else {
           var same = d.brief[k] === v;
           d.brief[k] = same ? '' : v;
+          if (k === 'venue_red' && !same && VENUE_A_PLANO[v] && !d.brief.plano_base) {
+            d.brief.plano_base = VENUE_A_PLANO[v];
+            scheduleSave();
+            renderPanel();
+            return;
+          }
           _panel.querySelectorAll('.brief-chip[data-k="' + k + '"]').forEach(function (c) { c.classList.remove('on'); });
           if (!same) chip.classList.add('on');
         }
@@ -904,8 +1213,21 @@
         renderPanel();
       };
     });
-    var input = $('foto-input');
-    if (input) input.onchange = function () { if (input.files[0]) uploadPhoto(input.files[0]); };
+    _panel.querySelectorAll('.foto-input').forEach(function (input) {
+      input.onchange = function () {
+        var libres = MAX_FOTOS - d.montaje.fotos.length;
+        var files = Array.prototype.slice.call(input.files, 0, libres);
+        if (input.files.length > libres) toast('Solo caben ' + libres + ' foto(s) más (máximo ' + MAX_FOTOS + ').', 'warning');
+        // Una por una para no saturar la conexión del teléfono
+        files.reduce(function (p, f) { return p.then(function () { return uploadPhoto(f); }); }, Promise.resolve());
+      };
+    });
+    _panel.querySelectorAll('.foto-tag').forEach(function (sel) {
+      sel.onchange = function () {
+        d.montaje.fotos[parseInt(sel.getAttribute('data-i'), 10)].etiqueta = sel.value;
+        scheduleSave();
+      };
+    });
   }
 
   // ── Fotos: se comprimen en el teléfono y se suben a Supabase Storage ──
@@ -937,7 +1259,7 @@
   function uploadPhoto(file) {
     if (!_event || !client()) return;
     toast('Subiendo foto…', 'info');
-    compressImage(file).then(function (blob) {
+    return compressImage(file).then(function (blob) {
       var path = _event.id + '/' + Date.now() + '.jpg';
       return client().storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg' }).then(function (res) {
         if (res.error) throw res.error;
