@@ -2078,711 +2078,325 @@
     img.src = url;
   }
 
+  // ══════════════════════════════════════════════════════════
+  // FICHA TÉCNICA (PDF) — membretada PEG, con QR al evento
+  // Usa los datos del evento abierto (brief.js) y el plano actual.
+  // ══════════════════════════════════════════════════════════
   function exportPDF() {
-    var menuChildDB = {
-      "mariana saldivar": 1, "maricela rodriguez": 1, "mauricio miranda": 1, "mercedes salgado": 3,
-      "nelly ochoa": 2, "pamela diaz": 3, "jessica maldonado": 1, "jimena maldonado": 0,
-      "patricia sanchez": 0, "paulina medina": 0, "priscila hernandez": 2, "ricardo villegas garcia": 1,
-      "ricardo villegas cervantes": 1, "stefany toledo": 2, "ulises jair": 1, "ximena ochoa": 1,
-      "yildhis ochoa": 2, "esteban fabian": 2, "alvania ronces": 2, "carlos sanchez soto": 2,
-      "carlos sanchez": 2, "fernanda sanchez cuevas": 2, "fernanda sanchez": 2, "andrea sanchez cuevas": 2,
-      "andrea sanchez": 2, "alejandra sanchez": 1, "luis sanchez": 0, "ángel vargas romero": 3,
-      "ángel vargas": 3, "angeles roque": 1, "beny telles": 0, "beny téllez": 0, "bertha garcía": 0,
-      "bertha garcia": 0, "braulio roque": 0, "carlos díaz": 4, "carlos diaz": 4, "cinthia maldonado": 2,
-      "damian alonso": 1, "damian alomso": 1, "dulce figueroa": 1, "dulce figuerioa": 1,
-      "dulce valdes": 1, "dulce valdez": 1, "elena villegas": 0, "elias alemán": 2, "elias aleman": 2,
-      "fam. sotelo bahena": 2, "sotelo bahena": 2, "fam. villalvazo cortés": 0, "villalvazo cortes": 0,
-      "francisco diaz": 0, "gabriel ledesma": 1, "gabriela medina": 0, "gael olivares": 1,
-      "gael olivarez": 1, "giezi sanchez": 1, "heriberto avelar": 1, "isabel basurto": 2,
-      "jaeson diaz": 0, "javier emiliano": 1, "jesús guillén": 2, "jesus guillen": 2,
-      "sobrino de esta loca": 1, "sobrino": 1, "josé hilario roque": 0, "profesor vals (jose)": 0,
-      "profesor vals": 0, "mtro. vals": 0, "josthin erubiel": 1, "karla díaz": 2, "karla diaz": 2,
-      "yessica ladron de guevara": 1, "yessica ladrón": 1, "manuel gonzalez": 2
-    };
-
-    function normStr(str) {
-      if (!str) return "";
-      str = str.toLowerCase().strip ? str.toLowerCase().strip() : str.toLowerCase().trim();
-      str = str.replace(/[áàäâ]/g, "a").replace(/[éèëê]/g, "e").replace(/[íìïî]/g, "i").replace(/[óòöô]/g, "o").replace(/[úùüû]/g, "u").replace(/ñ/g, "n");
-      return str;
-    }
-
-    function getChildCountForInv(name, pases, mesaNum) {
-      if (mesaNum === 1) return 0;
-      var normName = normStr(name);
-      for (var key in menuChildDB) {
-        var normKey = normStr(key);
-        if (normKey === normName || normName.indexOf(normKey) !== -1 || normKey.indexOf(normName) !== -1) {
-          return Math.min(pases, menuChildDB[key]);
-        }
-      }
-      return 0;
-    }
     var svgEl = document.getElementById('svg-canvas');
     if (!svgEl) {
       showToast('Error: No se encontró el lienzo 2D.', 'error');
       return;
     }
 
-    // Save current layout state and positions
-    var originalMode = _currentLayoutMode;
-    var originalElements = JSON.parse(JSON.stringify(AppState.elements));
-
-    // Helper to generate clean SVG for a given mode
-    function getSvgForMode(mode) {
-      if (mode === 'vertical') {
-        AppState.elements.forEach(function (elem) {
-          if (elem.type === 'table_imperial' && elem.mesaConfig) {
-            var num = parseInt(elem.mesaConfig.mesaNum, 10);
-            elem.rotation = 90;
-            elem.w = 15.0;
-            elem.h = 1.6;
-            if (num === 2) { elem.x = 19.3; elem.y = 28.0; }
-            else if (num === 3) { elem.x = 28.3; elem.y = 28.1; }
-            else if (num === 4) { elem.x = 36.9; elem.y = 28.1; }
-            else if (num === 5) { elem.x = 45.4; elem.y = 28.2; }
-          }
-        });
-      } else if (mode === 'horizontal') {
-        AppState.elements.forEach(function (elem) {
-          if (elem.type === 'table_imperial' && elem.mesaConfig) {
-            var num = parseInt(elem.mesaConfig.mesaNum, 10);
-            elem.rotation = 0;
-            elem.w = 15.0;
-            elem.h = 1.6;
-            if (num === 2) { elem.x = 23.8; elem.y = 23.8; }
-            else if (num === 3) { elem.x = 40.9; elem.y = 23.7; }
-            else if (num === 4) { elem.x = 24.0; elem.y = 33.2; }
-            else if (num === 5) { elem.x = 40.9; elem.y = 33.0; }
-          }
-        });
-      }
-      
-      if (window.Editor2D) window.Editor2D.update(AppState.elements);
-
-      var svgElForMode = document.getElementById('svg-canvas');
-      if (!svgElForMode) return '';
-
-      var clonedSvg = svgElForMode.cloneNode(true);
-      var activeSel = clonedSvg.querySelector('.active-selection');
-      if (activeSel) activeSel.remove();
-      var resizeHandles = clonedSvg.querySelectorAll('.resize-handle');
-      resizeHandles.forEach(function (h) { h.remove(); });
-      var rulerH = clonedSvg.querySelector('#svg-ruler-h');
-      if (rulerH) rulerH.remove();
-      var rulerV = clonedSvg.querySelector('#svg-ruler-v');
-      if (rulerV) rulerV.remove();
-      var terrainBorder = clonedSvg.querySelector('#svg-terrain-border');
-      if (terrainBorder) terrainBorder.remove();
-
-      var scale = 15;
-      var tw = AppState.terrain.w * scale;
-      var th = AppState.terrain.h * scale;
-
-      var svgBg = clonedSvg.querySelector('#svg-background');
-      if (svgBg) {
-        svgBg.setAttribute('width', tw);
-        svgBg.setAttribute('height', th);
-      }
-
-      var zoomGroup = clonedSvg.querySelector('#svg-zoom-group');
-      if (zoomGroup) {
-        zoomGroup.removeAttribute('transform');
-      }
-
-      clonedSvg.setAttribute('viewBox', '0 0 ' + tw + ' ' + th);
-      clonedSvg.setAttribute('width', '100%');
-      clonedSvg.setAttribute('height', '100%');
-      clonedSvg.style.width = '100%';
-      clonedSvg.style.height = '100%';
-      clonedSvg.setAttribute('shape-rendering', 'geometricPrecision');
-      clonedSvg.setAttribute('text-rendering', 'geometricPrecision');
-
-      return new XMLSerializer().serializeToString(clonedSvg);
+    var printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      showToast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error');
+      return;
     }
 
-    // Generate the single actual layout
-    var currentSvgString = getSvgForMode('current');
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function cap(s) { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' '); }
+    function fmtDate(iso) {
+      if (!iso) return '';
+      var d = new Date(iso + 'T12:00:00');
+      return isNaN(d) ? iso : cap(d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+    }
 
-    // Restore original state
-    AppState.elements = originalElements;
-    _currentLayoutMode = originalMode;
+    // ── Datos del evento (brief.js) ──
+    var PE = window.PEGEventos;
+    var ev = PE && PE.getEvent ? PE.getEvent() : null;
+    var isPlanner = PE && PE.isPlanner ? PE.isPlanner() : true;
+    var schema = PE && PE.getSchema ? PE.getSchema() : { sections: [], montajeFields: [] };
+    var data = ev ? ev.data : { brief: {}, minuto: [], montaje: { fotos: [] } };
+    var b = data.brief || {};
+    var eventName = ev ? ev.nombre : (localStorage.getItem(LS_KEY + '_name') || 'Plano de evento');
+    var eventUrl = ev ? location.origin + location.pathname + '?evento=' + ev.id : '';
+
+    // ── Plano: copia limpia del lienzo 2D, encuadrada al terreno ──
     if (window.Editor2D) window.Editor2D.update(AppState.elements);
-    _refresh();
+    var clonedSvg = svgEl.cloneNode(true);
+    ['.active-selection', '#svg-ruler-h', '#svg-ruler-v', '#svg-terrain-border'].forEach(function (sel) {
+      var n = clonedSvg.querySelector(sel);
+      if (n) n.remove();
+    });
+    Array.prototype.forEach.call(clonedSvg.querySelectorAll('.resize-handle'), function (h) { h.remove(); });
+    var tw = AppState.terrain.w * 15;
+    var th = AppState.terrain.h * 15;
+    var svgBg = clonedSvg.querySelector('#svg-background');
+    if (svgBg) { svgBg.setAttribute('width', tw); svgBg.setAttribute('height', th); }
+    var zoomGroup = clonedSvg.querySelector('#svg-zoom-group');
+    if (zoomGroup) zoomGroup.removeAttribute('transform');
+    clonedSvg.setAttribute('viewBox', '0 0 ' + tw + ' ' + th);
+    clonedSvg.setAttribute('width', '100%');
+    clonedSvg.setAttribute('height', '100%');
+    clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    var planSvg = new XMLSerializer().serializeToString(clonedSvg);
+    if (AppState.selectedId && window.Editor2D) window.Editor2D.select(AppState.selectedId);
 
-    // Get event data
-    var totalGuests = 0;
-    var totalAdults = 0;
-    var totalNinos = 0;
-    var tableCounts = {};
+    // ── Mesas y elementos del plano ──
     var tablesList = [];
     var otherElementsList = [];
-
+    var capacity = 0;
     AppState.elements.forEach(function (elem) {
-      var t = elem.type;
-      tableCounts[t] = (tableCounts[t] || 0) + 1;
-
-      var isTable = t.startsWith('table_') || t === 'lounge_set';
-      if (isTable) {
+      if (elem.bg2d) return; // estructuras fijas de la plantilla
+      if (elem.type.indexOf('table_') === 0 || elem.type === 'lounge_set') {
         tablesList.push(elem);
+        capacity += parseInt(elem.chairs, 10) || 0;
       } else {
         otherElementsList.push(elem);
       }
     });
-
-    // Calcular comensales reales desde mesaConfig.invitados
-    tablesList.forEach(function (t) {
-      var config = t.mesaConfig || {};
-      var invitados = config.invitados || [];
-      var mesaNum = parseInt(config.mesaNum, 10) || 0;
-      invitados.forEach(function (g) {
-        var p = g.pases || 0;
-        totalGuests += p;
-        var n = getChildCountForInv(g.nombre, p, mesaNum);
-        totalNinos += n;
-        totalAdults += (p - n);
-      });
+    tablesList.sort(function (a, c) {
+      var na = (a.mesaConfig && parseInt(a.mesaConfig.mesaNum, 10)) || 999;
+      var nc = (c.mesaConfig && parseInt(c.mesaConfig.mesaNum, 10)) || 999;
+      return na - nc;
     });
 
-    // Sort tables by number
-    tablesList.sort(function (a, b) {
-      var numA = (a.mesaConfig && a.mesaConfig.mesaNum) ? parseInt(a.mesaConfig.mesaNum, 10) : 999;
-      var numB = (b.mesaConfig && b.mesaConfig.mesaNum) ? parseInt(b.mesaConfig.mesaNum, 10) : 999;
-      return numA - numB;
-    });
+    var venueTpl = (window.VENUE_TEMPLATES || []).find(function (t) { return t.id === AppState.venueId; });
+    var venueName = b.venue_red || b.venue_externo || (venueTpl ? venueTpl.name : '');
+    var tipo = b.tipo_evento === 'Otro' ? (b.tipo_evento_otro || 'Otro') : b.tipo_evento;
+    var horario = [b.hora_inicio, b.hora_cierre].filter(Boolean).join(' – ');
 
-    var layoutName = localStorage.getItem(LS_KEY + '_name') || 'Mi Plano';
-
-    // Build the print HTML
-    var printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      showToast('Error: El navegador bloqueó la ventana emergente. Por favor permite las ventanas emergentes en este sitio.', 'error');
-      return;
+    // ── QR al evento ──
+    var qrSvg = '';
+    if (eventUrl && window.qrcode) {
+      var qr = window.qrcode(0, 'M');
+      qr.addData(eventUrl);
+      qr.make();
+      qrSvg = qr.createSvgTag({ cellSize: 3, margin: 0, scalable: true });
     }
+    var logoUrl = new URL('assets/logo-primavera.png', location.href).href;
 
     var typeLabels = {
-      'table_round': 'Mesa Redonda',
-      'table_square': 'Mesa Cuadrada',
-      'table_rectangular': 'Mesa Rectangular',
-      'table_imperial': 'Mesa Imperial',
-      'table_honor_bride': 'Mesa de Honor Novios',
-      'table_honor_xv': 'Mesa de Honor XV Años',
-      'table_honor_king': 'Mesa de Honor Imperial',
-      'table_periquera': 'Periquera Alta',
-      'table_kids': 'Mesa Infantil',
-      'table_campirana': 'Mesa Campirana',
-      'table_marble_round': 'Mesa Mármol Redonda',
-      'table_marble_square': 'Mesa Mármol Rectangular',
-      'table_umbrella': 'Mesa con Sombrilla',
-      'table_cake': 'Mesa de Pastel',
-      'table_gifts': 'Mesa de Regalos',
-      'table_candy': 'Mesa de Dulces',
-      'table_shots': 'Carrito de Shots',
-      'table_buffet': 'Mesa de Buffet',
-      'lounge_set': 'Sala Lounge',
-      'cart_esquites': 'Carrito de Esquites'
+      table_round: 'Mesa Redonda', table_square: 'Mesa Cuadrada', table_rectangular: 'Mesa Rectangular',
+      table_imperial: 'Mesa Imperial', table_honor_bride: 'Mesa de Honor Novios', table_honor_xv: 'Mesa de Honor XV Años',
+      table_honor_king: 'Mesa de Honor Imperial', table_periquera: 'Periquera Alta', table_kids: 'Mesa Infantil',
+      table_campirana: 'Mesa Campirana', table_marble_round: 'Mesa Mármol Redonda', table_marble_square: 'Mesa Mármol Rectangular',
+      table_umbrella: 'Mesa con Sombrilla', table_cake: 'Mesa de Pastel', table_gifts: 'Mesa de Regalos',
+      table_candy: 'Mesa de Dulces', table_shots: 'Carrito de Shots', table_buffet: 'Mesa de Buffet', lounge_set: 'Sala Lounge'
     };
-
     var glassLabels = {
-      'standard': 'Estándar',
-      'flauta': 'Copa Flauta',
-      'vino': 'Copa Vino',
-      'romana': 'Copa Romana',
-      'martinera': 'Copa Martinera',
-      'cubero': 'Vaso Cubero',
-      'old_fashion': 'Vaso Old Fashion',
-      'tequilero': 'Copa Tequilera',
-      'ninguno': 'Ninguno'
+      standard: 'Estándar', flauta: 'Copa Flauta', vino: 'Copa Vino', romana: 'Copa Romana', martinera: 'Copa Martinera',
+      cubero: 'Vaso Cubero', old_fashion: 'Vaso Old Fashion', tequilero: 'Copa Tequilera'
     };
-
     var plateBaseLabels = {
-      'gold_ring': 'Plato Base Oro',
-      'silver_ring': 'Plato Base Plata',
-      'glass_gold': 'Plato Base Vidrio Oro',
-      'wood': 'Plato Base Madera',
-      'ninguno': 'Ninguno'
+      gold_ring: 'Plato Base Oro', silver_ring: 'Plato Base Plata', glass_gold: 'Plato Base Vidrio Oro', wood: 'Plato Base Madera'
     };
+    var foldLabels = { corazon: 'Corazón', corbata: 'Corbata', loto: 'Loto', vela: 'Vela', abanico: 'Abanico', piramide: 'Pirámide' };
 
-    var html = '<!DOCTYPE html>\n<html>\n<head>\n';
-    html += '<title>Ficha Técnica - ' + layoutName + '</title>\n';
-    html += '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">\n';
-    html += '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">\n';
-    html += '<style>\n';
-    html += '  body { font-family: "Outfit", sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 40px; line-height: 1.5; }\n';
-    html += '  .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }\n';
-    html += '  .brand-title { font-size: 24px; font-weight: 700; color: #f43f5e; display: flex; align-items: center; gap: 8px; }\n';
-    html += '  .brand-sub { font-size: 14px; color: #64748b; font-weight: 400; }\n';
-    html += '  .doc-title { font-size: 20px; font-weight: 600; text-align: right; color: #0f172a; }\n';
-    html += '  .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }\n';
-    html += '  .meta-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; }\n';
-    html += '  .meta-val { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 5px; }\n';
-    html += '  .meta-lbl { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; }\n';
-    html += '  .section-title { font-size: 18px; font-weight: 600; color: #0f172a; border-left: 4px solid #f43f5e; padding-left: 10px; margin: 30px 0 15px 0; }\n';
-    html += '  .map-container { border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px; background: #f8fafc; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; page-break-inside: avoid; height: 680px; box-sizing: border-box; }\n';
-    html += '  .map-container svg { width: 100%; height: 100%; max-height: 100%; display: block; }\n';
-    html += '  .print-section-wrapper { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 30px; display: block; }\n';
-    html += '  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; page-break-inside: auto; }\n';
-    html += '  tr { page-break-inside: avoid; page-break-after: auto; }\n';
-    html += '  th { background: #0f172a; color: #fff; font-weight: 600; text-align: left; padding: 10px; border: 1px solid #1e293b; }\n';
-    html += '  td { padding: 10px; border: 1px solid #e2e8f0; vertical-align: top; }\n';
-    html += '  tr:nth-child(even) td { background: #f8fafc; }\n';
-    html += '  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }\n';
-    html += '  .badge-primary { background: #ffe4e6; color: #f43f5e; }\n';
-    html += '  .menu-text { font-style: italic; color: #475569; white-space: pre-wrap; font-size: 12px; border-left: 2px solid #cbd5e1; padding-left: 8px; margin-top: 4px; }\n';
-    html += '  .footer { border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 50px; font-size: 12px; color: #64748b; text-align: center; page-break-before: auto; }\n';
-    html += '  @media print {\n';
-    html += '    body { padding: 0; margin: 0; }\n';
-    html += '    .no-print { display: none; }\n';
-    html += '    .page-break { page-break-before: always !important; break-before: page !important; }\n';
-    html += '    .print-section-wrapper { page-break-inside: avoid !important; break-inside: avoid !important; }\n';
-    html += '    .map-container { height: 480px !important; max-height: 480px !important; border: none; background: none; padding: 0; margin: 0; page-break-inside: avoid !important; break-inside: avoid !important; }\n';
-    html += '  }\n';
-    html += '</style>\n</head>\n<body>\n';
+    // ── HTML ──
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">';
+    html += '<title>Ficha Técnica · ' + esc(eventName) + '</title>';
+    html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">';
+    html += '<style>' +
+      '@page { size: letter; margin: 14mm 12mm 16mm; }' +
+      ':root { --pink:#F65C7A; --gold:#C9A96E; --ink:#1F1F1F; --gray:#6D6D6D; --line:#EFE7E1; --soft:#F8F6F4; }' +
+      '* { box-sizing: border-box; }' +
+      'body { font-family: Poppins, sans-serif; color: var(--ink); background: #fff; margin: 0; padding: 28px; font-size: 11px; line-height: 1.5; }' +
+      'h1, h2, h3 { font-family: "Playfair Display", Georgia, serif; font-weight: 600; margin: 0; }' +
+      '.toolbar { position: sticky; top: 0; z-index: 9; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: -28px -28px 24px; padding: 12px 28px; background: var(--ink); color: #fff; }' +
+      '.toolbar button { font-family: Poppins, sans-serif; border: none; border-radius: 999px; padding: 9px 18px; font-weight: 600; cursor: pointer; color: #fff; background: linear-gradient(135deg, #F65C7A, #FF8FA3); }' +
+      '.letterhead { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 14px; border-bottom: 2px solid var(--gold); }' +
+      '.brand { display: flex; align-items: center; gap: 14px; }' +
+      '.brand img { width: 62px; height: 62px; object-fit: cover; border-radius: 10px; border: 1px solid var(--gold); }' +
+      '.brand-name { font-family: "Playfair Display", serif; font-size: 20px; font-weight: 600; }' +
+      '.brand-sub { font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }' +
+      '.doc-kind { font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--pink); margin-top: 2px; }' +
+      '.qr { text-align: center; font-size: 8px; color: var(--gray); }' +
+      '.qr svg { width: 92px; height: 92px; display: block; margin: 0 auto 4px; }' +
+      '.hero { margin: 18px 0 14px; }' +
+      '.hero h1 { font-size: 26px; }' +
+      '.hero p { margin: 2px 0 0; color: var(--gray); }' +
+      '.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }' +
+      '.card { background: var(--soft); border: 1px solid var(--line); border-top: 3px solid var(--pink); border-radius: 8px; padding: 8px 10px; }' +
+      '.card .v { font-weight: 600; font-size: 12px; }' +
+      '.card .l { font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gray); }' +
+      '.section { margin-top: 18px; }' +
+      '.section h2 { font-size: 15px; padding-left: 10px; border-left: 3px solid var(--pink); margin-bottom: 10px; }' +
+      '.plan { height: 520px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #171516; }' +
+      '.plan svg { width: 100%; height: 100%; display: block; }' +
+      '.flow-path { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 9; opacity: .85; }' +
+      'table { width: 100%; border-collapse: collapse; font-size: 10.5px; }' +
+      'th { text-align: left; background: var(--ink); color: #fff; font-weight: 500; padding: 6px 8px; }' +
+      'td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }' +
+      'tr { page-break-inside: avoid; break-inside: avoid; }' +
+      '.kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 18px; }' +
+      '.kv div { padding: 5px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }' +
+      '.kv .wide { grid-column: 1 / -1; }' +
+      '.kv b { display: block; font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); font-weight: 600; }' +
+      '.block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; }' +
+      '.block h3 { font-size: 12.5px; margin-bottom: 4px; }' +
+      '.photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }' +
+      '.photos img { width: 100%; height: 210px; object-fit: cover; border-radius: 8px; border: 1px solid var(--gold); }' +
+      '.guests { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }' +
+      '.guest-card { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; break-inside: avoid; }' +
+      '.guest-card h3 { font-size: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--pink); padding-bottom: 4px; margin-bottom: 4px; }' +
+      '.muted { color: var(--gray); }' +
+      '.signs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 46px; text-align: center; font-size: 10px; color: var(--gray); }' +
+      '.signs div { border-top: 1px solid var(--ink); padding-top: 6px; }' +
+      '.footer { margin-top: 26px; padding-top: 8px; border-top: 1px solid var(--gold); text-align: center; font-size: 8.5px; color: var(--gray); }' +
+      '.page-break { break-before: page; page-break-before: always; }' +
+      '@media print { body { padding: 0; } .toolbar { display: none; } .plan { height: 470px; } }' +
+      '</style></head><body>';
 
-    // Toolbar inside print window to trigger print
-    html += '<div class="no-print" style="background: #0f172a; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-bottom: 30px;">\n';
-    html += '  <span style="color: #fff; font-size: 14px; font-weight: 600;"><i class="fa-solid fa-file-pdf" style="color: #f43f5e; margin-right: 6px;"></i> Vista Previa de Ficha Técnica</span>\n';
-    html += '  <button onclick="window.print();" style="background: #f43f5e; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-print"></i> Guardar como PDF / Imprimir</button>\n';
-    html += '</div>\n';
+    html += '<div class="toolbar"><span>Vista previa · Ficha técnica</span><button onclick="window.print()">Imprimir / Guardar PDF</button></div>';
 
-    // Document Header
-    html += '<div class="header">\n';
-    html += '  <div class="brand-title">\n';
-    html += '    🌸 Primavera <span class="brand-sub">| Planeador de Eventos</span>\n';
-    html += '  </div>\n';
-    html += '  <div style="display: flex; align-items: center; gap: 15px;">\n';
-    html += '    <div style="display: flex; flex-direction: column; align-items: center; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 6px; background: #fff;">\n';
-    html += '      <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=https://5410m0n0c001.github.io/maquetador-/" style="width: 50px; height: 50px; display: block;" alt="Ver en 3D" />\n';
-    html += '      <span style="font-size: 8px; color: #475569; font-weight: 700; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px;">Ver en 3D 📱</span>\n';
-    html += '    </div>\n';
-    html += '    <div class="doc-title">\n';
-    html += '      <div>FICHA TÉCNICA</div>\n';
-    html += '      <div style="font-size: 14px; font-weight: 400; color: #64748b; margin-top: 4px;">Proyecto: ' + layoutName + '</div>\n';
-    html += '    </div>\n';
-    html += '  </div>\n';
-    html += '</div>\n';
+    // Membrete
+    html += '<header class="letterhead"><div class="brand"><img src="' + esc(logoUrl) + '" alt="Primavera Events Group">' +
+      '<div><div class="brand-name">Primavera Events Group<sup>®</sup></div>' +
+      '<div class="brand-sub">primaveraeventsgroup.com</div>' +
+      '<div class="doc-kind">Ficha técnica del evento' + (isPlanner ? '' : ' · versión para personal') + '</div></div></div>' +
+      (qrSvg ? '<div class="qr">' + qrSvg + 'Escanea para ver el evento</div>' : '') +
+      '</header>';
 
-    // Meta Grid
-    var numTablesTotal = tablesList.length;
-    var formattedDate = new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+    // Encabezado del evento
+    html += '<section class="hero"><h1>' + esc(eventName) + '</h1>' +
+      (b.fecha_evento ? '<p>' + esc(fmtDate(b.fecha_evento)) + (horario ? ' · ' + esc(horario) : '') + '</p>' : '') + '</section>';
 
-    html += '<div class="meta-grid">\n';
-    html += '  <div class="meta-card"><div class="meta-val">' + totalGuests + '</div><div class="meta-lbl">Invitados</div></div>\n';
-    html += '  <div class="meta-card"><div class="meta-val">' + numTablesTotal + '</div><div class="meta-lbl">Total Mesas</div></div>\n';
-    html += '  <div class="meta-card"><div class="meta-val">' + (AppState.terrain.w + 'x' + AppState.terrain.h + 'm') + '</div><div class="meta-lbl">Terreno</div></div>\n';
-    html += '  <div class="meta-card"><div class="meta-val" style="font-size: 13px; font-weight: 600; padding: 6px 0;">' + formattedDate + '</div><div class="meta-lbl">Fecha Reporte</div></div>\n';
-    html += '</div>\n';
+    var cards = [
+      ['Tipo de evento', tipo],
+      ['Invitados', b.invitados ? b.invitados + (b.adultos || b.ninos ? ' (' + (b.adultos || 0) + ' adultos · ' + (b.ninos || 0) + ' niños)' : '') : ''],
+      ['Venue', venueName],
+      ['Mesas · capacidad', tablesList.length + ' mesas · ' + capacity + ' lugares'],
+      ['Formalidad', b.formalidad],
+      ['Temática', b.tematica],
+      ['Paleta de colores', b.paleta],
+      ['Planner', b.planner]
+    ].filter(function (c) { return c[1]; });
+    html += '<div class="cards">' + cards.map(function (c) {
+      return '<div class="card"><div class="v">' + esc(c[1]) + '</div><div class="l">' + esc(c[0]) + '</div></div>';
+    }).join('') + '</div>';
 
-    // Ficha Técnica General Card — GRADUACIÓN PRIMARIA BURGOS DE ANA MARÍA
-    // Color palette: azul marino (#1e3a5f) y dorado/champagne (#c9a96e)
-    var NAVY = '#1e3a5f';
-    var GOLD = '#c9a96e';
-    var CHAMPAGNE = '#f5e6c8';
-    html += '<div class="print-section-wrapper" style="margin-bottom: 0;">\n';
-    html += '  <div style="background: #f0f4f8; border: 2px solid ' + NAVY + '; border-radius: 8px; padding: 20px 25px; display: flex; flex-direction: column; gap: 15px;">\n';
-    html += '    <div style="display:flex; align-items:center; gap:12px; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 10px; margin-bottom: 4px;">\n';
-    html += '      <div style="font-size:28px;">🎓</div>\n';
-    html += '      <div>\n';
-    html += '        <h4 style="margin:0; color: ' + NAVY + '; font-size:16px; font-weight:700;">GRADUACIÓN PRIMARIA BURGOS DE ANA MARÍA</h4>\n';
-    html += '        <div style="color:' + GOLD + '; font-size:12px; font-weight:600; margin-top:2px; font-style:italic;">✨ Por un futuro maravilloso... • Clase 2026</div>\n';
-    html += '      </div>\n';
-    html += '    </div>\n';
-    html += '    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">\n';
-    html += '      <div style="font-size: 13px; line-height: 1.8; display: flex; flex-direction: column; gap: 6px;">\n';
-    html += '        <div><strong>Evento:</strong> Graduación Primaria Burgos de Ana María</div>\n';
-    html += '        <div><strong>Fecha:</strong> Sábado 10 de Julio de 2026</div>\n';
-    html += '        <div><strong>Horario:</strong> 13:00 – 22:00 HRS (9 horas)</div>\n';
-    html += '        <div><strong>Coordinador:</strong> Alex Salomon / Primavera Eventos</div>\n';
-    html += '        <div><strong>Comensales en Plano:</strong> ' + totalGuests + ' personas</div>\n';
-    html += '      </div>\n';
-    html += '      <div style="font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">\n';
-    html += '        <div style="background:' + CHAMPAGNE + '; border: 1px solid ' + GOLD + '; border-radius: 6px; padding: 10px 12px;">\n';
-    html += '          <div style="font-weight: 700; font-size: 11px; text-transform: uppercase; color:' + NAVY + ';">🎨 Paleta de Colores del Montaje</div>\n';
-    html += '          <div style="display:flex; gap:10px; margin-top:6px; align-items:center;">\n';
-    html += '            <div style="display:flex;align-items:center;gap:5px;"><div style="width:18px;height:18px;border-radius:4px;background:#1e3a5f;border:1px solid #ccc;"></div><span style="font-size:12px;font-weight:600;color:#1e3a5f;">Azul Marino</span></div>\n';
-    html += '            <div style="display:flex;align-items:center;gap:5px;"><div style="width:18px;height:18px;border-radius:4px;background:#c9a96e;border:1px solid #ccc;"></div><span style="font-size:12px;font-weight:600;color:#92712a;">Dorado</span></div>\n';
-    html += '            <div style="display:flex;align-items:center;gap:5px;"><div style="width:18px;height:18px;border-radius:4px;background:#f5e6c8;border:1px solid #ccc;"></div><span style="font-size:12px;font-weight:600;color:#a07840;">Champagne</span></div>\n';
-    html += '          </div>\n';
-    html += '        </div>\n';
-    html += '        <div style="background:#e8f0fe; border:1px solid #93b4f0; border-radius:6px; padding:10px 12px;">\n';
-    html += '          <div style="font-weight:700; font-size:11px; text-transform:uppercase; color:' + NAVY + ';">📋 Menú del Evento</div>\n';
-    html += '          <div style="font-size:11px; color:#1e293b; font-weight:600; margin-top:4px;">Entradas: Cremas (Champiñones / Pimiento)</div>\n';
-    html += '          <div style="font-size:11px; color:#1e293b; margin-top:2px;">Fuertes: Pechuga Hawaiana / Lomo en Salsa Gravy</div>\n';
-    html += '        </div>\n';
-    html += '      </div>\n';
-    html += '    </div>\n';
-    html += '    <div style="border-top: 1px solid ' + GOLD + '; padding-top: 10px; margin-top: 2px; font-size: 11px; line-height: 1.5; color: #475569;">\n';
-    html += '      <strong>Cabina de Fotos:</strong> Apertura 18:00 – 20:00 HRS (horario pendiente de confirmar definitivamente). &nbsp;|&nbsp; <strong>Sección Baile/Albercada:</strong> Clase 2026 · Calv. F. a partir de las 16:00 HRS.\n';
-    html += '    </div>\n';
-    html += '  </div>\n';
-    html += '</div>\n';
+    // Plano
+    html += '<section class="section block"><h2>Plano y distribución</h2><div class="plan">' + planSvg + '</div></section>';
 
-    // Section 1: Plano Map (Croquis de Distribución del Evento) - Renders on Page 2
-    html += '<div class="page-break"></div>\n';
-    html += '<div class="print-section-wrapper">\n';
-    html += '  <div class="section-title"><i class="fa-solid fa-map" style="margin-right: 6px; color:#f43f5e;"></i> Plano y Croquis de Distribución del Evento</div>\n';
-    html += '  <div class="map-container">\n' + currentSvgString + '\n</div>\n';
-    html += '</div>\n';
-
-    // Section: Minuto a Minuto & Información Relevante
-    html += '<div class="page-break"></div>\n';
-    html += '<div class="print-section-wrapper">\n';
-    html += '  <div class="section-title"><i class="fa-solid fa-clock" style="margin-right: 6px; color:#f43f5e;"></i> Cronograma y Minuto a Minuto del Evento</div>\n';
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px 25px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 15px; color: #0f172a; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 8px; font-size:14px;"><i class="fa-solid fa-calendar-day" style="color:' + NAVY + '; margin-right: 6px;"></i> 🎓 Itinerario — Graduación Primaria Burgos de Ana María (Clase 2026)</h4>\n';
-    html += '    <div style="position: relative; padding-left: 20px; border-left: 2px solid ' + GOLD + '; font-size: 11px;">\n';
-
-    var timelineEvents = [
-      { time: '13:00 HRS', title: 'Recepción de Invitados', desc: 'Graduados y familias. Bienvenida en el área de entrada.', pending: false },
-      { time: '14:00 HRS', title: 'Inicio Formal — Bienvenida', desc: 'Apertura oficial del programa. Palabras de bienvenida a graduados y familias.', pending: false },
-      { time: '14:30 HRS', title: 'Fotos Familiares', desc: 'Sesión fotográfica con graduados y sus familias. Palabras de padres.', pending: false },
-      { time: '14:45 HRS', title: 'Pase de Lista — Entrega Simbólica', desc: 'Ceremonia de pase de lista y entrega simbólica de reconocimientos a la Clase 2026.', pending: false },
-      { time: '15:00 HRS', title: 'Comida — Banquete Primavera', desc: 'Servicio de banquete. Menú: Cremas (Champiñones/Pimiento), Plato fuerte (Pechuga Hawaiana/Lomo Gravy), Postres.', pending: false },
-      { time: '16:00 HRS', title: 'Baile / Albercada — Clase 2026', desc: 'Apertura de pista de baile y área de albercada para los graduados. Animación Clase 2026 · Calv. F.', pending: false },
-      { time: '18:00 – 20:00 HRS', title: 'Apertura Cabina de Fotos', desc: '⚠️ Horario PENDIENTE DE CONFIRMAR (6:00 – 8:00 pm aprox.). Cabina inflable de fotos para los asistentes.', pending: true },
-      { time: '22:00 HRS', title: 'Cierre / Despedida', desc: 'Fin del evento. Agradecimientos y cierre oficial de la celebración.', pending: false }
-    ];
-    
-    timelineEvents.forEach(function (ev) {
-      var dotColor = ev.pending ? '#b45309' : NAVY;
-      var timeColor = ev.pending ? '#b45309' : GOLD;
-      html += '      <div style="margin-bottom: 8px; position: relative;">\n';
-      html += '        <div style="position: absolute; left: -26px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: ' + dotColor + '; border: 2px solid #fff;"></div>\n';
-      html += '        <div style="font-weight: 700; font-size: 10px; color: ' + timeColor + '; margin-bottom: 1px;">' + ev.time + '</div>\n';
-      html += '        <div style="font-weight: 600; font-size: 11px; color: #0f172a; margin-bottom: 0px;">' + ev.title + (ev.pending ? ' <span style="background:#fff3cd;color:#b45309;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:700;">PENDIENTE</span>' : '') + '</div>\n';
-      html += '        <div style="font-size: 10px; color: #475569; line-height: 1.3;">' + ev.desc + '</div>\n';
-      html += '      </div>\n';
-    });
-    
-    html += '    </div>\n';
-    html += '  </div>\n';
-    
-    html += '</div>\n';
-
-    // Section 1.8: Menú del Evento y Servicio A&B — GRADUACIÓN BURGOS
-    html += '<div class="page-break"></div>\n';
-    html += '<div class="section-title"><i class="fa-solid fa-utensils" style="margin-right: 6px; color:' + NAVY + ';"></i> Ficha de Menú y Logística del Evento</div>\n';
-    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
-
-    // Left column: Menu (CONFIRMADO)
-    html += '  <div style="background: #e0f2fe; border: 2px solid #0284c7; border-radius: 8px; padding: 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-plate-wheat" style="color:' + GOLD + '; margin-right:6px;"></i> Menú — Banquete Primavera</h4>\n';
-    html += '    <div style="font-size: 11px; line-height: 1.6; display: flex; flex-direction: column; gap: 8px; color: #1e293b;">\n';
-    html += '      <div><strong>🍲 Entradas (Cremas):</strong><br>\n';
-    html += '        • Crema de champiñones al ajillo<br>\n';
-    html += '        • Crema de pimiento rojo\n';
-    html += '      </div>\n';
-    html += '      <div><strong>🍗 Platos Fuertes:</strong><br>\n';
-    html += '        • Pechuga hawaiana (rellena de espinacas con jamón y queso gouda)<br>\n';
-    html += '        <span style="font-size:10px; color:#64748b; margin-left: 8px;">Guarniciones: Espagueti Alfredo y Verduras finas hierbas</span><br>\n';
-    html += '        • Lomo en salsa de gravy con cebollita cambray<br>\n';
-    html += '        <span style="font-size:10px; color:#64748b; margin-left: 8px;">Guarniciones: Puré de papa y Verduras finas hierbas</span>\n';
-    html += '      </div>\n';
-    html += '      <div><strong>🍰 Postres:</strong><br>\n';
-    html += '        • Strudel de manzana con helado napolitano<br>\n';
-    html += '        • Cheesecake de queso\n';
-    html += '      </div>\n';
-    html += '    </div>\n';
-    html += '  </div>\n';
-
-    // Right column: Montaje & Logística
-    html += '  <div style="background: #f0f4f8; border: 1px solid ' + NAVY + '; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-star" style="color:' + GOLD + '; margin-right:6px;"></i> Montaje y Logística del Evento</h4>\n';
-    html += '    <div style="font-size: 11px; line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">\n';
-    html += '      <div style="background:' + CHAMPAGNE + '; border-left: 3px solid ' + GOLD + '; padding:8px 10px; border-radius:0 4px 4px 0;">\n';
-    html += '        <strong style="color:' + NAVY + ';">🎨 Colores del Montaje:</strong><br>\n';
-    html += '        <span style="color:#1e3a5f;">■ Azul Marino</span> &nbsp;|&nbsp; <span style="color:#92712a;">■ Dorado</span> &nbsp;|&nbsp; <span style="color:#a07840;">■ Champagne</span>\n';
-    html += '      </div>\n';
-    html += '      <div><strong>📸 Cabina de Fotos:</strong><br>\n';
-    html += '        <span style="color:#b45309; font-weight:600;">⚠️ Horario pendiente: 18:00 – 20:00 HRS (por confirmar)</span>\n';
-    html += '      </div>\n';
-    html += '      <div><strong>🏊 Baile / Albercada:</strong><br>\n';
-    html += '        <span style="color:#475569;">Apertura para Clase 2026 a las 16:00 HRS. Actividad Calv. F. incluida.</span>\n';
-    html += '      </div>\n';
-    html += '      <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:6px; padding:8px 10px;">\n';
-    html += '        <strong style="color:#991b1b;">⚠️ Pendientes por Confirmar:</strong>\n';
-    html += '        <ul style="margin: 4px 0 0 0; padding-left: 15px; color:#b45309; font-weight: 600;">\n';
-    html += '          <li>Horario exacto de apertura de cabina (6:00 – 8:00 pm aprox.)</li>\n';
-    html += '        </ul>\n';
-    html += '      </div>\n';
-    html += '    </div>\n';
-    html += '  </div>\n';
-    html += '</div>\n';
-
-    // Section 2: Tables Specifications
-    html += '<div class="section-title"><i class="fa-solid fa-circle-dot" style="margin-right: 6px; color:#f43f5e;"></i> Especificaciones de Mobiliario y Montaje</div>\n';
-    html += '<table>\n';
-    html += '  <thead>\n';
-    html += '    <tr>\n';
-    html += '      <th style="width: 12%;">Mesa</th>\n';
-    html += '      <th style="width: 15%;">Tipo</th>\n';
-    html += '      <th style="width: 12%;">Capacidad</th>\n';
-    html += '      <th style="width: 25%;">Configuración Montaje</th>\n';
-    html += '      <th style="width: 18%;">Cristalería y Copas</th>\n';
-    html += '      <th style="width: 18%;">Menú / Comentarios</th>\n';
-    html += '    </tr>\n';
-    html += '  </thead>\n';
-    html += '  <tbody>\n';
-
-    tablesList.forEach(function (t) {
-      var config = t.mesaConfig || {};
-      var mesaLabel = config.mesaNum ? 'Mesa ' + config.mesaNum : 'Sin Número';
-      if (t.type === 'table_honor_xv' || t.type === 'table_honor_king' || t.type === 'table_honor_bride') {
-        mesaLabel = 'Honor ' + (config.mesaNum || '');
-      }
-
-      var typeName = typeLabels[t.type] || t.type;
-      var capacityText = t.chairs ? t.chairs + ' Sillas' : '-';
-      if (config.capacidadMax) capacityText += ' (Máx ' + config.capacidadMax + ')';
-
-      // Montage details
-      var montageItems = [];
-      if (config.mantelColor) {
-        var mantelText = config.mantelColor === 'sin_mantel' ? 'Sin Mantel' : config.mantelColor.charAt(0).toUpperCase() + config.mantelColor.slice(1);
-        montageItems.push('<strong>Mantel:</strong> ' + mantelText);
-      }
-      if (config.caminoColor && config.caminoColor !== 'ninguno') {
-        var caminoText = config.caminoColor.charAt(0).toUpperCase() + config.caminoColor.slice(1);
-        if (config.caminoAcomodo && config.caminoAcomodo !== 'centro') {
-          caminoText += ' (' + (config.caminoAcomodo === 'diagonal' ? 'Diagonal' : 'Cruzado') + ')';
-        }
-        montageItems.push('<strong>Camino:</strong> ' + caminoText);
-      }
-      var activeDobleces = [];
-      if (Array.isArray(config.servilletaDoblez)) {
-        activeDobleces = config.servilletaDoblez;
-      } else if (typeof config.servilletaDoblez === 'string' && config.servilletaDoblez) {
-        activeDobleces = [config.servilletaDoblez];
-      }
-      
-      var labelsMap = {
-        'corazon': 'Corazón',
-        'corbata': 'Corbata',
-        'loto': 'Loto',
-        'vela': 'Vela',
-        'abanico': 'Abanico',
-        'piramide': 'Pirámide',
-        'default': '(General)'
-      };
-      
-      var sParts = [];
-      activeDobleces.forEach(function (fold) {
-        var foldLabel = labelsMap[fold] || fold.charAt(0).toUpperCase() + fold.slice(1);
-        var foldKey = 'servilletaColor_' + fold;
-        
-        var defaultColor = 'blanco';
-        if (fold === 'corazon') {
-          defaultColor = config.servilletaColorCorazon || 'dorado';
-        } else if (fold === 'corbata') {
-          defaultColor = config.servilletaColorCorbata || 'champagne';
-        } else {
-          defaultColor = config.servilletaColorOtros || 'blanco';
-        }
-        
-        var foldColor = config[foldKey] || defaultColor;
-        var colLabel = foldColor.charAt(0).toUpperCase() + foldColor.slice(1);
-        sParts.push(foldLabel + ' (' + colLabel + ')');
+    // Minuto a minuto
+    var minuto = (data.minuto || []).filter(function (r) { return r.hora || r.actividad; });
+    if (minuto.length) {
+      html += '<section class="section"><h2>Minuto a minuto</h2><table><thead><tr><th style="width:14%">Hora</th><th>Actividad</th><th style="width:28%">Responsable</th></tr></thead><tbody>';
+      minuto.forEach(function (r) {
+        html += '<tr><td><strong>' + esc(r.hora) + '</strong></td><td>' + esc(r.actividad) + '</td><td>' + esc(r.responsable) + '</td></tr>';
       });
-      
-      if (sParts.length > 0) {
-        montageItems.push('<strong>Servilleta:</strong> ' + sParts.join(', '));
-      }
-      if (config.platoBase && config.platoBase !== 'ninguno') {
-        var pbText = plateBaseLabels[config.platoBase] || config.platoBase.replace('_', ' ');
-        montageItems.push('<strong>P. Base:</strong> ' + pbText);
-      }
-      if (config.platoTrinche && config.platoTrinche !== 'ninguno') {
-        montageItems.push('<strong>P. Trinche:</strong> ' + config.platoTrinche.replace('_', ' '));
-      }
-      if (config.cubiertos) {
-        montageItems.push('<strong>Cubiertos:</strong> ' + config.cubiertos);
-      }
-      if (config.arregloFloralTipo && config.arregloFloralTipo !== 'ninguno') {
-        var floralText = config.arregloFloralTipo === 'bajo' ? 'Bajo' : 'Alto';
-        if (config.arregloFloralAcomodo && config.arregloFloralAcomodo !== 'ninguno') {
-          floralText += ' (' + config.arregloFloralAcomodo.charAt(0).toUpperCase() + config.arregloFloralAcomodo.slice(1) + ')';
-        }
-        montageItems.push('<strong>Floral:</strong> ' + floralText);
-      }
-      if (t.type === 'table_imperial') {
-        var ensTipo = (config.ensambleTipo === 'ancho') ? 'A lo Ancho (Lado a Lado)' : 'A lo Largo (Extremo a Extremo)';
-        montageItems.push('<strong>Ensamble:</strong> ' + ensTipo);
-      }
-      var montageText = montageItems.join('<br>');
+      html += '</tbody></table></section>';
+    }
 
-      // Glassware details
-      var glassItems = [];
-      if (config.cristal) {
-        var c1 = glassLabels[config.cristal] || config.cristal.charAt(0).toUpperCase() + config.cristal.slice(1);
-        var col1 = config.copasColor ? config.copasColor : 'transparente';
-        glassItems.push('1: ' + c1 + ' (' + col1 + ')');
+    // Montaje elegido
+    var m = data.montaje || {};
+    var montajeRows = (schema.montajeFields || []).filter(function (f) { return m[f.k]; });
+    var fotos = m.fotos || [];
+    if (montajeRows.length || fotos.length) {
+      html += '<section class="section block"><h2>Montaje elegido</h2><div class="kv">' + montajeRows.map(function (f) {
+        return '<div' + (f.type === 'textarea' ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(m[f.k]) + '</div>';
+      }).join('') + '</div>';
+      if (fotos.length) {
+        html += '<div class="photos">' + fotos.map(function (f, i) {
+          return '<img src="' + esc(f.url) + '" alt="Montaje ' + (i + 1) + '">';
+        }).join('') + '</div>';
       }
-      if (config.cristal2 && config.cristal2 !== 'ninguno') {
-        var c2 = glassLabels[config.cristal2] || config.cristal2.charAt(0).toUpperCase() + config.cristal2.slice(1);
-        var col2 = config.copasColor2 ? config.copasColor2 : 'transparente';
-        glassItems.push('2: ' + c2 + ' (' + col2 + ')');
-      }
-      var glassText = glassItems.join('<br>');
+      html += '</section>';
+    }
 
-      // Menu / Comments
-      var menuText = config.menu ? '<div class="menu-text">' + config.menu + '</div>' : '-';
-
-      html += '    <tr>\n';
-      html += '      <td>' + mesaLabel + '</td>\n';
-      html += '      <td>' + typeName + '</td>\n';
-      html += '      <td>' + capacityText + '</td>\n';
-      html += '      <td>' + montageText + '</td>\n';
-      html += '      <td>' + glassText + '</td>\n';
-      html += '      <td>' + menuText + '</td>\n';
-      html += '    </tr>\n';
+    // Brief: solo campos con respuesta; en la versión para personal sin lo interno
+    var briefHtml = '';
+    (schema.sections || []).forEach(function (s) {
+      if (!isPlanner && s.internal) return;
+      var rows = s.fields.filter(function (f) {
+        if (!f.k || (!isPlanner && f.internal)) return false;
+        var v = b[f.k];
+        return Array.isArray(v) ? v.length : (v !== undefined && v !== null && v !== '');
+      });
+      if (!rows.length) return;
+      briefHtml += '<div class="block"><h3>' + esc(s.title) + '</h3><div class="kv">' + rows.map(function (f) {
+        var v = b[f.k];
+        var val = Array.isArray(v) ? v.join(' · ') : (f.type === 'date' ? fmtDate(v) : v);
+        return '<div' + (f.type === 'textarea' || f.type === 'checks' ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(val) + '</div>';
+      }).join('') + '</div></div>';
     });
+    if (briefHtml) html += '<section class="section page-break"><h2>Información del evento</h2>' + briefHtml + '</section>';
 
-    html += '  </tbody>\n';
-    html += '</table>\n';
+    // Mobiliario por mesa (las mesas con el mismo montaje se agrupan en una sola fila)
+    if (tablesList.length) {
+      html += '<section class="section"><h2>Mobiliario y montaje por mesa</h2><table><thead><tr>' +
+        '<th style="width:13%">Mesa(s)</th><th style="width:16%">Tipo</th><th style="width:9%">Sillas</th>' +
+        '<th>Montaje</th><th style="width:19%">Cristalería</th><th style="width:15%">Menú / notas</th></tr></thead><tbody>';
+      var rowsBySig = [];
+      tablesList.forEach(function (t) {
+        var c = t.mesaConfig || {};
+        var items = [];
+        if (c.mantelColor) items.push('<b>Mantel:</b> ' + (c.mantelColor === 'sin_mantel' ? 'Sin mantel' : esc(cap(c.mantelColor))));
+        if (c.caminoColor && c.caminoColor !== 'ninguno') items.push('<b>Camino:</b> ' + esc(cap(c.caminoColor)) + (c.caminoAcomodo ? ' (' + esc(c.caminoAcomodo) + ')' : ''));
+        var folds = Array.isArray(c.servilletaDoblez) ? c.servilletaDoblez : (c.servilletaDoblez ? [c.servilletaDoblez] : []);
+        if (folds.length) {
+          items.push('<b>Servilleta:</b> ' + folds.map(function (f) {
+            var color = c['servilletaColor_' + f] || (f === 'corazon' ? c.servilletaColorCorazon : f === 'corbata' ? c.servilletaColorCorbata : c.servilletaColorOtros) || 'blanco';
+            return esc((foldLabels[f] || cap(f)) + ' (' + color + ')');
+          }).join(', '));
+        }
+        if (c.platoBase && c.platoBase !== 'ninguno') items.push('<b>Plato base:</b> ' + esc(plateBaseLabels[c.platoBase] || cap(c.platoBase)));
+        if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push('<b>Plato trinche:</b> ' + esc(cap(c.platoTrinche)));
+        if (c.cubiertos) items.push('<b>Cubiertos:</b> ' + esc(cap(c.cubiertos)));
+        if (c.tipoSilla) items.push('<b>Silla:</b> ' + esc(cap(c.tipoSilla)));
+        if (c.arregloFloralTipo && c.arregloFloralTipo !== 'ninguno') items.push('<b>Floral:</b> ' + esc(cap(c.arregloFloralTipo)) + (c.arregloFloralAcomodo ? ' (' + esc(c.arregloFloralAcomodo) + ')' : ''));
+        var glass = [];
+        if (c.cristal && c.cristal !== 'ninguno') glass.push(esc((glassLabels[c.cristal] || cap(c.cristal)) + ' (' + (c.copasColor || 'transparente') + ')'));
+        if (c.cristal2 && c.cristal2 !== 'ninguno') glass.push(esc((glassLabels[c.cristal2] || cap(c.cristal2)) + ' (' + (c.copasColor2 || 'transparente') + ')'));
+        var cells = '<td>' + esc(typeLabels[t.type] || t.name || t.type) + '</td>' +
+          '<td>' + esc(t.chairs || '-') + '</td><td>' + items.join('<br>') + '</td><td>' + (glass.join('<br>') || '-') + '</td>' +
+          '<td>' + (c.menu ? esc(c.menu) : '-') + '</td>';
+        var prefix = t.type.indexOf('table_honor') === 0 ? 'Honor ' : '';
+        var row = rowsBySig.find(function (r) { return r.cells === cells && r.prefix === prefix; });
+        if (row) row.nums.push(c.mesaNum || '');
+        else rowsBySig.push({ cells: cells, prefix: prefix, nums: [c.mesaNum || ''] });
+      });
+      rowsBySig.forEach(function (r) {
+        var nums = r.nums.map(esc);
+        var label = nums.length === 1
+          ? (r.prefix || 'Mesa ') + nums[0]
+          : (r.prefix || 'Mesas ') + nums.join(', ') + '<br><span class="muted">' + nums.length + ' mesas</span>';
+        html += '<tr><td><strong>' + label + '</strong></td>' + r.cells + '</tr>';
+      });
+      html += '</tbody></table></section>';
+    }
 
-    // Section 3: Other Elements
-    if (otherElementsList.length > 0) {
-      html += '<div class="section-title"><i class="fa-solid fa-shapes" style="margin-right: 6px; color:#f43f5e;"></i> Distribución de Áreas y Equipamiento</div>\n';
-      html += '<table>\n';
-      html += '  <thead>\n';
-      html += '    <tr>\n';
-      html += '      <th style="width: 25%;">Nombre Elemento</th>\n';
-      html += '      <th style="width: 25%;">Categoría</th>\n';
-      html += '      <th style="width: 20%;">Dimensiones</th>\n';
-      html += '      <th style="width: 30%;">Configuración / Ubicación</th>\n';
-      html += '    </tr>\n';
-      html += '  </thead>\n';
-      html += '  <tbody>\n';
-
+    // Áreas y equipamiento
+    if (otherElementsList.length) {
+      html += '<section class="section"><h2>Áreas y equipamiento</h2><table><thead><tr><th>Elemento</th><th style="width:22%">Categoría</th><th style="width:18%">Medidas</th></tr></thead><tbody>';
       otherElementsList.forEach(function (e) {
         var cat = window.getCatalogEntry ? window.getCatalogEntry(e.type) : null;
-        var typeName = cat ? cat.name : e.type;
-        var categoryName = cat ? cat.category.charAt(0).toUpperCase() + cat.category.slice(1) : '-';
-        var nameLabel = e.name || typeName;
-        
-        var dimText = (e.w && e.h) ? e.w + ' x ' + e.h + ' m' : '-';
-        var configItems = [];
-        configItems.push('<strong>Posición:</strong> X: ' + parseFloat(e.x).toFixed(1) + 'm, Y: ' + parseFloat(e.y).toFixed(1) + 'm');
-        if (e.elevation) configItems.push('<strong>Elevación:</strong> ' + e.elevation + ' m');
-        if (e.color) configItems.push('<strong>Color:</strong> <span style="display:inline-block; width:10px; height:10px; border-radius:20%; background:' + e.color + '; border:1px solid #ccc; vertical-align:middle; margin-right:3px;"></span>' + e.color);
-        if (e.salonType) configItems.push('<strong>Estilo:</strong> ' + e.salonType);
-        
-        html += '    <tr>\n';
-        html += '      <td><strong>' + nameLabel + '</strong></td>\n';
-        html += '      <td>' + categoryName + '</td>\n';
-        html += '      <td>' + dimText + '</td>\n';
-        html += '      <td>' + configItems.join('<br>') + '</td>\n';
-        html += '    </tr>\n';
+        html += '<tr><td><strong>' + esc(e.name || (cat ? cat.name : e.type)) + '</strong></td>' +
+          '<td>' + esc(cat ? cap(cat.category) : '-') + '</td>' +
+          '<td>' + (e.w && e.h ? esc(e.w + ' × ' + e.h + ' m') : '-') + '</td></tr>';
       });
-
-      html += '  </tbody>\n';
-      html += '</table>\n';
+      html += '</tbody></table></section>';
     }
 
-    // Montage reference image section
-    html += '<div class="page-break"></div>\n';
-    html += '<div class="section-title"><i class="fa-solid fa-image" style="margin-right: 6px; color:#f43f5e;"></i> Referencia Visual de Montaje</div>\n';
-    html += '<div style="display: flex; justify-content: center; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-sizing: border-box; page-break-inside: avoid; margin-bottom: 30px;">\n';
-    html += '  <img src="montaje_graduacion_burgos.jpg" style="max-width: 100%; max-height: 600px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);" alt="Montaje Graduación Burgos" />\n';
-    html += '</div>\n';
-
-    // Section 4: Guest List by Table
-    var hasAnyGuests = tablesList.some(function (t) {
-      return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length > 0;
-    });
-
-    if (hasAnyGuests) {
-      html += '<div class="page-break"></div>\n';
-      html += '<div class="section-title"><i class="fa-solid fa-users" style="margin-right: 6px; color:#f43f5e;"></i> Distribución de Invitados por Mesa</div>\n';
-      html += '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; font-size: 12px; margin-bottom: 30px;">\n';
-
-      tablesList.forEach(function (t) {
-        var config = t.mesaConfig || {};
-        if (!config.invitados || config.invitados.length === 0) return;
-
-        var mesaNum = parseInt(config.mesaNum, 10) || 0;
-        var mesaAdults = 0;
-        var mesaNinos = 0;
-        config.invitados.forEach(function (g) {
-          var p = g.pases || 0;
-          var n = getChildCountForInv(g.nombre, p, mesaNum);
-          mesaNinos += n;
-          mesaAdults += (p - n);
-        });
-
-        var mesaLabel = config.mesaNum ? 'Mesa ' + config.mesaNum : 'Sin Número';
-        if (t.type === 'table_honor_xv' || t.type === 'table_honor_king' || t.type === 'table_honor_bride') {
-          mesaLabel += ' (Honor)';
-        }
-        mesaLabel += ' <span style="font-size:10px; color:#475569; font-weight:normal;">(' + mesaAdults + ' Adultos / ' + mesaNinos + ' Niños)</span>';
-
-        var totalMesaGuests = config.invitados.reduce(function (sum, g) { return sum + (g.pases || 0); }, 0);
-
-        html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 15px; page-break-inside: avoid; display: flex; flex-direction: column;">\n';
-        html += '    <div style="font-weight: 700; font-size: 14px; color: #0f172a; border-bottom: 2px solid #f43f5e; padding-bottom: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">\n';
-        html += '      <span>' + mesaLabel + '</span>\n';
-        html += '      <span style="font-size: 11px; background: #ffe4e6; color: #f43f5e; padding: 2px 8px; border-radius: 20px;">' + totalMesaGuests + ' asignados</span>\n';
-        html += '    </div>\n';
-        html += '    <div style="column-count: 2; column-gap: 15px;">\n';
-
-        config.invitados.forEach(function (g) {
-          html += '      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding: 3px 0; break-inside: avoid; font-size: 11px;">\n';
-          html += '        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;">' + g.nombre + '</span>\n';
-          html += '        <span style="font-weight: 600; color: #f43f5e; margin-left: 4px;">' + g.pases + 'p</span>\n';
-          html += '      </div>\n';
-        });
-
-        html += '    </div>\n';
-        html += '  </div>\n';
+    // Invitados por mesa
+    var withGuests = tablesList.filter(function (t) { return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length; });
+    if (withGuests.length) {
+      html += '<section class="section page-break"><h2>Invitados por mesa</h2><div class="guests">';
+      withGuests.forEach(function (t) {
+        var inv = t.mesaConfig.invitados;
+        var total = inv.reduce(function (s, g) { return s + (parseInt(g.pases, 10) || 0); }, 0);
+        html += '<div class="guest-card"><h3><span>Mesa ' + esc(t.mesaConfig.mesaNum || '') + '</span><span class="muted">' + total + ' pases</span></h3>' +
+          inv.map(function (g) { return '<div>' + esc(g.nombre) + ' <span class="muted">· ' + esc(g.pases) + '</span></div>'; }).join('') + '</div>';
       });
-
-      html += '</div>\n';
+      html += '</div></section>';
     }
 
-    // Section 5: Cruce de Pendientes y Menús (Hoja de Control)
-    html += '<div class="page-break"></div>\n';
-    html += '<div class="section-title"><i class="fa-solid fa-clipboard-check" style="margin-right: 6px; color:' + NAVY + ';"></i> Ficha de Control y Conciliación de Pendientes</div>\n';
-    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">\n';
-    
-    // Left column: Menu counts
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-utensils" style="color:' + GOLD + '; margin-right: 6px;"></i> Conciliación de Menús</h4>\n';
-    html += '    <table style="width: 100%; margin-bottom: 0; font-size: 12px;">\n';
-    html += '      <thead>\n';
-    html += '        <tr><th>Tipo de Menú</th><th style="text-align:center;">Estatus</th><th style="text-align:center;">Asignado</th></tr>\n';
-    html += '      </thead>\n';
-    html += '      <tbody>\n';
-    html += '        <tr><td><strong>Menú Adultos (Banquete Primavera)</strong></td><td style="text-align:center; font-weight:700; color:#10b981;">Confirmado</td><td style="text-align:center; font-weight:700; color:#0f172a;">' + totalAdults + '</td></tr>\n';
-    html += '        <tr><td><strong>Menú Infantil / Adolescentes</strong></td><td style="text-align:center; font-weight:700; color:#10b981;">Confirmado</td><td style="text-align:center; font-weight:700; color:#0f172a;">' + totalNinos + '</td></tr>\n';
-    html += '        <tr style="background:#f1f5f9;"><td style="font-weight:700;">Total Platillos</td><td style="text-align:center; font-weight:700; color:#10b981; font-size:13px;">Confirmado</td><td style="text-align:center; font-weight:700; color:#0f172a; font-size:14px;">' + totalGuests + '</td></tr>\n';
-    html += '      </tbody>\n';
-    html += '    </table>\n';
-    html += '    <p style="font-size: 11px; color: #475569; margin-top: 12px; line-height: 1.4;">\n';
-    html += '      <strong>Nota de Control:</strong> Actualmente se encuentran <strong>' + totalGuests + '</strong> invitados acomodados en el plano (<strong>' + totalAdults + '</strong> adultos y <strong>' + totalNinos + '</strong> niños). Los detalles específicos del menú de dos opciones y sus guarniciones ya han sido integrados a esta ficha técnica para la coordinación del personal de banquete de la Primaria Burgos de Ana María.\n';
-    html += '    </p>\n';
-    html += '  </div>\n';
-    
-    // Right column: Pending checklist
-    html += '  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px 20px;">\n';
-    html += '    <h4 style="margin-top: 0; margin-bottom: 12px; color: ' + NAVY + '; border-bottom: 2px solid ' + GOLD + '; padding-bottom: 6px;"><i class="fa-solid fa-list-check" style="color:' + GOLD + '; margin-right: 6px;"></i> Estatus de Tareas y Pendientes Logísticos</h4>\n';
-    html += '    <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Cronograma de Actividades</strong>: Itinerario oficial para la graduación Burgos cargado y estructurado con recepción, fotos, pase de lista, comida, cabina, albercada y cierre.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Colores y Montaje General</strong>: Confirmado el uso de los colores azul marino, dorado y champagne para el montaje general de mesas.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Mesa de Dulces e Inventario</strong>: Elemento de mesa de dulces/barra mix validado en plano y listo para montaje.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-check" style="color:#10b981; margin-top:3px;"></i> <div><strong>Menú Banquete Primavera</strong>: Confirmado el menú de entradas (cremas de champiñones/pimiento), plato fuerte (pechuga hawaiana/lomo de res) y postres.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Cabina de Fotos</strong>: Proyectada de 6:00 pm a 8:00 pm (18:00 - 20:00 HRS); pendiente de confirmación de horario exacta.</div></li>\n';
-    html += '      <li style="display:flex; align-items:flex-start; gap: 8px;"><i class="fa-solid fa-circle-question" style="color:#f59e0b; margin-top:3px;"></i> <div><strong>Programa de Albercada</strong>: Pendiente coordinar y definir el programa específico para el área de la alberca con Clase 2026 · Calv. F.</div></li>\n';
-    html += '    </ul>\n';
-    html += '  </div>\n';
-    html += '</div>\n';
+    if (isPlanner) {
+      html += '<div class="signs"><div>Firma del cliente</div><div>Firma del planner</div><div>Fecha</div></div>';
+    }
 
-    // Document Footer
-    html += '<div class="footer">\n';
-    html += '  Primavera Events Planner &copy; 2026. Documento generado digitalmente desde el navegador. Ficha técnica de montaje para personal de banquete y proveedores.\n';
-    html += '</div>\n';
+    html += '<footer class="footer">Primavera Events Group® · Marca registrada · Todos los derechos reservados · primaveraeventsgroup.com' +
+      (eventUrl ? '<br>Evento en línea: ' + esc(eventUrl) : '') + '</footer>';
+    html += '</body></html>';
 
-    html += '</body>\n</html>';
-
+    printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
   }
@@ -3410,6 +3024,7 @@
     save: saveToLocalStorage,
     exportJSON: exportJSON,
     exportPNG: exportPNG,
+    exportPDF: exportPDF,
     importJSON: importJSON,
     updateCounters: updateCounters,
     refresh: _refresh,

@@ -522,6 +522,7 @@
           '<div class="brief-head-actions">' +
             (ro ? '<span class="brief-ro"><i class="fa-solid fa-eye"></i> Solo lectura</span>' : '') +
             '<button type="button" class="btn-ghost" id="brief-share"><i class="fa-solid fa-share-nodes"></i> Compartir</button>' +
+            '<button type="button" class="btn-ghost" id="brief-pdf"><i class="fa-solid fa-file-pdf"></i> Ficha PDF</button>' +
             '<button type="button" class="btn-primary" id="brief-close"><i class="fa-solid fa-map"></i> Ver plano</button>' +
           '</div>' +
         '</header>' +
@@ -550,6 +551,7 @@
     var d = _event.data;
     $('brief-close').onclick = closePanel;
     $('brief-share').onclick = shareEvent;
+    $('brief-pdf').onclick = function () { if (window.App && window.App.exportPDF) window.App.exportPDF(); };
     _panel.querySelectorAll('.brief-nav a').forEach(function (a) {
       a.onclick = function (e) {
         e.preventDefault();
@@ -688,6 +690,7 @@
       return !!eventIdFromUrl() || !planner;
     },
     getEvent: function () { return _event; },
+    getSchema: function () { return { sections: SECTIONS, montajeFields: MONTAJE_FIELDS }; },
     isPlanner: function () { return _isPlanner; }
   };
 })();
