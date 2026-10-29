@@ -9,7 +9,7 @@
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Font Awesome 6.5 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -22,7 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- App Styles -->
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20261029_01" />
 </head>
 <body>
 
@@ -52,7 +52,7 @@
   <aside id="sidebar-left">
 
     <div class="sidebar-logo">
-      <div class="logo-icon">🌸</div>
+      <img class="logo-img" src="assets/logo-primavera.png" alt="Primavera Events Group" />
       <div class="logo-text">
         <span class="logo-brand">Primavera</span>
         <span class="logo-sub">Maquetador de Planos</span>
@@ -85,6 +85,10 @@
         <span>Dimensiones del Terreno</span>
       </div>
       <p class="panel-hint">Define la forma y tamaño de tu terreno para empezar a maquetar.</p>
+
+      <button id="btn-open-venues" class="btn-primary full-width" style="margin-bottom: 14px;">
+        <i class="fa-solid fa-building-columns"></i> Elegir Salón / Plantilla
+      </button>
 
       <div class="form-group">
         <label class="form-label" for="terrain-width">
@@ -174,14 +178,14 @@
       <!-- Quick Actions (Align, Clean smart, Import) -->
       <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
         <div style="display: flex; gap: 8px;">
-          <button id="btn-align" class="btn-primary half" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); font-size: 11px; padding: 8px 6px;" title="Alinear mesas y elementos del plano simétricamente">
+          <button id="btn-align" class="btn-gold half" style="font-size: 11px; padding: 8px 6px;" title="Alinear mesas y elementos del plano simétricamente">
             <i class="fa-solid fa-arrows-to-dot"></i> Alinear Plano
           </button>
-          <button id="btn-clear" class="btn-danger half" style="background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 11px; padding: 8px 6px;" title="Limpiar todas las mesas e iniciar plano desde cero">
+          <button id="btn-clear" class="btn-danger half" style="font-size: 11px; padding: 8px 6px;" title="Limpiar todas las mesas e iniciar plano desde cero">
             <i class="fa-solid fa-trash-can"></i> Iniciar desde Cero
           </button>
         </div>
-        <button id="btn-import-json-sidebar" class="btn-primary full-width" style="background: linear-gradient(135deg, #10b981, #047857); font-size: 11px; padding: 8px 12px;" title="Importar plano desde archivo JSON local">
+        <button id="btn-import-json-sidebar" class="btn-ghost full-width" style="font-size: 11px; padding: 8px 12px;" title="Importar plano desde archivo JSON local">
           <i class="fa-solid fa-file-import"></i> Importar Plano (JSON)
         </button>
       </div>
@@ -217,8 +221,8 @@
       <div class="divider"></div>
 
       <!-- Collapsible Supabase Accordion -->
-      <details class="supabase-details" style="margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: rgba(255,255,255,0.01);">
-        <summary style="font-size: 12px; font-weight:600; cursor:pointer; color:#fff; display:flex; align-items:center; gap:6px; outline:none; user-select:none;">
+      <details class="supabase-details" style="margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; background: rgba(255,255,255,0.02);">
+        <summary style="font-size: 12px; font-weight:600; cursor:pointer; color:var(--text-primary); display:flex; align-items:center; gap:6px; outline:none; user-select:none;">
           <i class="fa-solid fa-database" style="color:var(--accent);"></i> Base de Datos Supabase (Opcional)
         </summary>
         <div style="margin-top: 10px;">
@@ -240,7 +244,7 @@
             <button id="btn-db-test" class="btn-icon-sm" title="Probar conexión" style="width:30px; height:30px;">
               <i class="fa-solid fa-plug"></i>
             </button>
-            <button id="btn-db-clear" class="btn-danger half" style="font-size:11px; padding:6px; background-color:#374151;">
+            <button id="btn-db-clear" class="btn-danger half" style="font-size:11px; padding:6px;">
               <i class="fa-solid fa-eraser"></i> Quitar
             </button>
           </div>
@@ -274,7 +278,7 @@
 
         <div class="layer-row">
           <span class="layer-label">
-            <i class="fa-solid fa-umbrella layer-icon" style="color: #60a5fa; width: 16px; text-align: center;"></i> Techos
+            <i class="fa-solid fa-umbrella layer-icon" style="color: var(--gold); width: 16px; text-align: center;"></i> Techos
           </span>
           <label class="toggle-switch sm">
             <input type="checkbox" id="layer-toggle-techos" checked />
@@ -374,6 +378,16 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
+
+        <div class="layer-row">
+          <span class="layer-label">
+            <i class="fa-solid fa-person-running layer-icon" style="color:#ef4444;"></i> Evacuación
+          </span>
+          <label class="toggle-switch sm">
+            <input type="checkbox" id="layer-toggle-flujo_emergencia" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
       </div>
     </details>
 
@@ -397,7 +411,7 @@
             <i class="fa-solid fa-map"></i> 2D
           </button>
         </div>
-        <div class="view-toggle" style="margin-left: 12px; border-color: rgba(255,255,255,0.05);">
+        <div class="view-toggle" style="margin-left: 12px;">
           <button id="btn-light-day" class="view-btn active lighting-btn" title="Luz de Día">
             <i class="fa-solid fa-sun"></i> Día
           </button>
@@ -409,7 +423,7 @@
           </button>
         </div>
         <!-- Layout Version Toggle -->
-        <div class="view-toggle" id="topbar-layout-group" style="margin-left: 12px; border-color: rgba(255,255,255,0.05);">
+        <div class="view-toggle" id="topbar-layout-group" style="margin-left: 12px;">
           <button id="btn-layout-ver" class="view-btn active" title="Acomodo Vertical (Fila Única)">
             <i class="fa-solid fa-arrows-up-down"></i> Vertical
           </button>
@@ -418,10 +432,10 @@
           </button>
         </div>
         <!-- Brightness Slider -->
-        <div class="view-toggle" id="topbar-brightness-group" style="margin-left: 12px; border-color: rgba(255,255,255,0.05); display: none; align-items: center; gap: 8px; padding: 0 10px;">
-          <i class="fa-solid fa-lightbulb" style="color: #fbbf24; font-size: 13px;"></i>
+        <div class="view-toggle" id="topbar-brightness-group" style="margin-left: 12px; display: none; align-items: center; gap: 8px; padding: 0 10px;">
+          <i class="fa-solid fa-lightbulb" style="color: var(--gold); font-size: 13px;"></i>
           <span style="font-size: 11px; color: var(--text-secondary); white-space: nowrap;">Brillo:</span>
-          <input type="range" id="light-intensity-slider" min="0.2" max="2.5" step="0.05" value="1.0" style="width: 70px; height: 4px; accent-color: #fbbf24; cursor: pointer; margin: 0;" />
+          <input type="range" id="light-intensity-slider" min="0.2" max="2.5" step="0.05" value="1.0" style="width: 70px; height: 4px; accent-color: var(--gold); cursor: pointer; margin: 0;" />
           <span id="light-intensity-val" style="font-size: 11px; font-weight: 600; color: var(--text-primary); min-width: 18px; text-align: right;">1.0</span>
         </div>
       </div>
@@ -521,11 +535,11 @@
           <i class="fa-solid fa-file-import"></i>
           <span class="fab-label">Importar</span>
         </button>
-        <button id="btn-align-fab" class="fab-btn fab-secondary" title="Alinear mesas y elementos del plano simétricamente" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+        <button id="btn-align-fab" class="fab-btn fab-gold" title="Alinear mesas y elementos del plano simétricamente">
           <i class="fa-solid fa-arrows-to-dot"></i>
           <span class="fab-label">Alinear</span>
         </button>
-        <button id="btn-clear-fab" class="fab-btn fab-secondary" title="Limpiar todas las mesas e iniciar plano desde cero" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+        <button id="btn-clear-fab" class="fab-btn fab-danger" title="Limpiar todas las mesas e iniciar plano desde cero">
           <i class="fa-solid fa-trash-can"></i>
           <span class="fab-label">Reiniciar</span>
         </button>
@@ -942,7 +956,7 @@
             <i class="fa-solid fa-users"></i> Lista de Invitados
           </p>
           <div class="form-group">
-            <div id="mesa-invitados-list" class="form-input" style="background: rgba(30, 41, 59, 0.5); border: 1px dashed rgba(244, 63, 94, 0.4); border-radius: 6px; padding: 10px; max-height: 200px; overflow-y: auto; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+            <div id="mesa-invitados-list" class="form-input" style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(246, 92, 122, 0.4); border-radius: 6px; padding: 10px; max-height: 200px; overflow-y: auto; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
               No hay invitados asignados a esta mesa.
             </div>
           </div>
@@ -968,9 +982,10 @@
 <!-- SCRIPTS (order matters) -->
 <script src="elements-db.js?v=20260718_01" charset="utf-8"></script>
 <script src="default-layout.js?v=20260718_01" charset="utf-8"></script>
-<script src="editor2d.js?v=20260718_01" charset="utf-8"></script>
-<script src="visualizer3d.js?v=20260718_01" charset="utf-8"></script>
-<script src="app.js?v=20260718_01" charset="utf-8"></script>
+<script src="templates.js?v=20261029_02" charset="utf-8"></script>
+<script src="editor2d.js?v=20261029_01" charset="utf-8"></script>
+<script src="visualizer3d.js?v=20261029_01" charset="utf-8"></script>
+<script src="app.js?v=20261029_01" charset="utf-8"></script>
 
 </body>
 </html>

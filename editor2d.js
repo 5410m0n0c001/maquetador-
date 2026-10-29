@@ -119,6 +119,14 @@ window.Editor2D = (function () {
 
     var defs = svgEl('defs');
 
+    // Flecha al final de los flujos de circulación (toma el color del trazo)
+    var arrow = svgEl('marker', {
+      id: 'flow-arrow', viewBox: '0 0 10 10', refX: 6, refY: 5,
+      markerWidth: 4, markerHeight: 4, orient: 'auto-start-reverse'
+    });
+    arrow.appendChild(svgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: 'context-stroke' }));
+    defs.appendChild(arrow);
+
     // Grid pattern
     var gridPat = svgEl('pattern', {
       id: 'grid-pattern',
@@ -126,15 +134,15 @@ window.Editor2D = (function () {
       height: mToPx(GRID_M),
       patternUnits: 'userSpaceOnUse'
     });
-    var gridLine1 = svgEl('line', { x1: 0, y1: 0, x2: mToPx(GRID_M), y2: 0, stroke: 'rgba(255,255,255,0.07)', 'stroke-width': 0.5 });
-    var gridLine2 = svgEl('line', { x1: 0, y1: 0, x2: 0, y2: mToPx(GRID_M), stroke: 'rgba(255,255,255,0.07)', 'stroke-width': 0.5 });
+    var gridLine1 = svgEl('line', { x1: 0, y1: 0, x2: mToPx(GRID_M), y2: 0, stroke: 'rgba(201,169,110,0.10)', 'stroke-width': 0.5 });
+    var gridLine2 = svgEl('line', { x1: 0, y1: 0, x2: 0, y2: mToPx(GRID_M), stroke: 'rgba(201,169,110,0.10)', 'stroke-width': 0.5 });
     gridPat.appendChild(gridLine1);
     gridPat.appendChild(gridLine2);
     defs.appendChild(gridPat);
 
     // Selection glow filter
     var filter = svgEl('filter', { id: 'sel-glow', x: '-20%', y: '-20%', width: '140%', height: '140%' });
-    var feGlow = svgEl('feDropShadow', { dx: 0, dy: 0, stdDeviation: 4, 'flood-color': '#f0c040', 'flood-opacity': 0.95 });
+    var feGlow = svgEl('feDropShadow', { dx: 0, dy: 0, stdDeviation: 4, 'flood-color': '#F65C7A', 'flood-opacity': 0.95 });
     filter.appendChild(feGlow);
     defs.appendChild(filter);
 
@@ -145,7 +153,7 @@ window.Editor2D = (function () {
       id: 'svg-background',
       x: 0, y: 0,
       width: '100%', height: '100%',
-      fill: '#0f172a'
+      fill: '#171516'
     });
     _svg.appendChild(bg);
 
@@ -158,7 +166,7 @@ window.Editor2D = (function () {
       x: 0, y: 0,
       width: mToPx(_terrain.w),
       height: mToPx(_terrain.h),
-      fill: '#1a2c4a',
+      fill: '#221f20',
       rx: 2,
       cursor: 'grab'
     });
@@ -178,7 +186,7 @@ window.Editor2D = (function () {
     // Layer groups (including flow layers)
     var layers = [
       'bg', 'estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores',
-      'flujo_invitados', 'flujo_proveedores', 'flujo_staff'
+      'flujo_invitados', 'flujo_proveedores', 'flujo_staff', 'flujo_emergencia'
     ];
     _layerGroups = {};
     layers.forEach(function (lyr) {
@@ -236,17 +244,17 @@ window.Editor2D = (function () {
     _gRulerH.innerHTML = '';
     _gRulerV.innerHTML = '';
 
-    var rulerBg = svgEl('rect', { x: 0, y: 0, width: '100%', height: RULER_SIZE, fill: '#1e293b' });
+    var rulerBg = svgEl('rect', { x: 0, y: 0, width: '100%', height: RULER_SIZE, fill: '#1F1F1F' });
     _gRulerH.appendChild(rulerBg);
-    var rulerBgV = svgEl('rect', { x: 0, y: 0, width: RULER_SIZE, height: '100%', fill: '#1e293b' });
+    var rulerBgV = svgEl('rect', { x: 0, y: 0, width: RULER_SIZE, height: '100%', fill: '#1F1F1F' });
     _gRulerV.appendChild(rulerBgV);
 
     // Horizontal marks every 5m
     for (var mx = 0; mx <= _terrain.w; mx += 5) {
       var px = _panX + mx * SCALE * _zoom;
-      var tick = svgEl('line', { x1: px, y1: RULER_SIZE - 6, x2: px, y2: RULER_SIZE, stroke: '#94a3b8', 'stroke-width': 1 });
+      var tick = svgEl('line', { x1: px, y1: RULER_SIZE - 6, x2: px, y2: RULER_SIZE, stroke: '#C9A96E', 'stroke-width': 1 });
       _gRulerH.appendChild(tick);
-      var lbl = svgEl('text', { x: px + 2, y: RULER_SIZE - 8, fill: '#94a3b8', 'font-size': 9, 'font-family': 'sans-serif' });
+      var lbl = svgEl('text', { x: px + 2, y: RULER_SIZE - 8, fill: '#C9A96E', 'font-size': 9, 'font-family': 'sans-serif' });
       lbl.textContent = mx + 'm';
       _gRulerH.appendChild(lbl);
     }
@@ -254,12 +262,12 @@ window.Editor2D = (function () {
     // Vertical marks every 5m
     for (var my = 0; my <= _terrain.h; my += 5) {
       var py = _panY + my * SCALE * _zoom;
-      var tickV = svgEl('line', { x1: RULER_SIZE - 6, y1: py, x2: RULER_SIZE, y2: py, stroke: '#94a3b8', 'stroke-width': 1 });
+      var tickV = svgEl('line', { x1: RULER_SIZE - 6, y1: py, x2: RULER_SIZE, y2: py, stroke: '#C9A96E', 'stroke-width': 1 });
       _gRulerV.appendChild(tickV);
       var lblV = svgEl('text', {
         x: -(py + 2),
         y: RULER_SIZE - 8,
-        fill: '#94a3b8',
+        fill: '#C9A96E',
         'font-size': 9,
         'font-family': 'sans-serif',
         transform: 'rotate(-90)'
@@ -273,6 +281,9 @@ window.Editor2D = (function () {
   function _renderElement(elem) {
     var state = _getState ? _getState() : {};
     var layers = state.layers || {};
+
+    // Estructuras fijas de una plantilla: en 2D ya las dibuja el croquis de fondo
+    if (elem.bg2d) return;
 
     // Layer visibility
     var layer = elem.layer || elem.category || 'mobiliario';
@@ -311,7 +322,7 @@ window.Editor2D = (function () {
       var circ = svgEl('circle', {
         cx: px, cy: py, r: r,
         fill: color,
-        stroke: isSelected ? '#f0c040' : colorLight,
+        stroke: isSelected ? '#F65C7A' : colorLight,
         'stroke-width': isSelected ? 2 : 1,
         opacity: 0.92
       });
@@ -325,7 +336,7 @@ window.Editor2D = (function () {
         x: px - pw / 2, y: py - ph / 2,
         width: pw, height: ph,
         fill: color,
-        stroke: isSelected ? '#f0c040' : colorLight,
+        stroke: isSelected ? '#F65C7A' : colorLight,
         'stroke-width': isSelected ? 2 : 1,
         opacity: 0.92
       });
@@ -337,7 +348,7 @@ window.Editor2D = (function () {
         x: px - pw / 2, y: py - ph / 2,
         width: pw, height: ph,
         fill: color,
-        stroke: isSelected ? '#f0c040' : colorLight,
+        stroke: isSelected ? '#F65C7A' : colorLight,
         'stroke-width': isSelected ? 2 : 1,
         opacity: 0.88
       });
@@ -368,7 +379,7 @@ window.Editor2D = (function () {
         x: px - pw / 2, y: py - doorH / 2,
         width: pw, height: doorH,
         fill: color,
-        stroke: isSelected ? '#f0c040' : color,
+        stroke: isSelected ? '#F65C7A' : color,
         'stroke-width': isSelected ? 3 : 2.5,
         rx: mToPx(0.05)
       });
@@ -416,7 +427,7 @@ window.Editor2D = (function () {
         x: px - pw / 2, y: py - ph / 2,
         width: pw, height: ph,
         fill: color,
-        stroke: isSelected ? '#f0c040' : colorLight,
+        stroke: isSelected ? '#F65C7A' : colorLight,
         'stroke-width': isSelected ? 2 : 1,
         opacity: 0.92
       });
@@ -520,7 +531,7 @@ window.Editor2D = (function () {
       var trap = svgEl('polygon', {
         points: pts,
         fill: color,
-        stroke: isSelected ? '#f0c040' : colorLight,
+        stroke: isSelected ? '#F65C7A' : colorLight,
         'stroke-width': isSelected ? 2 : 1,
         opacity: 0.92
       });
@@ -552,7 +563,7 @@ window.Editor2D = (function () {
         x: px - pw / 2, y: py - ph / 2,
         width: pw, height: ph,
         fill: color,
-        stroke: isSelected ? '#f0c040' : colorLight,
+        stroke: isSelected ? '#F65C7A' : colorLight,
         'stroke-width': isSelected ? 2 : 1,
         opacity: 0.88
       });
@@ -670,7 +681,7 @@ window.Editor2D = (function () {
       var selRing = svgEl('circle', {
         cx: px, cy: py, r: selR,
         fill: 'none',
-        stroke: '#f0c040',
+        stroke: '#F65C7A',
         'stroke-width': 1.5,
         'stroke-dasharray': '6 3',
         'pointer-events': 'none',
@@ -772,9 +783,40 @@ window.Editor2D = (function () {
     Object.keys(_layerGroups).forEach(function (k) {
       _layerGroups[k].innerHTML = '';
     });
+    var state = _getState ? _getState() : {};
+    _renderVenueBackground(state.venueId);
+    _renderFlows(state.flows || [], state.layers || {});
     if (!elements) return;
     elements.forEach(function (elem) {
       _renderElement(elem);
+    });
+  }
+
+  // ─── Croquis de fondo de la plantilla de salón ────────────
+  function _renderVenueBackground(venueId) {
+    if (!venueId || !window.VENUE_TEMPLATES || !window.VENUE_BACKGROUNDS) return;
+    var tpl = window.VENUE_TEMPLATES.find(function (t) { return t.id === venueId; });
+    var bg = tpl && tpl.bg ? window.VENUE_BACKGROUNDS[tpl.bg] : null;
+    if (!bg) return;
+    var g = svgEl('g', { transform: 'scale(' + mToPx(bg.scale) + ')', 'pointer-events': 'none' });
+    g.innerHTML = bg.svg;
+    _layerGroups['bg'].appendChild(g);
+  }
+
+  // ─── Flujos de circulación (polilíneas animadas) ──────────
+  function _renderFlows(flows, layers) {
+    flows.forEach(function (flow) {
+      if (layers[flow.layer] === false) return;
+      var group = _layerGroups[flow.layer];
+      if (!group || !flow.points || flow.points.length < 2) return;
+      var pts = flow.points.map(function (p) { return mToPx(p[0]) + ',' + mToPx(p[1]); }).join(' ');
+      group.appendChild(svgEl('polyline', {
+        points: pts,
+        'class': 'flow-path',
+        stroke: flow.color || '#3b82f6',
+        'marker-end': 'url(#flow-arrow)',
+        'pointer-events': 'none'
+      }));
     });
   }
 
@@ -949,8 +991,8 @@ window.Editor2D = (function () {
       'position:fixed',
       'left:' + clientX + 'px',
       'top:' + clientY + 'px',
-      'background:#1e293b',
-      'border:1px solid #334155',
+      'background:#1F1F1F',
+      'border:1px solid rgba(201,169,110,0.35)',
       'border-radius:6px',
       'padding:4px 0',
       'z-index:9000',
@@ -968,9 +1010,9 @@ window.Editor2D = (function () {
 
     items.forEach(function (item) {
       var btn = document.createElement('div');
-      btn.style.cssText = 'padding:7px 14px;cursor:pointer;color:' + (item.danger ? '#ef4444' : '#e2e8f0') + ';transition:background 0.15s;';
+      btn.style.cssText = 'padding:7px 14px;cursor:pointer;color:' + (item.danger ? '#d94f6f' : '#F8F6F4') + ';transition:background 0.15s;';
       btn.textContent = item.label;
-      btn.addEventListener('mouseenter', function () { btn.style.background = '#334155'; });
+      btn.addEventListener('mouseenter', function () { btn.style.background = '#2a2728'; });
       btn.addEventListener('mouseleave', function () { btn.style.background = ''; });
       btn.addEventListener('click', function () {
         _hideContextMenu();
@@ -1016,7 +1058,7 @@ window.Editor2D = (function () {
       'left:' + screenX + 'px',
       'top:' + screenY + 'px',
       'transform:translate(-50%,-100%)',
-      'background:#1e293b',
+      'background:#1F1F1F',
       'color:#fff',
       'border:1px solid #c9a96e',
       'border-radius:4px',

@@ -12,6 +12,8 @@
   // ══════════════════════════════════════════════════════════
   window.AppState = {
     elements: [],
+    flows: [],          // polilíneas de circulación: { id, layer, color, points: [[x,y], ...] } en metros
+    venueId: null,      // id de la plantilla de salón de origen (templates.js)
     terrain: { w: 50, h: 60 },
     selectedId: null,
     activeView: '3d',
@@ -29,7 +31,8 @@
       proveedores:      true,
       flujo_invitados:  true,
       flujo_proveedores: true,
-      flujo_staff:      true
+      flujo_staff:      true,
+      flujo_emergencia: true
     }
   };
 
@@ -66,10 +69,10 @@
   function showToast(message, type) {
     type = type || 'info';
     var colors = {
-      info:    '#3b82f6',
-      success: '#22c55e',
-      warning: '#f59e0b',
-      error:   '#ef4444'
+      info:    '#C9A96E',
+      success: '#7fbf9a',
+      warning: '#e0b866',
+      error:   '#d94f6f'
     };
     var icons = {
       info:    'ℹ',
@@ -97,13 +100,16 @@
 
     var toast = document.createElement('div');
     toast.style.cssText = [
-      'background:' + colors[type],
-      'color:#fff',
+      'background:rgba(31,31,31,0.92)',
+      'backdrop-filter:blur(12px)',
+      'border:1px solid rgba(201,169,110,0.3)',
+      'border-left:3px solid ' + colors[type],
+      'color:#F8F6F4',
       'padding:10px 16px',
-      'border-radius:8px',
+      'border-radius:12px',
       'font-size:14px',
-      'font-family:sans-serif',
-      'box-shadow:0 4px 16px rgba(0,0,0,0.35)',
+      'font-family:var(--font-body)',
+      'box-shadow:0 10px 30px rgba(0,0,0,0.45)',
       'display:flex',
       'align-items:center',
       'gap:8px',
@@ -111,7 +117,7 @@
       'animation:toastIn 0.25s ease',
       'max-width:320px'
     ].join(';');
-    toast.innerHTML = '<span style="font-size:16px">' + (icons[type] || '•') + '</span>' +
+    toast.innerHTML = '<span style="font-size:16px;color:' + colors[type] + '">' + (icons[type] || '•') + '</span>' +
                       '<span>' + message + '</span>';
 
     container.appendChild(toast);
@@ -250,17 +256,17 @@
 
     var box = document.createElement('div');
     box.style.cssText = [
-      'background:#1e293b', 'border:1px solid #334155', 'border-radius:12px',
+      'background:#1F1F1F', 'border:1px solid rgba(201,169,110,0.35)', 'border-radius:16px',
       'padding:28px 32px', 'min-width:300px', 'font-family:sans-serif', 'color:#e2e8f0'
     ].join(';');
 
     box.innerHTML = [
       '<h3 style="margin:0 0 16px;color:#c9a96e;font-size:18px">Mesa Imperial</h3>',
       '<p style="margin:0 0 14px;font-size:14px;color:#94a3b8">¿Cuántos tablones? <br><small>(mínimo 2 — cada tablón = 2.4m, 10 personas)</small></p>',
-      '<input id="imperial-tablones" type="number" min="2" max="20" value="3" style="width:100%;padding:8px 12px;background:#0f172a;border:1px solid #475569;border-radius:6px;color:#fff;font-size:16px;box-sizing:border-box;">',
+      '<input id="imperial-tablones" type="number" min="2" max="20" value="3" style="width:100%;padding:8px 12px;background:#141314;border:1px solid rgba(201,169,110,0.3);border-radius:6px;color:#fff;font-size:16px;box-sizing:border-box;">',
       '<div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end">',
       '<button id="imperial-cancel" style="padding:8px 18px;background:#374151;color:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-size:14px">Cancelar</button>',
-      '<button id="imperial-ok" style="padding:8px 18px;background:#c9a96e;color:#1e293b;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700">Agregar</button>',
+      '<button id="imperial-ok" style="padding:8px 18px;background:#c9a96e;color:#1F1F1F;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700">Agregar</button>',
       '</div>'
     ].join('');
 
@@ -483,13 +489,13 @@
     var html = '';
     html += '<div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">';
     if (invitados.length === 0) {
-      html += '  <span style="color:#64748b; font-size:12px;">No hay invitados asignados a esta mesa.</span>';
+      html += '  <span style="color:var(--text-muted); font-size:12px;">No hay invitados asignados a esta mesa.</span>';
     } else {
       invitados.forEach(function (guest, idx) {
         html += '  <div class="guest-edit-row" data-index="' + idx + '" style="display:flex; align-items:center; gap:6px;">';
-        html += '    <input type="text" class="guest-name-input form-input" value="' + guest.nombre + '" style="flex:1; padding:4px 8px; font-size:12px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px;" placeholder="Nombre" />';
-        html += '    <input type="number" class="guest-passes-input form-input" min="1" max="' + maxCapacity + '" value="' + guest.pases + '" style="width:50px; padding:4px; font-size:12px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px; text-align:center;" />';
-        html += '    <button class="guest-delete-btn" style="padding:4px 8px; background:rgba(244,63,94,0.15); border:1px solid rgba(244,63,94,0.3); color:#f43f5e; border-radius:4px; cursor:pointer;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>';
+        html += '    <input type="text" class="guest-name-input form-input" value="' + guest.nombre + '" style="flex:1; padding:4px 8px; font-size:12px; background:rgba(10,9,10,0.55); border:1px solid rgba(201,169,110,0.16); color:var(--text-primary); border-radius:4px;" placeholder="Nombre" />';
+        html += '    <input type="number" class="guest-passes-input form-input" min="1" max="' + maxCapacity + '" value="' + guest.pases + '" style="width:50px; padding:4px; font-size:12px; background:rgba(10,9,10,0.55); border:1px solid rgba(201,169,110,0.16); color:var(--text-primary); border-radius:4px; text-align:center;" />';
+        html += '    <button class="guest-delete-btn" style="padding:4px 8px; background:rgba(217,79,111,0.15); border:1px solid rgba(217,79,111,0.35); color:#d94f6f; border-radius:4px; cursor:pointer;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>';
         html += '  </div>';
       });
     }
@@ -634,14 +640,14 @@
     var html = '';
     slots.forEach(function (slot, idx) {
       var slotNum = idx + 1;
-      html += '<div style="background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 10px;">';
-      html += '  <div style="font-size: 11px; font-weight: bold; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">';
+      html += '<div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border: 1px solid rgba(201,169,110,0.16); margin-bottom: 10px;">';
+      html += '  <div style="font-size: 11px; font-weight: bold; color: var(--gold); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">';
       html += '    <i class="fa-solid fa-cookie"></i> Doblez de Servilleta ' + slotNum;
       html += '  </div>';
       
       html += '  <div class="form-group" style="margin-bottom: 6px;">';
-      html += '    <label class="form-label" style="font-size:11px; color:#cbd5e1; margin-bottom:2px;">Tipo de Doblez</label>';
-      html += '    <select class="form-input napkin-slot-type" data-slot="' + idx + '" style="font-size:12px; padding:6px 10px; background:#1e293b; border:1px solid #475569; color:#fff; border-radius:4px; width:100%; box-sizing:border-box;">';
+      html += '    <label class="form-label" style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Tipo de Doblez</label>';
+      html += '    <select class="form-input napkin-slot-type" data-slot="' + idx + '" style="font-size:12px; padding:6px 10px; background:rgba(10,9,10,0.55); border:1px solid rgba(201,169,110,0.16); color:var(--text-primary); border-radius:4px; width:100%; box-sizing:border-box;">';
       foldOptions.forEach(function (opt) {
         var selected = opt.value === slot.type ? ' selected' : '';
         html += '      <option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
@@ -651,8 +657,8 @@
       
       var colorHiddenStyle = slot.type === 'ninguno' ? ' style="margin-bottom: 0; display:none;"' : ' style="margin-bottom: 0;"';
       html += '  <div class="form-group napkin-slot-color-wrapper" data-slot="' + idx + '"' + colorHiddenStyle + '>';
-      html += '    <label class="form-label" style="font-size:11px; color:#cbd5e1; margin-bottom:2px;">Color de Servilleta</label>';
-      html += '    <select class="form-input napkin-slot-color" data-slot="' + idx + '" style="font-size:12px; padding:6px 10px; background:#1e293b; border:1px solid #475569; color:#fff; border-radius:4px; width:100%; box-sizing:border-box;">';
+      html += '    <label class="form-label" style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Color de Servilleta</label>';
+      html += '    <select class="form-input napkin-slot-color" data-slot="' + idx + '" style="font-size:12px; padding:6px 10px; background:rgba(10,9,10,0.55); border:1px solid rgba(201,169,110,0.16); color:var(--text-primary); border-radius:4px; width:100%; box-sizing:border-box;">';
       colorOptions.forEach(function (opt) {
         var selected = opt.value === slot.color ? ' selected' : '';
         html += '      <option value="' + opt.value + '"' + selected + '>' + opt.label + '</option>';
@@ -1112,7 +1118,7 @@
         card.dataset.type = item.type;
         card.style.cssText = [
           'display:flex', 'flex-direction:column', 'align-items:center', 'justify-content:center',
-          'gap:4px', 'padding:10px 6px', 'background:#1e293b', 'border:1px solid #334155',
+          'gap:4px', 'padding:10px 6px', 'background:rgba(255,255,255,0.025)', 'border:1px solid rgba(201,169,110,0.16)',
           'border-radius:8px', 'cursor:pointer', 'transition:all 0.15s', 'text-align:center',
           'user-select:none'
         ].join(';');
@@ -1126,7 +1132,7 @@
           card.style.transform = 'scale(1.03)';
         });
         card.addEventListener('mouseleave', function () {
-          card.style.background = AppState.pendingType === item.type ? '#1e3a5f' : '#1e293b';
+          card.style.background = AppState.pendingType === item.type ? 'rgba(246,92,122,0.16)' : 'rgba(255,255,255,0.025)';
           card.style.borderColor = AppState.pendingType === item.type ? item.color : '#334155';
           card.style.transform = '';
         });
@@ -1166,7 +1172,7 @@
 
     // Deselect previous card
     if (_lastPendingCard) {
-      _lastPendingCard.style.background = '#1e293b';
+      _lastPendingCard.style.background = 'rgba(255,255,255,0.025)';
       _lastPendingCard.style.borderColor = '#334155';
       _lastPendingCard.style.outline = '';
     }
@@ -1186,7 +1192,7 @@
     _lastPendingColor = color;
 
     if (card) {
-      card.style.background = '#1e3a5f';
+      card.style.background = 'rgba(246,92,122,0.16)';
       card.style.borderColor = color || '#c9a96e';
       card.style.outline = '2px solid ' + (color || '#c9a96e');
     }
@@ -1266,6 +1272,11 @@
       if (view === '2d') {
         if (container2d) container2d.style.display = 'block';
         if (container3d) container3d.style.display = 'none';
+        // Ajustar el encuadre si el terreno cambió mientras el 2D estaba oculto
+        if (_fit2dOnShow && window.Editor2D) {
+          _fit2dOnShow = false;
+          window.Editor2D.resetZoom();
+        }
         if (btn2d) { btn2d.classList.add('active'); }
         if (btn3d) { btn3d.classList.remove('active'); }
         if (brightnessGroup) brightnessGroup.style.display = 'none';
@@ -1408,7 +1419,7 @@
   function _wireLayerToggles() {
     var cats = [
       'estructuras', 'techos', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores',
-      'flujo_invitados', 'flujo_proveedores', 'flujo_staff'
+      'flujo_invitados', 'flujo_proveedores', 'flujo_staff', 'flujo_emergencia'
     ];
     cats.forEach(function (cat) {
       var cb = document.getElementById('layer-toggle-' + cat);
@@ -1611,7 +1622,9 @@
         if (data.elements) AppState.elements = data.elements;
         if (data.terrain) AppState.terrain = data.terrain;
         if (data.layers) Object.assign(AppState.layers, data.layers);
-        
+        AppState.flows = data.flows || [];
+        AppState.venueId = data.venueId || null;
+
         var wEl = document.getElementById('terrain-width');
         var hEl = document.getElementById('terrain-height');
         if (wEl) wEl.value = AppState.terrain.w;
@@ -1820,7 +1833,9 @@
       if (data.elements) AppState.elements = data.elements;
       if (data.terrain) AppState.terrain = data.terrain;
       if (data.layers) Object.assign(AppState.layers, data.layers);
-      
+      AppState.flows = data.flows || [];
+      AppState.venueId = data.venueId || null;
+
       var wEl = document.getElementById('terrain-width');
       var hEl = document.getElementById('terrain-height');
       if (wEl) wEl.value = AppState.terrain.w;
@@ -1862,6 +1877,8 @@
       elements: AppState.elements,
       terrain: AppState.terrain,
       layers: AppState.layers,
+      flows: AppState.flows,
+      venueId: AppState.venueId,
       savedAt: new Date().toISOString()
     };
 
@@ -1915,6 +1932,8 @@
     if (data.elements) AppState.elements = data.elements;
     if (data.terrain) AppState.terrain = data.terrain;
     if (data.layers) Object.assign(AppState.layers, data.layers);
+    AppState.flows = data.flows || [];
+    AppState.venueId = data.venueId || null;
     AppState.elements.forEach(function (e) {
       // Clean up corrupted characters caused by broken UTF-8 encoding
       if (typeof e.name === 'string') {
@@ -1991,7 +2010,9 @@
       exportedAt: new Date().toISOString(),
       terrain: AppState.terrain,
       elements: AppState.elements,
-      layers: AppState.layers
+      layers: AppState.layers,
+      flows: AppState.flows,
+      venueId: AppState.venueId
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -2013,6 +2034,8 @@
           AppState.elements = data.elements;
           if (data.terrain) AppState.terrain = data.terrain;
           if (data.layers) Object.assign(AppState.layers, data.layers);
+          AppState.flows = data.flows || [];
+          AppState.venueId = data.venueId || null;
           if (window.Editor2D) window.Editor2D.setTerrain(AppState.terrain.w, AppState.terrain.h);
           _refresh();
           updateCounters();
@@ -2038,7 +2061,7 @@
       canvas.width = svgEl.clientWidth || 1200;
       canvas.height = svgEl.clientHeight || 800;
       var ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#171516';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
@@ -2800,8 +2823,10 @@
     var onClearClick = function () {
       if (!confirm('¿Deseas iniciar desde cero? Se eliminarán absolutamente TODOS los elementos del plano (terreno, construcción, mesas, sillas y decoración) para dejar el lienzo 100% vacío.')) return;
       saveHistory();
-      
+
       AppState.elements = [];
+      AppState.flows = [];
+      AppState.venueId = null;
       _tableCounter = 0;
       deselectAll();
       _refresh();
@@ -2816,6 +2841,97 @@
 
     if (btn) btn.onclick = onClearClick;
     if (btnFab) btnFab.onclick = onClearClick;
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // VENUE PICKER (plantillas de salones / desde cero)
+  // ══════════════════════════════════════════════════════════
+  var _fit2dOnShow = false;
+
+  function _venueOptions() {
+    var opts = [];
+    if (window.DEFAULT_LAYOUT) {
+      opts.push({
+        id: 'jardin', name: 'Jardín con alberca',
+        description: 'Plano base actual del maquetador universal', layout: window.DEFAULT_LAYOUT
+      });
+    }
+    (window.VENUE_TEMPLATES || []).forEach(function (t) { opts.push(t); });
+    opts.push({
+      id: 'cero', name: 'Empezar desde cero',
+      description: 'Terreno vacío de 50 × 60 m para maquetar un salón nuevo',
+      layout: { terrain: { w: 50, h: 60 }, elements: [], flows: [] }
+    });
+    return opts;
+  }
+
+  function _loadVenueTemplate(opt) {
+    var data = JSON.parse(JSON.stringify(opt.layout));
+    saveHistory();
+    _tableCounter = 0;
+    _loadLayoutData(data);
+    deselectAll();
+
+    var wEl = document.getElementById('terrain-width');
+    var hEl = document.getElementById('terrain-height');
+    if (wEl) wEl.value = AppState.terrain.w;
+    if (hEl) hEl.value = AppState.terrain.h;
+    Object.keys(AppState.layers).forEach(function (cat) {
+      var cb = document.getElementById('layer-toggle-' + cat);
+      if (cb) cb.checked = AppState.layers[cat] !== false;
+    });
+
+    if (window.Editor2D) window.Editor2D.setTerrain(AppState.terrain.w, AppState.terrain.h);
+    _fit2dOnShow = AppState.activeView !== '2d';
+    _refresh();
+    updateCounters();
+    showToast('Plantilla cargada: ' + opt.name, 'success');
+  }
+
+  function _openVenuePicker(isStart) {
+    var modal = document.createElement('div');
+    modal.className = 'venue-picker-overlay';
+    var cards = _venueOptions().map(function (opt, i) {
+      var count = (opt.layout.elements || []).filter(function (e) { return !e.bg2d; }).length;
+      var meta = opt.id === 'cero' ? 'Lienzo vacío' :
+        opt.layout.terrain.w + ' × ' + opt.layout.terrain.h + ' m · ' + count + ' elementos' +
+        ((opt.layout.flows || []).length ? ' · flujos de circulación' : '');
+      return '<button class="venue-card' + (opt.id === 'cero' ? ' venue-card-empty' : '') + '" data-idx="' + i + '">' +
+        '<i class="fa-solid ' + (opt.id === 'cero' ? 'fa-plus' : 'fa-building-columns') + '"></i>' +
+        '<strong>' + opt.name + '</strong>' +
+        '<span>' + opt.description + '</span>' +
+        '<small>' + meta + '</small>' +
+        '</button>';
+    }).join('');
+    modal.innerHTML =
+      '<div class="venue-picker">' +
+        '<div class="venue-picker-head">' +
+          '<h2>¿Con qué salón quieres empezar?</h2>' +
+          '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button>' +
+        '</div>' +
+        '<p>Elige un salón ya maquetado y ajústalo a tu evento, o empieza un plano nuevo.</p>' +
+        '<div class="venue-grid">' + cards + '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+
+    var opts = _venueOptions();
+    var close = function () { modal.remove(); };
+    modal.querySelector('.venue-picker-close').onclick = close;
+    modal.onclick = function (e) { if (e.target === modal) close(); };
+    Array.prototype.forEach.call(modal.querySelectorAll('.venue-card'), function (btn) {
+      btn.onclick = function () {
+        var hasWork = AppState.elements.some(function (e) { return !e.bg2d; });
+        if (!isStart && hasWork && !confirm('Se reemplazará el plano actual. Puedes deshacer con Ctrl+Z. ¿Continuar?')) return;
+        _loadVenueTemplate(opts[parseInt(btn.getAttribute('data-idx'), 10)]);
+        close();
+      };
+    });
+  }
+
+  function _wireVenuePicker(showOnStart) {
+    var btn = document.getElementById('btn-open-venues');
+    if (btn) btn.onclick = function () { _openVenuePicker(false); };
+    if (showOnStart) _openVenuePicker(true);
   }
 
   // ══════════════════════════════════════════════════════════
@@ -2996,7 +3112,7 @@
       onPlaceElement: function (type, x, y) {
         AppState.pendingType = null;
         if (_lastPendingCard) {
-          _lastPendingCard.style.background = '#1e293b';
+          _lastPendingCard.style.background = 'rgba(255,255,255,0.025)';
           _lastPendingCard.style.borderColor = '#334155';
           _lastPendingCard.style.outline = '';
           _lastPendingCard = null;
@@ -3094,6 +3210,8 @@
           elements: AppState.elements,
           terrain: AppState.terrain,
           layers: AppState.layers,
+          flows: AppState.flows,
+          venueId: AppState.venueId,
           savedAt: new Date().toISOString()
         };
         try {
@@ -3159,6 +3277,7 @@
     _wireClear();
     _wireAlign();
     _wireImportSidebar();
+    _wireVenuePicker(!hadSaved);
     _wireKeyboard();
 
     // Init Supabase Connection

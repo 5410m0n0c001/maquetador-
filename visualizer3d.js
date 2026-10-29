@@ -655,8 +655,8 @@ window.Visualizer3D = (function () {
 
     // 1. Scene
     _scene = new THREE.Scene();
-    _scene.background = new THREE.Color(0x0a0f1d); // Midnight dark theme
-    _scene.fog = new THREE.FogExp2(0x0a0f1d, 0.015);
+    _scene.background = new THREE.Color(0x141214); // Negro gala PEG
+    _scene.fog = new THREE.FogExp2(0x141214, 0.015);
 
     // 2. Camera — defensive: guarantee non-zero dimensions
     var cw = _container.clientWidth || _container.parentElement.clientWidth || window.innerWidth;
