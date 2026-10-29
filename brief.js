@@ -57,6 +57,27 @@
   // Venue elegido → plano base sugerido
   var VENUE_A_PLANO = { 'C. Convenciones Presidente': 'Centro de Convenciones Presidente', 'Salón Jardín Yolomecatl': 'Yolomecatl · Versión A', 'Salón Manzanares': 'Salón Manzanares' };
 
+  // Al llenar el campo (clave) se marca sola la opción relacionada [campo, valor]
+  var AUTO_MARCA = {
+    venue_red: ['tiene_venue', 'Venue de la red Primavera'],
+    venue_externo: ['tiene_venue', 'Sí (propio / externo)'],
+    tipo_evento_otro: ['tipo_evento', 'Otro'],
+    chambelanes_cuantos: ['chambelanes', 'Sí'],
+    chambelanes_nombres: ['chambelanes', 'Sí'],
+    menu_infantil_cant: ['menu_infantil', 'Sí'],
+    pastel_detalle: ['pastel', 'Sí'],
+    estilo_tematico: ['estilo_montaje', 'Temático'],
+    foto_paquete: ['foto_incluye', 'Sí'],
+    foto_extras: ['foto_incluye', 'Sí']
+  };
+
+  function vacio(v) {
+    if (v == null || v === '') return true;
+    if (Array.isArray(v)) return !v.length;
+    if (typeof v === 'object') return !Object.keys(v).length;
+    return false;
+  }
+
   // ── Esquema del brief (formato "Brief de Evento" de PEG) ──
   var SI_NO = ['Sí', 'No'];
   var SECTIONS = [
@@ -623,6 +644,7 @@
       return '<div class="brief-notice"><strong><i class="fa-solid fa-triangle-exclamation"></i> ' + esc(f.label) + '</strong><p>' + esc(f.text) + '</p></div>';
     }
     var v = brief[f.k];
+    if (ro && vacio(v)) return '';
     var wide = ['checks', 'radio', 'textarea', 'palette', 'swatches', 'detail'].indexOf(f.type) > -1;
     var html = '<div class="brief-field' + (wide ? ' wide' : '') + '">' +
       '<label class="form-label">' + esc(f.label) + '</label>';
@@ -669,7 +691,8 @@
     if (f.type === 'radio' || f.type === 'checks') {
       var multi = f.type === 'checks';
       var sel = multi ? (Array.isArray(v) ? v : []) : v;
-      html += '<div class="brief-chips">' + f.options.map(function (o) {
+      var visibles = ro ? f.options.filter(function (o) { return multi ? sel.indexOf(o) > -1 : sel === o; }) : f.options;
+      html += '<div class="brief-chips">' + visibles.map(function (o) {
         var on = multi ? sel.indexOf(o) > -1 : sel === o;
         return '<button type="button" class="brief-chip' + (on ? ' on' : '') + '" data-k="' + f.k + '" data-v="' + esc(o) + '" data-multi="' + (multi ? 1 : 0) + '"' + dis + '>' + esc(o) + '</button>';
       }).join('') + '</div>';
@@ -1059,6 +1082,11 @@
           return '<option value="' + i + '"' + (i === _step ? ' selected' : '') + '>Paso ' + (i + 1) + ' de ' + steps.length + ': ' + esc(st.title) + '</option>';
         }).join('') + '</select></div>' +
         '<div class="brief-body">';
+    if (ro) {
+      html += '<div class="ro-banner"><div><strong><i class="fa-solid fa-eye"></i> Estás en solo lectura.</strong> ' +
+        'Aquí se muestra solo lo que ya se capturó. Para llenar o editar el brief, entra como planner.</div>' +
+        '<button type="button" class="btn-gold" id="ro-editar"><i class="fa-solid fa-unlock"></i> Editar como planner</button></div>';
+    }
     if (step.generar) {
       html += '<section class="brief-section"><h3><span>' + (_step + 1) + '</span>' + esc(step.title) + '</h3>' + generarHtml() + '</section>';
     }
@@ -1068,9 +1096,21 @@
       html += '<section class="brief-section" id="brief-' + sec.id + '"><h3>' + esc(sec.title) + '</h3>';
       if (sec.id === 'minuto') html += minutoHtml(d.minuto || [], ro);
       else if (sec.id === 'montaje_elegido') html += montajeHtml(d.montaje || { fotos: [] }, ro);
-      else html += '<div class="brief-grid">' + sec.fields
-        .filter(function (f) { return !(ro && f.internal); })
-        .map(function (f) { return fieldHtml(f, d.brief, ro); }).join('') + '</div>';
+      else {
+        var parts = sec.fields
+          .filter(function (f) { return !(ro && f.internal); })
+          .map(function (f) { return { f: f, html: fieldHtml(f, d.brief, ro) }; });
+        if (ro) {
+          // Un subtítulo solo se muestra si debajo hay algo respondido
+          parts = parts.filter(function (p, i) {
+            if (p.f.type !== 'heading') return p.html !== '';
+            for (var j = i + 1; j < parts.length && parts[j].f.type !== 'heading'; j++) if (parts[j].html) return true;
+            return false;
+          });
+        }
+        var inner = parts.map(function (p) { return p.html; }).join('');
+        html += inner ? '<div class="brief-grid">' + inner + '</div>' : '<p class="brief-empty">Sin datos capturados todavía.</p>';
+      }
       html += '</section>';
     });
     html += '<div class="brief-steps-nav">' +
@@ -1110,6 +1150,8 @@
     });
     var gen = $('btn-generar-plano');
     if (gen) gen.onclick = generarPlano;
+    var roEdit = $('ro-editar');
+    if (roEdit) roEdit.onclick = function () { ensurePlanner(function () { renderPanel(); }); };
     if (!_isPlanner) return;
 
     // Campos con detalle: marcar/desmarcar, editar datos y agregar opciones propias
@@ -1143,9 +1185,20 @@
       };
     });
 
+    // Marca la opción relacionada sin redibujar (para no perder el foco del campo)
+    function autoMarca(k, v) {
+      var rel = AUTO_MARCA[k];
+      if (!rel || vacio(v) || d.brief[rel[0]] === rel[1]) return;
+      d.brief[rel[0]] = rel[1];
+      _panel.querySelectorAll('.brief-chip[data-k="' + rel[0] + '"]').forEach(function (c) {
+        c.classList.toggle('on', c.getAttribute('data-v') === rel[1]);
+      });
+    }
+
     _panel.querySelectorAll('[data-k]:not(.brief-chip)').forEach(function (el) {
       el.addEventListener('input', function () {
         d.brief[el.getAttribute('data-k')] = el.value;
+        autoMarca(el.getAttribute('data-k'), el.value);
         scheduleSave();
       });
     });
@@ -1163,6 +1216,7 @@
           d.brief[k] = same ? '' : v;
           if (k === 'venue_red' && !same && VENUE_A_PLANO[v] && !d.brief.plano_base) {
             d.brief.plano_base = VENUE_A_PLANO[v];
+            d.brief.tiene_venue = 'Venue de la red Primavera';
             scheduleSave();
             renderPanel();
             return;
@@ -1170,6 +1224,7 @@
           _panel.querySelectorAll('.brief-chip[data-k="' + k + '"]').forEach(function (c) { c.classList.remove('on'); });
           if (!same) chip.classList.add('on');
         }
+        autoMarca(k, d.brief[k]);
         scheduleSave();
       };
     });

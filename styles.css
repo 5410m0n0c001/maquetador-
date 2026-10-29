@@ -2097,3 +2097,20 @@ body.peg-view-only .minuto-row { grid-template-columns: 120px 1fr 200px; }
 .generar-falta { color: var(--warning); margin-bottom: 12px; }
 #btn-generar-plano { padding: 14px 22px; font-size: 15px; }
 #btn-generar-plano:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Aviso de solo lectura dentro del brief */
+.ro-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(201, 169, 110, 0.45);
+  background: var(--gold-soft);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.ro-banner strong { color: var(--gold); }
