@@ -22,6 +22,35 @@
   var LIMITE_DB = 500 * 1024 * 1024;
   var LIMITE_ARCHIVOS = 1024 * 1024 * 1024;
 
+  // ── Paletas y colores más usados en bodas y XV años (para mostrarlas al cliente) ──
+  var PALETTES = [
+    { name: 'Blush & Oro', colors: ['#F4C2C2', '#E8B4B8', '#C9A96E', '#FFF8F0'] },
+    { name: 'Champagne & Marfil', colors: ['#F7E7CE', '#E6D2B5', '#FFFFF0', '#C9A96E'] },
+    { name: 'Verde salvia & Blanco', colors: ['#9CAF88', '#B2C2A4', '#FFFFFF', '#E8E4D9'] },
+    { name: 'Terracota boho', colors: ['#C8553D', '#D9A441', '#F4E3C1', '#8B5E3C'] },
+    { name: 'Azul marino & Dorado', colors: ['#1F2A44', '#2E4057', '#C9A96E', '#F8F6F4'] },
+    { name: 'Vino & Oro', colors: ['#6D1A36', '#8E2C48', '#C9A96E', '#F5E6E8'] },
+    { name: 'Lavanda & Plata', colors: ['#B9A7D1', '#D8CCE8', '#C0C0C0', '#FFFFFF'] },
+    { name: 'Rosa mexicano & Fucsia', colors: ['#E4007C', '#FF4F9A', '#F9C6DA', '#C9A96E'] },
+    { name: 'Azul cielo & Plata', colors: ['#A7C7E7', '#D6E6F5', '#C0C0C0', '#FFFFFF'] },
+    { name: 'Negro & Dorado (gala)', colors: ['#1F1F1F', '#3A3A3A', '#C9A96E', '#F8F6F4'] },
+    { name: 'Total white', colors: ['#FFFFFF', '#F8F6F4', '#EFE7E1', '#D9D4CC'] },
+    { name: 'Esmeralda & Oro', colors: ['#0B6E4F', '#2E8B57', '#C9A96E', '#F8F6F4'] },
+    { name: 'Lila & Rosa pastel', colors: ['#C8A2C8', '#F7C6D9', '#FBE3EC', '#FFFFFF'] },
+    { name: 'Durazno & Coral', colors: ['#FFCBA4', '#FF9F80', '#F6E0D5', '#C9A96E'] },
+    { name: 'Dusty blue & Blanco', colors: ['#8DA9C4', '#B7C9D9', '#FFFFFF', '#E5E5E5'] },
+    { name: 'Rojo & Blanco', colors: ['#B22222', '#D7263D', '#FFFFFF', '#F5F5F5'] }
+  ];
+  var DRESS_COLORS = [
+    { name: 'Blanco', hex: '#FFFFFF' }, { name: 'Marfil', hex: '#FFFFF0' }, { name: 'Champagne', hex: '#F7E7CE' },
+    { name: 'Rosa palo', hex: '#F4C2C2' }, { name: 'Rosa mexicano', hex: '#E4007C' }, { name: 'Fucsia', hex: '#FF00A0' },
+    { name: 'Lila', hex: '#C8A2C8' }, { name: 'Lavanda', hex: '#B57EDC' }, { name: 'Azul cielo', hex: '#A7C7E7' },
+    { name: 'Azul rey', hex: '#4169E1' }, { name: 'Azul marino', hex: '#1F2A44' }, { name: 'Verde esmeralda', hex: '#0B6E4F' },
+    { name: 'Verde menta', hex: '#98E6B8' }, { name: 'Rojo', hex: '#C1121F' }, { name: 'Vino', hex: '#6D1A36' },
+    { name: 'Durazno', hex: '#FFCBA4' }, { name: 'Dorado', hex: '#D4AF37' }, { name: 'Plateado', hex: '#C0C0C0' },
+    { name: 'Negro', hex: '#1F1F1F' }
+  ];
+
   // ── Esquema del brief (formato "Brief de Evento" de PEG) ──
   var SI_NO = ['Sí', 'No'];
   var SECTIONS = [
@@ -55,26 +84,55 @@
       { k: 'formalidad', label: 'Formalidad', type: 'radio', options: ['Formal / Gala', 'Semiformal', 'Casual'] },
       { k: 'momento', label: 'Momento', type: 'radio', options: ['Día', 'Tarde', 'Noche'] },
       { k: 'tematica', label: 'Temática / estilo' },
-      { k: 'paleta', label: 'Paleta de colores' }
+      { k: 'paletas', label: 'Paleta de colores (puedes elegir varias para mostrarlas al cliente)', type: 'palette', options: PALETTES },
+      { k: 'paleta', label: 'Paleta personalizada / notas de color' }
     ] },
     { id: 'especificos', title: 'Datos específicos por tipo de evento', fields: [
+      { type: 'heading', label: 'Ceremonias (boda, XV años, bautizo…)' },
+      { k: 'ceremonias', label: 'Marca cada ceremonia y anota hora, lugar y quién la oficia', type: 'detail', timed: true,
+        options: ['Ceremonia civil', 'Ceremonia religiosa / misa', 'Ceremonia simbólica'],
+        sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'lugar', label: 'Lugar' }, { k: 'quien', label: 'Oficia (juez / sacerdote / ministro)' }] },
+
       { type: 'heading', label: 'Si es XV años' },
+      { k: 'color_vestido', label: 'Color del vestido', type: 'swatches', options: DRESS_COLORS },
+      { k: 'color_vestido_otro', label: 'Otro color / detalle del vestido' },
+      { k: 'xv_mesa_principal', label: 'Mesa principal de la quinceañera', type: 'radio', options: ['Imperial con chambelanes', 'Imperial con familia', 'Redonda', 'Sin mesa principal'] },
       { k: 'chambelanes', label: 'Chambelanes', type: 'radio', options: SI_NO },
       { k: 'chambelanes_cuantos', label: '¿Cuántos?', type: 'number' },
+      { k: 'chambelanes_nombres', label: 'Nombres de los chambelanes', type: 'textarea' },
       { k: 'coreografo', label: 'Coreógrafo (nombre)' },
       { k: 'coreografo_tel', label: 'Tel. coreógrafo', type: 'tel' },
       { k: 'coreografo_peg', label: 'Coreógrafo', type: 'checks', options: ['PEG lo proporciona'] },
-      { k: 'xv_momentos', label: 'Momentos', type: 'checks', options: ['Vals', 'Última muñeca', 'Brindis', 'Cambio de zapatilla', 'Misa / ceremonia religiosa'] },
-      { k: 'color_vestido', label: 'Color del vestido' },
+      { k: 'xv_momentos', label: 'Momentos de la fiesta (hora y con quién)', type: 'detail', timed: true,
+        options: ['Entrada de la quinceañera', 'Presentación / bendición', 'Vals con papá', 'Vals con chambelanes', 'Baile con el padrino / compadre', 'Baile con padrinos', 'Baile sorpresa', 'Show de chambelanes', 'Ceremonia de las 15 velas', 'Entrega de la última muñeca', 'Cambio de zapatilla', 'Coronación / entrega de tiara', 'Brindis', 'Partida de pastel', 'Semblanza / video'],
+        sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'quien', label: 'Con quién / responsable' }] },
+      { k: 'xv_padrinos', label: 'Padrinos', type: 'detail',
+        options: ['Padrinos de velación / misa', 'Padrinos de anillo', 'Padrinos de tiara / corona', 'Padrinos de zapatilla', 'Padrinos de última muñeca', 'Padrinos de cojín', 'Padrinos de biblia y rosario', 'Padrinos de ramo', 'Padrinos de pastel', 'Padrinos de brindis / copas'],
+        sub: [{ k: 'nombre', label: 'Nombre(s)' }] },
+
       { type: 'heading', label: 'Si es Boda' },
-      { k: 'boda_mesa_honor', label: 'Mesa de honor', type: 'radio', options: SI_NO },
-      { k: 'boda_ceremonia', label: 'Ceremonia', type: 'checks', options: ['Civil', 'Religiosa', 'Simbólica'] },
-      { k: 'damas_pajes', label: 'Damas / pajes' },
-      { k: 'primer_baile', label: 'Primer baile', type: 'radio', options: SI_NO },
-      { type: 'heading', label: 'Si es Graduación / Corporativo' },
+      { k: 'boda_mesa_honor', label: 'Mesa principal de los novios', type: 'radio', options: ['Imperial con cortejo', 'Imperial solo novios', 'Mesa de novios (sweetheart)', 'Sin mesa principal'] },
+      { k: 'damas_nombres', label: 'Damas de honor (nombres)', type: 'textarea' },
+      { k: 'caballeros_nombres', label: 'Caballeros de honor (nombres)', type: 'textarea' },
+      { k: 'pajes_nombres', label: 'Pajes y niñas de las flores (nombres)', type: 'textarea' },
+      { k: 'boda_padrinos', label: 'Padrinos', type: 'detail',
+        options: ['Padrinos de velación', 'Padrinos de anillos', 'Padrinos de arras', 'Padrinos de lazo', 'Padrinos de biblia y rosario', 'Padrinos de cojines', 'Padrinos de ramo', 'Padrinos de pastel', 'Padrinos de brindis / copas'],
+        sub: [{ k: 'nombre', label: 'Nombre(s)' }] },
+      { k: 'boda_momentos', label: 'Momentos de la fiesta (hora y con quién)', type: 'detail', timed: true,
+        options: ['Entrada de los novios', 'Primer baile', 'Baile con papás', 'Baile con padrinos', 'Brindis', 'Partida de pastel', 'Lanzamiento de ramo', 'Lanzamiento de liga', 'Víbora de la mar', 'Show / sorpresa'],
+        sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'quien', label: 'Con quién / responsable' }] },
+
+      { type: 'heading', label: 'Si es Graduación' },
       { k: 'institucion', label: 'Institución / empresa' },
       { k: 'generacion', label: 'Generación' },
-      { k: 'grad_momentos', label: 'Momentos', type: 'checks', options: ['Pase de lista', 'Reconocimientos'] }
+      { k: 'grad_protocolo', label: 'Protocolo (hora y quién lo conduce)', type: 'detail', timed: true,
+        options: ['Honores a la bandera', 'Himno Nacional', 'Presentación del presídium', 'Palabras de bienvenida', 'Mensaje del director', 'Discurso de generación', 'Pase de lista', 'Entrega de documentos / reconocimientos', 'Toma de protesta / juramento', 'Entrega de anillos de generación', 'Brindis', 'Vals de graduación', 'Último pase de lista', 'Lanzamiento de birretes', 'Foto de generación'],
+        sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'quien', label: 'Quién lo conduce / entrega' }] },
+
+      { type: 'heading', label: 'Si es Corporativo' },
+      { k: 'corp_programa', label: 'Programa (hora y responsable)', type: 'detail', timed: true,
+        options: ['Bienvenida', 'Conferencia / ponencia', 'Reconocimientos / premiación', 'Brindis', 'Coffee break', 'Comida / cena', 'Rifa', 'Show / entretenimiento', 'Cierre'],
+        sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'quien', label: 'Responsable / ponente' }] }
     ] },
     { id: 'venue', title: 'Locación / Venue', fields: [
       { k: 'tiene_venue', label: '¿Ya tiene venue?', type: 'radio', options: ['Sí (propio / externo)', 'Quiere recomendación', 'Venue de la red Primavera'] },
@@ -88,9 +146,13 @@
     ] },
     { id: 'menu', title: 'Banquete / Menú', fields: [
       { k: 'tipo_servicio', label: 'Tipo de servicio', type: 'radio', options: ['Emplatado (a la mesa)', 'Buffet', 'Estaciones de autor', 'Familiar', 'Taquiza', 'Parrillada de cortes'] },
-      { k: 'tiempos', label: 'Tiempos', type: 'checks', options: ['Cóctel de bienvenida', 'Entrada', 'Sopa / Crema', 'Plato fuerte', 'Postre', 'Tornafiesta'] },
-      { k: 'num_tiempos', label: '# tiempos', type: 'radio', options: ['3', '4'] },
-      { k: 'proteina', label: 'Proteína / preferencia plato fuerte' },
+      { k: 'num_tiempos', label: '# tiempos', type: 'radio', options: ['2', '3', '4', '5'] },
+      { k: 'tiempos_menu', label: 'Tiempos del banquete (hora y platillo)', type: 'detail', timed: true,
+        options: ['Cóctel de bienvenida', 'Entrada', 'Sopa / Crema', 'Ensalada', 'Plato fuerte', 'Postre', 'Tornafiesta'],
+        sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'platillo', label: 'Platillo / descripción', type: 'textarea' }] },
+      { k: 'proteina', label: 'Carnes / proteína del plato fuerte', type: 'textarea' },
+      { k: 'guarniciones', label: 'Guarniciones', type: 'textarea' },
+      { k: 'menu_notas', label: 'Notas del menú', type: 'textarea' },
       { k: 'menu_infantil', label: 'Menú infantil', type: 'radio', options: SI_NO },
       { k: 'menu_infantil_cant', label: 'Cantidad menú infantil', type: 'number' },
       { k: 'menu_especial', label: 'Menú especial', type: 'checks', options: ['Vegetariano', 'Vegano', 'Sin gluten'] },
@@ -115,8 +177,11 @@
       { k: 'sillas', label: 'Sillas', type: 'checks', options: ['Tiffany (blanca / chocolate)', 'Crossback (miel / nogal)', 'Boss', 'Lotus', 'Sillón Rey & Reyna / palo de rosa (novios)', 'Banca larga', 'Banco puff individual', 'Silla negra plegable (económica)'] },
       { k: 'mesas', label: 'Mesas', type: 'checks', options: ['Redonda', 'Tablón / imperial', 'Rect. madera (miel/nogal)', 'Tipo mármol', 'Plegable cuadrada', 'Infantil'] },
       { k: 'centros', label: 'Centros', type: 'radio', options: ['Altos', 'Bajos', 'Mixtos'] },
-      { k: 'manteleria', label: 'Mantelería y caminos — color' },
-      { k: 'vajilla_color', label: 'Vajilla / cristalería / cubertería — color' },
+      { k: 'centros_notas', label: 'Notas de centros de mesa (altos / bajos)', type: 'textarea' },
+      { k: 'follaje_flores', label: 'Follaje y flores', type: 'textarea' },
+      { k: 'colores_deco', label: 'Colores de la decoración', type: 'textarea' },
+      { k: 'manteleria', label: 'Mantelería y caminos — color', type: 'textarea' },
+      { k: 'vajilla_color', label: 'Vajilla / cristalería / cubertería — color', type: 'textarea' },
       { k: 'mesa_novios', label: 'Mesa de novios / festejada', type: 'radio', options: ['Imperial', 'Redonda'] },
       { k: 'floral', label: 'Diseño floral / arco / backdrop', type: 'textarea' }
     ] },
@@ -493,8 +558,49 @@
       return '<div class="brief-notice"><strong><i class="fa-solid fa-triangle-exclamation"></i> ' + esc(f.label) + '</strong><p>' + esc(f.text) + '</p></div>';
     }
     var v = brief[f.k];
-    var html = '<div class="brief-field' + (f.type === 'checks' || f.type === 'radio' || f.type === 'textarea' ? ' wide' : '') + '">' +
+    var wide = ['checks', 'radio', 'textarea', 'palette', 'swatches', 'detail'].indexOf(f.type) > -1;
+    var html = '<div class="brief-field' + (wide ? ' wide' : '') + '">' +
       '<label class="form-label">' + esc(f.label) + '</label>';
+    if (f.type === 'palette' || f.type === 'swatches') {
+      // Tarjetas con muestras de color (selección múltiple); en solo lectura solo las elegidas
+      var chosen = Array.isArray(v) ? v : [];
+      var opts = ro ? f.options.filter(function (o) { return chosen.indexOf(o.name) > -1; }) : f.options;
+      if (ro && !opts.length) return html + '<p class="brief-empty">—</p></div>';
+      html += '<div class="' + (f.type === 'palette' ? 'palette-grid' : 'brief-chips') + '">' + opts.map(function (o) {
+        var on = chosen.indexOf(o.name) > -1;
+        var dots = f.type === 'palette'
+          ? '<span class="palette-swatches">' + o.colors.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join('') + '</span>'
+          : '<i class="color-dot" style="background:' + o.hex + '"></i>';
+        return '<button type="button" class="brief-chip ' + (f.type === 'palette' ? 'palette-card' : 'swatch-chip') + (on ? ' on' : '') +
+          '" data-k="' + f.k + '" data-v="' + esc(o.name) + '" data-multi="1"' + dis + '>' + dots + '<span>' + esc(o.name) + '</span></button>';
+      }).join('') + '</div>';
+      return html + '</div>';
+    }
+    if (f.type === 'detail') {
+      // Lista de opciones; cada una marcada lleva sus datos (hora, lugar, quién, nombre…)
+      var val = (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+      var names = f.options.concat(Object.keys(val).filter(function (n) { return f.options.indexOf(n) === -1; }));
+      if (ro) names = names.filter(function (n) { return val[n]; });
+      if (ro && !names.length) return html + '<p class="brief-empty">—</p></div>';
+      html += '<div class="detail-list">' + names.map(function (n) {
+        var on = !!val[n];
+        var row = '<div class="detail-row' + (on ? ' on' : '') + '">' +
+          '<button type="button" class="detail-toggle" data-dt="' + f.k + '" data-v="' + esc(n) + '"' + dis + '>' +
+          '<i class="fa-solid ' + (on ? 'fa-circle-check' : 'fa-circle') + '"></i> ' + esc(n) + '</button>';
+        if (on) {
+          row += '<div class="detail-sub">' + f.sub.map(function (s) {
+            var sv = val[n][s.k];
+            var attrs = ' data-dk="' + f.k + '" data-dv="' + esc(n) + '" data-ds="' + s.k + '"' + dis;
+            return s.type === 'textarea'
+              ? '<textarea class="form-input detail-wide" placeholder="' + esc(s.label) + '"' + attrs + '>' + esc(sv) + '</textarea>'
+              : '<input class="form-input" type="' + (s.type || 'text') + '" placeholder="' + esc(s.label) + '" title="' + esc(s.label) + '" value="' + esc(sv) + '"' + attrs + ' />';
+          }).join('') + '</div>';
+        }
+        return row + '</div>';
+      }).join('') + '</div>';
+      if (!ro) html += '<button type="button" class="detail-add" data-da="' + f.k + '"><i class="fa-solid fa-plus"></i> Agregar otro</button>';
+      return html + '</div>';
+    }
     if (f.type === 'radio' || f.type === 'checks') {
       var multi = f.type === 'checks';
       var sel = multi ? (Array.isArray(v) ? v : []) : v;
@@ -524,8 +630,45 @@
         '</div>';
     });
     html += '</div>';
-    if (!ro) html += '<button type="button" class="btn-ghost" id="minuto-add"><i class="fa-solid fa-plus"></i> Agregar actividad</button>';
+    if (!ro) {
+      html += '<div class="minuto-actions">' +
+        '<button type="button" class="btn-ghost" id="minuto-add"><i class="fa-solid fa-plus"></i> Agregar actividad</button>' +
+        '<button type="button" class="btn-gold" id="minuto-import"><i class="fa-solid fa-clock-rotate-left"></i> Traer horarios del brief</button>' +
+        '</div>';
+    }
     return html;
+  }
+
+  // Ceremonias, momentos, protocolo y tiempos del banquete con hora → filas del minuto a minuto
+  function timedFromBrief(brief) {
+    var rows = [];
+    SECTIONS.forEach(function (s) {
+      s.fields.forEach(function (f) {
+        if (f.type !== 'detail' || !f.timed) return;
+        var val = brief[f.k] || {};
+        Object.keys(val).forEach(function (n) {
+          var it = val[n] || {};
+          if (!it.hora) return;
+          var extra = [it.lugar, it.platillo].filter(Boolean).join(' · ');
+          rows.push({ hora: it.hora, actividad: n + (extra ? ' — ' + extra : ''), responsable: it.quien || '' });
+        });
+      });
+    });
+    return rows;
+  }
+
+  // Texto legible de cualquier valor del brief (lo usa también la ficha PDF)
+  function formatValue(f, v) {
+    if (v == null || v === '') return '';
+    if (f.type === 'detail') {
+      return Object.keys(v || {}).map(function (n) {
+        var it = v[n] || {};
+        var parts = f.sub.map(function (s) { return it[s.k]; }).filter(Boolean);
+        return n + (parts.length ? ': ' + parts.join(' · ') : '');
+      }).join('\n');
+    }
+    if (Array.isArray(v)) return v.join(' · ');
+    return String(v);
   }
 
   var MONTAJE_FIELDS = [
@@ -582,6 +725,11 @@
         '<nav class="brief-nav">' + all.map(function (s, i) {
           return '<a href="#brief-' + s.id + '">' + (i + 1) + '. ' + esc(s.title) + '</a>';
         }).join('') + '</nav>' +
+        // En el teléfono: lista desplegable con todas las secciones
+        '<div class="brief-nav-mobile"><select class="form-input" id="brief-nav-select">' +
+          '<option value="">Ir a la sección…</option>' + all.map(function (s, i) {
+            return '<option value="brief-' + s.id + '">' + (i + 1) + '. ' + esc(s.title) + '</option>';
+          }).join('') + '</select></div>' +
         '<div class="brief-body">';
     all.forEach(function (s, i) {
       html += '<section class="brief-section" id="brief-' + s.id + '"><h3><span>' + (i + 1) + '</span>' + esc(s.title) + '</h3>';
@@ -612,7 +760,44 @@
         if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
     });
+    var navSel = $('brief-nav-select');
+    if (navSel) navSel.onchange = function () {
+      var t = navSel.value && $(navSel.value);
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      navSel.value = '';
+    };
     if (!_isPlanner) return;
+
+    // Campos con detalle: marcar/desmarcar, editar datos y agregar opciones propias
+    _panel.querySelectorAll('.detail-toggle').forEach(function (b) {
+      b.onclick = function () {
+        var k = b.getAttribute('data-dt'), n = b.getAttribute('data-v');
+        var obj = (d.brief[k] && typeof d.brief[k] === 'object' && !Array.isArray(d.brief[k])) ? d.brief[k] : {};
+        if (obj[n]) delete obj[n]; else obj[n] = {};
+        d.brief[k] = obj;
+        scheduleSave();
+        renderPanel();
+      };
+    });
+    _panel.querySelectorAll('[data-dk]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        var obj = d.brief[el.getAttribute('data-dk')];
+        obj[el.getAttribute('data-dv')][el.getAttribute('data-ds')] = el.value;
+        scheduleSave();
+      });
+    });
+    _panel.querySelectorAll('.detail-add').forEach(function (b) {
+      b.onclick = function () {
+        var n = prompt('Nombre del elemento a agregar:');
+        if (!n || !n.trim()) return;
+        var k = b.getAttribute('data-da');
+        var obj = (d.brief[k] && typeof d.brief[k] === 'object' && !Array.isArray(d.brief[k])) ? d.brief[k] : {};
+        obj[n.trim()] = obj[n.trim()] || {};
+        d.brief[k] = obj;
+        scheduleSave();
+        renderPanel();
+      };
+    });
 
     _panel.querySelectorAll('[data-k]:not(.brief-chip)').forEach(function (el) {
       el.addEventListener('input', function () {
@@ -654,6 +839,17 @@
     });
     var add = $('minuto-add');
     if (add) add.onclick = function () { d.minuto.push({ hora: '', actividad: '', responsable: '' }); renderPanel(); };
+    var imp = $('minuto-import');
+    if (imp) imp.onclick = function () {
+      var nuevos = timedFromBrief(d.brief).filter(function (r) {
+        return !d.minuto.some(function (m) { return m.hora === r.hora && m.actividad === r.actividad; });
+      });
+      if (!nuevos.length) { toast('No hay horarios nuevos en el brief. Marca ceremonias, momentos o tiempos y anota su hora.', 'info'); return; }
+      d.minuto = d.minuto.concat(nuevos).sort(function (a, b) { return (a.hora || '99').localeCompare(b.hora || '99'); });
+      scheduleSave();
+      renderPanel();
+      toast(nuevos.length + ' actividad(es) agregadas al minuto a minuto.', 'success');
+    };
 
     // Montaje elegido
     _panel.querySelectorAll('[data-mt]').forEach(function (el) {
@@ -742,6 +938,7 @@
     suppressStartPicker: function () { return true; },
     getEvent: function () { return _event; },
     getSchema: function () { return { sections: SECTIONS, montajeFields: MONTAJE_FIELDS }; },
+    formatValue: formatValue,
     isPlanner: function () { return _isPlanner; }
   };
 })();

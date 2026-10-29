@@ -2226,7 +2226,7 @@
       'td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }' +
       'tr { page-break-inside: avoid; break-inside: avoid; }' +
       '.kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 18px; }' +
-      '.kv div { padding: 5px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }' +
+      '.kv div { padding: 5px 0; border-bottom: 1px solid var(--line); break-inside: avoid; white-space: pre-line; }' +
       '.kv .wide { grid-column: 1 / -1; }' +
       '.kv b { display: block; font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); font-weight: 600; }' +
       '.block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; }' +
@@ -2265,7 +2265,7 @@
       ['Mesas · capacidad', tablesList.length + ' mesas · ' + capacity + ' lugares'],
       ['Formalidad', b.formalidad],
       ['Temática', b.tematica],
-      ['Paleta de colores', b.paleta],
+      ['Paleta de colores', [].concat(b.paletas || [], b.paleta ? [b.paleta] : []).join(' · ')],
       ['Planner', b.planner]
     ].filter(function (c) { return c[1]; });
     html += '<div class="cards">' + cards.map(function (c) {
@@ -2305,16 +2305,19 @@
     var briefHtml = '';
     (schema.sections || []).forEach(function (s) {
       if (!isPlanner && s.internal) return;
+      var fmt = function (f) {
+        var v = b[f.k];
+        if (f.type === 'date') return fmtDate(v);
+        return PE && PE.formatValue ? PE.formatValue(f, v) : (Array.isArray(v) ? v.join(' · ') : (v || ''));
+      };
       var rows = s.fields.filter(function (f) {
         if (!f.k || (!isPlanner && f.internal)) return false;
-        var v = b[f.k];
-        return Array.isArray(v) ? v.length : (v !== undefined && v !== null && v !== '');
+        return fmt(f) !== '';
       });
       if (!rows.length) return;
       briefHtml += '<div class="block"><h3>' + esc(s.title) + '</h3><div class="kv">' + rows.map(function (f) {
-        var v = b[f.k];
-        var val = Array.isArray(v) ? v.join(' · ') : (f.type === 'date' ? fmtDate(v) : v);
-        return '<div' + (f.type === 'textarea' || f.type === 'checks' ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(val) + '</div>';
+        var wide = ['textarea', 'checks', 'detail', 'palette', 'swatches'].indexOf(f.type) > -1;
+        return '<div' + (wide ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(fmt(f)) + '</div>';
       }).join('') + '</div></div>';
     });
     if (briefHtml) html += '<section class="section page-break"><h2>Información del evento</h2>' + briefHtml + '</section>';
