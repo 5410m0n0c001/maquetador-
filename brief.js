@@ -456,8 +456,10 @@
 
   function createEvent() {
     if (!client()) { toast('No hay conexión con Supabase.', 'error'); return; }
+    // Cada evento nuevo empieza en blanco: nunca hereda el plano ni los datos del evento que estaba abierto
     var data = emptyData();
-    data.layout = window.App && window.App.getLayout ? window.App.getLayout() : null;
+    data.layout = { terrain: { w: 50, h: 60 }, elements: [], flows: [], layers: {}, venueId: null };
+    if (window.App && window.App.loadLayout) window.App.loadLayout(data.layout);
     client().from(TABLE).insert({
       nombre: 'Nuevo evento',
       venue_id: data.layout && data.layout.venueId,
@@ -600,7 +602,7 @@
         '<p>Cada evento guarda el plano, el brief, el minuto a minuto y las fotos del montaje.</p>' +
         '<div class="venue-grid" id="events-grid">' +
           '<button class="venue-card venue-card-empty" id="btn-new-event"><i class="fa-solid fa-plus"></i>' +
-          '<strong>Nuevo evento</strong><span>Empieza con el plano que tienes abierto</span></button>' +
+          '<strong>Nuevo evento</strong><span>Empieza en blanco: primero el brief, luego el plano</span></button>' +
         '</div>' +
         '<div class="usage-meter" id="usage-meter">Calculando espacio usado…</div>' +
       '</div>';

@@ -5108,20 +5108,7 @@ window.VENUE_TEMPLATES = [
       "servilletaColor_corazon": "dorado",
       "servilletaColor_corbata": "champagne",
       "servilletaColor_default": "blanco",
-      "invitados": [
-       {
-        "nombre": "Zoe (Quinceañera)",
-        "pases": 1
-       },
-       {
-        "nombre": "Papás de Zoe",
-        "pases": 2
-       },
-       {
-        "nombre": "Hermano de Zoe",
-        "pases": 1
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5171,7 +5158,10 @@ window.VENUE_TEMPLATES = [
      "editable": true,
      "removable": true,
      "layer": "entretenimiento",
-     "mesaConfig": {}
+     "mesaConfig": {
+      "invitados": [],
+      "menu": ""
+     }
     },
     {
      "id": "el_1782333947644_19",
@@ -5220,56 +5210,7 @@ window.VENUE_TEMPLATES = [
       "tipoSilla": "tiffany",
       "menu": "",
       "mesaNum": 2,
-      "invitados": [
-       {
-        "nombre": "Pamela Díaz",
-        "pases": 5
-       },
-       {
-        "nombre": "jessica Maldonado",
-        "pases": 2
-       },
-       {
-        "nombre": "Jimena Maldonado",
-        "pases": 1
-       },
-       {
-        "nombre": "Mauricio Miranda",
-        "pases": 1
-       },
-       {
-        "nombre": "Damián Alonso",
-        "pases": 1
-       },
-       {
-        "nombre": "Dulce Figueroa",
-        "pases": 1
-       },
-       {
-        "nombre": "Dulce Valdez",
-        "pases": 1
-       },
-       {
-        "nombre": "Elías Alemán",
-        "pases": 2
-       },
-       {
-        "nombre": "Gael Olivares",
-        "pases": 1
-       },
-       {
-        "nombre": "Giezi Sanchez",
-        "pases": 1
-       },
-       {
-        "nombre": "Javier Emiliano",
-        "pases": 1
-       },
-       {
-        "nombre": "Josthin Erubiel",
-        "pases": 1
-       }
-      ],
+      "invitados": [],
       "capacidadMax": 18,
       "caminoAcomodo": "diagonal",
       "cristal2": "ninguno",
@@ -5315,36 +5256,7 @@ window.VENUE_TEMPLATES = [
       "tipoSilla": "tiffany",
       "menu": "",
       "mesaNum": 4,
-      "invitados": [
-       {
-        "nombre": "Fernanda Sanchez",
-        "pases": 5
-       },
-       {
-        "nombre": "Andrea Sanchez",
-        "pases": 5
-       },
-       {
-        "nombre": "Carlos Sanchez",
-        "pases": 4
-       },
-       {
-        "nombre": "Alejandra Sanchez",
-        "pases": 4
-       },
-       {
-        "nombre": "Luis Sanchez",
-        "pases": 2
-       },
-       {
-        "nombre": "José Hilario Roque",
-        "pases": 2
-       },
-       {
-        "nombre": "Braulio Roque",
-        "pases": 2
-       }
-      ],
+      "invitados": [],
       "capacidadMax": 24,
       "caminoAcomodo": "diagonal",
       "cristal2": "ninguno",
@@ -5496,20 +5408,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Elena Villegas",
-        "pases": 2
-       },
-       {
-        "nombre": "Ricardo Villegas Garcia",
-        "pases": 5
-       },
-       {
-        "nombre": "Ricardo Villegas Cervantes",
-        "pases": 3
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5552,20 +5451,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Carlos Díaz",
-        "pases": 6
-       },
-       {
-        "nombre": "Bertha Garcia",
-        "pases": 2
-       },
-       {
-        "nombre": "Beny Téllez",
-        "pases": 2
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5608,20 +5494,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Mariana Saldívar",
-        "pases": 3
-       },
-       {
-        "nombre": "Maricela Rodriguez",
-        "pases": 3
-       },
-       {
-        "nombre": "Isabel Basurto",
-        "pases": 3
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5664,20 +5537,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Priscila Hernandez",
-        "pases": 3
-       },
-       {
-        "nombre": "Stefany Toledo",
-        "pases": 4
-       },
-       {
-        "nombre": "Gabriel Ledesma",
-        "pases": 3
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5720,20 +5580,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Ximena Ochoa",
-        "pases": 3
-       },
-       {
-        "nombre": "Yildhis Ochoa",
-        "pases": 5
-       },
-       {
-        "nombre": "Villalvazo Cortes",
-        "pases": 2
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5776,20 +5623,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Manuel Gonzalez",
-        "pases": 5
-       },
-       {
-        "nombre": "Alvania Ronces",
-        "pases": 4
-       },
-       {
-        "nombre": "Mtro. Vals",
-        "pases": 1
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5832,20 +5666,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Cinthia Maldonado",
-        "pases": 3
-       },
-       {
-        "nombre": "Jaeson Díaz",
-        "pases": 2
-       },
-       {
-        "nombre": "Mercedes Salgado",
-        "pases": 4
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5888,24 +5709,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Yessica Ladrón de Guevara",
-        "pases": 3
-       },
-       {
-        "nombre": "Heriberto Avelar",
-        "pases": 3
-       },
-       {
-        "nombre": "Gabriela Medina",
-        "pases": 2
-       },
-       {
-        "nombre": "Patricia Sanchez",
-        "pases": 1
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -5948,20 +5752,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Ángel Vargas",
-        "pases": 5
-       },
-       {
-        "nombre": "Ángeles Roque",
-        "pases": 3
-       },
-       {
-        "nombre": "Paulina Medina",
-        "pases": 2
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -6004,20 +5795,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Nelly Ochoa",
-        "pases": 4
-       },
-       {
-        "nombre": "Sotelo Bahena",
-        "pases": 4
-       },
-       {
-        "nombre": "Francisco Diaz",
-        "pases": 2
-       }
-      ]
+      "invitados": []
      }
     },
     {
@@ -6060,28 +5838,7 @@ window.VENUE_TEMPLATES = [
       "arregloFloralTipo": "bajo",
       "arregloFloralAcomodo": "diagonal",
       "ensambleTipo": "angosto",
-      "invitados": [
-       {
-        "nombre": "Ulises Jair",
-        "pases": 1
-       },
-       {
-        "nombre": "Esteban Fabian",
-        "pases": 2
-       },
-       {
-        "nombre": "Jesus Guillen",
-        "pases": 2
-       },
-       {
-        "nombre": "Sobrino de esta loca",
-        "pases": 1
-       },
-       {
-        "nombre": "Karla Diaz",
-        "pases": 4
-       }
-      ]
+      "invitados": []
      }
     },
     {

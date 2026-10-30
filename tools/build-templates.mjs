@@ -242,7 +242,13 @@ function buildManzanares() {
   const ctx = { window: {} };
   vm.runInNewContext(read('salon-manzanares/default-layout.js').replace('var DEFAULT_LAYOUT', 'window.L'), ctx);
   const L = ctx.window.L;
-  return { terrain: L.terrain, elements: L.elements, flows: [], layers: { ...ALL_LAYERS, ...L.layers } };
+  return { terrain: L.terrain, elements: L.elements.map(sinDatosDeCliente), flows: [], layers: { ...ALL_LAYERS, ...L.layers } };
+}
+
+// Las plantillas no deben llevar datos de un evento real (invitados, menú)
+function sinDatosDeCliente(e) {
+  if (!e.mesaConfig) return e;
+  return { ...e, mesaConfig: { ...e.mesaConfig, invitados: [], menu: '' } };
 }
 
 // ══════════════════════════════════════════════════════════

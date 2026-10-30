@@ -1448,6 +1448,16 @@
     var btnReset = document.getElementById('zoom-reset');
 
     if (btnIn) btnIn.onclick = function () { if (window.Editor2D) window.Editor2D.zoomIn(); };
+    // Tamaño de las etiquetas del plano (se guarda con el plano y lo usa la ficha PDF)
+    var cambiaEtiquetas = function (factor) {
+      var v = Math.round(Math.min(2.5, Math.max(0.6, (AppState.labelScale || 1) * factor)) * 100) / 100;
+      AppState.labelScale = v;
+      _refresh();
+      showToast('Etiquetas al ' + Math.round(v * 100) + '%', 'info');
+    };
+    var bBig = document.getElementById('label-bigger'), bSmall = document.getElementById('label-smaller');
+    if (bBig) bBig.onclick = function () { cambiaEtiquetas(1.2); };
+    if (bSmall) bSmall.onclick = function () { cambiaEtiquetas(1 / 1.2); };
     if (btnOut) btnOut.onclick = function () { if (window.Editor2D) window.Editor2D.zoomOut(); };
     if (btnReset) btnReset.onclick = function () {
       if (window.Editor2D) window.Editor2D.resetZoom();
@@ -1940,6 +1950,7 @@
     if (data.layers) Object.assign(AppState.layers, data.layers);
     AppState.flows = data.flows || [];
     AppState.venueId = data.venueId || null;
+    AppState.labelScale = data.labelScale || 1;
     AppState.elements.forEach(function (e) {
       // Clean up corrupted characters caused by broken UTF-8 encoding
       // Solo se reparan nombres con acentos dañados por codificación (Ã… o �); los demás se respetan
@@ -2139,7 +2150,36 @@
     if (svgBg) { svgBg.setAttribute('width', tw); svgBg.setAttribute('height', th); }
     var zoomGroup = clonedSvg.querySelector('#svg-zoom-group');
     if (zoomGroup) zoomGroup.removeAttribute('transform');
-    clonedSvg.setAttribute('viewBox', '0 0 ' + tw + ' ' + th);
+    // Encuadre: la zona donde están las mesas y elementos (con margen), no todo el terreno
+    var vb = [0, 0, tw, th];
+    var piezas = AppState.elements.filter(function (e) { return !e.bg2d && e.category !== 'estructuras'; });
+    if (piezas.length) {
+      var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      piezas.forEach(function (e) {
+        var r = Math.max(e.w || 1, e.h || 1) / 2;
+        x0 = Math.min(x0, e.x - r); x1 = Math.max(x1, e.x + r);
+        y0 = Math.min(y0, e.y - r); y1 = Math.max(y1, e.y + r);
+      });
+      var m = 4;
+      x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m);
+      x1 = Math.min(AppState.terrain.w, x1 + m); y1 = Math.min(AppState.terrain.h, y1 + m);
+      if (x1 - x0 < 20) { var cxm = (x0 + x1) / 2; x0 = Math.max(0, cxm - 10); x1 = x0 + 20; }
+      if (y1 - y0 < 15) { var cym = (y0 + y1) / 2; y0 = Math.max(0, cym - 7.5); y1 = y0 + 15; }
+      vb = [x0 * 15, y0 * 15, (x1 - x0) * 15, (y1 - y0) * 15];
+    }
+    clonedSvg.setAttribute('viewBox', vb.join(' '));
+    // Etiquetas con tamaño fijo en la hoja (~9 px) sin importar el zoom de la pantalla
+    var escala = Math.min(725 / vb[2], 400 / vb[3]);
+    Array.prototype.forEach.call(clonedSvg.querySelectorAll('.elem-label'), function (l) {
+      var fs = 9 * (AppState.labelScale || 1) / escala;
+      l.setAttribute('font-size', fs);
+      l.setAttribute('font-weight', '700');
+      var badge = l.nextElementSibling;
+      if (badge && badge.classList.contains('elem-badge')) {
+        badge.setAttribute('font-size', 7 * (AppState.labelScale || 1) / escala);
+        badge.setAttribute('y', parseFloat(l.getAttribute('y')) + fs * 1.1);
+      }
+    });
     clonedSvg.setAttribute('width', '100%');
     clonedSvg.setAttribute('height', '100%');
     clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -2594,7 +2634,8 @@
       elements: AppState.elements,
       flows: AppState.flows,
       layers: AppState.layers,
-      venueId: AppState.venueId
+      venueId: AppState.venueId,
+      labelScale: AppState.labelScale || 1
     };
   }
 

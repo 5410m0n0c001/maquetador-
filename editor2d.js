@@ -623,7 +623,8 @@ window.Editor2D = (function () {
     }
 
     // ── Label ─────────────────────────────────────────────
-    var labelFontSize = Math.min(Math.max(mToPx(0.5) * _zoom, 7), 13) / _zoom;
+    // Entre 10 y 14 px en pantalla, sin importar el zoom (antes bajaba a 7 px y no se leía)
+    var labelFontSize = Math.min(Math.max(mToPx(0.5) * _zoom, 10), 14) / _zoom * (state.labelScale || 1);
     var labelY = py;
     if (elem.type === 'dressing_room') {
       labelY = py - 18;
