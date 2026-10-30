@@ -2120,7 +2120,7 @@
     var data = ev ? ev.data : { brief: {}, minuto: [], montaje: { fotos: [] } };
     var b = data.brief || {};
     var eventName = ev ? ev.nombre : (localStorage.getItem(LS_KEY + '_name') || 'Plano de evento');
-    var eventUrl = ev ? location.origin + location.pathname + '?evento=' + ev.id : '';
+    var eventUrl = ev && PE.publicEventUrl ? PE.publicEventUrl(ev.id) : '';
 
     // ── Plano: copia limpia del lienzo 2D, encuadrada al terreno ──
     if (window.Editor2D) window.Editor2D.update(AppState.elements);

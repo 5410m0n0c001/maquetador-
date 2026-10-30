@@ -304,6 +304,12 @@
   function eventIdFromUrl() {
     return new URLSearchParams(location.search).get('evento');
   }
+  // Dirección pública del maquetador (para QR y enlaces compartidos, aunque se trabaje en una copia local)
+  var PUBLIC_URL = 'https://5410m0n0c001.github.io/maquetador-/';
+  function publicEventUrl(id) {
+    return PUBLIC_URL + '?evento=' + id;
+  }
+
   function eventUrl(id) {
     return location.origin + location.pathname + '?evento=' + id;
   }
@@ -567,7 +573,7 @@
 
   function shareEvent() {
     if (!_event) return;
-    var url = eventUrl(_event.id);
+    var url = publicEventUrl(_event.id);
     if (navigator.share) {
       navigator.share({ title: _event.nombre + ' · Primavera Events Group', url: url }).catch(function () { /* cancelado */ });
     } else if (navigator.clipboard) {
@@ -1496,6 +1502,7 @@
     // Al inicio se muestra la pantalla "¿brief o maquetar?" de brief.js en lugar del selector de salón
     suppressStartPicker: function () { return true; },
     getEvent: function () { return _event; },
+    publicEventUrl: publicEventUrl,
     getSchema: function () { return { sections: SECTIONS, montajeFields: MONTAJE_FIELDS }; },
     formatValue: formatValue,
     syncMinuto: function () { if (_event) syncMinuto(_event.data); },
