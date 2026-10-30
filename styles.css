@@ -2130,3 +2130,17 @@ body.peg-view-only .minuto-row { grid-template-columns: 120px 1fr 200px; }
 /* Minuto a minuto: actividades que vienen del brief */
 .minuto-row.del-brief .form-input:disabled { opacity: 1; color: var(--peg-ivory); border-color: rgba(201, 169, 110, 0.25); }
 .minuto-badge { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(201, 169, 110, 0.5); border-radius: 999px; padding: 2px 8px; text-align: center; }
+
+/* Ambientes del plano 2D (botones Día / Noche / Gala / Claro) */
+body.plan-day #svg-background { fill: #2b2a2e; }
+body.plan-day #terrain-fill { fill: #34333a; }
+body.plan-night #svg-background { fill: #05070f; }
+body.plan-night #terrain-fill { fill: #0d1224; }
+body.plan-gala #svg-background { fill: #140c08; }
+body.plan-gala #terrain-fill { fill: #24170f; }
+/* Claro: fondo blanco para imprimir; el croquis del salón se invierte a tonos claros */
+body.plan-claro .canvas-area { background: #fff; }
+body.plan-claro #svg-background { fill: #ffffff; }
+body.plan-claro #terrain-fill { fill: #f8f6f4; }
+body.plan-claro #layer-bg > g { filter: invert(1) hue-rotate(180deg); }
+body.plan-claro #grid-pattern line { stroke: rgba(0, 0, 0, 0.08); }

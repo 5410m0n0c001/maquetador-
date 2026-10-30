@@ -798,6 +798,14 @@ window.Visualizer3D = (function () {
       baseParty1 = 0.8;
       _partyLight2.color.setHex(0xec4899);
       baseParty2 = 0.8;
+    } else if (_currentLightingMode === 'claro') {
+      // Claro / impresión: luz pareja y blanca, sin luces de color
+      _ambientLight.color.setHex(0xffffff);
+      baseAmbient = 0.95;
+      _sunLight.color.setHex(0xffffff);
+      baseSun = 0.6;
+      baseParty1 = 0;
+      baseParty2 = 0;
     } else if (_currentLightingMode === 'gala') {
       _ambientLight.color.setHex(0xffedd5);
       baseAmbient = 0.35;
@@ -808,6 +816,15 @@ window.Visualizer3D = (function () {
       _partyLight2.color.setHex(0xf97316);
       baseParty2 = 0.8;
     }
+
+    // Fondo y niebla de cada ambiente
+    var AMBIENTE = { day: 0xbfd7ea, night: 0x070a16, gala: 0x1c120c, claro: 0xffffff };
+    var fondo = AMBIENTE[_currentLightingMode] || 0x141214;
+    if (_scene) {
+      _scene.background = new THREE.Color(fondo);
+      if (_scene.fog) _scene.fog.color.setHex(fondo);
+    }
+    if (_renderer) _renderer.toneMappingExposure = { day: 1.05, night: 0.85, gala: 0.95, claro: 1.15 }[_currentLightingMode] || 1;
 
     _ambientLight.intensity = baseAmbient * _brightnessFactor;
     _sunLight.intensity = baseSun * _brightnessFactor;
@@ -840,11 +857,12 @@ window.Visualizer3D = (function () {
     _scene.add(_sunLight);
 
     // Evening overhead party lights (small blue and magenta accents)
-    _partyLight1 = new THREE.PointLight(0x3b82f6, 0.4, 40);
+    var alcance = Math.max(_terrain.w, _terrain.h) * 1.2; // que las luces de ambiente cubran todo el salón
+    _partyLight1 = new THREE.PointLight(0x3b82f6, 0.4, alcance);
     _partyLight1.position.set(_terrain.w * 0.25, 12, _terrain.h * 0.5);
     _scene.add(_partyLight1);
 
-    _partyLight2 = new THREE.PointLight(0xec4899, 0.4, 40);
+    _partyLight2 = new THREE.PointLight(0xec4899, 0.4, alcance);
     _partyLight2.position.set(_terrain.w * 0.75, 12, _terrain.h * 0.5);
     _scene.add(_partyLight2);
 

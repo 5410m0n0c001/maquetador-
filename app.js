@@ -1387,15 +1387,19 @@
   // LIGHTING
   // ══════════════════════════════════════════════════════════
   function _wireLighting() {
-    var modes = ['day', 'night', 'gala'];
+    var modes = ['day', 'night', 'gala', 'claro'];
+    var nombres = { day: 'Día', night: 'Noche', gala: 'Gala', claro: 'Claro (para imprimir)' };
     modes.forEach(function (mode) {
       var btn = document.getElementById('btn-light-' + mode);
       if (!btn) return;
       btn.onclick = function () {
         if (window.Visualizer3D) window.Visualizer3D.setLighting(mode);
+        // En 2D el ambiente se aplica con una clase (colores del lienzo en styles.css)
+        modes.forEach(function (m) { document.body.classList.remove('plan-' + m); });
+        document.body.classList.add('plan-' + mode);
         $$('.lighting-btn').forEach(function (b) { b.classList.remove('active'); });
         btn.classList.add('active');
-        showToast('Iluminación: ' + mode, 'info');
+        showToast('Ambiente: ' + nombres[mode], 'info');
       };
     });
   }
@@ -2219,9 +2223,12 @@
       '.card .l { font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gray); }' +
       '.section { margin-top: 18px; }' +
       '.section h2 { font-size: 15px; padding-left: 10px; border-left: 3px solid var(--pink); margin-bottom: 10px; }' +
-      '.plan { height: 520px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #171516; }' +
+      '.plan { height: 520px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }' +
       '.plan svg { width: 100%; height: 100%; display: block; }' +
       '.flow-path { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 9; opacity: .85; }' +
+      // Plano en versión clara para imprimir
+      '.plan { background: #fff; } .plan #svg-background { fill: #fff; } .plan #terrain-fill { fill: #f8f6f4; }' +
+      '.plan #layer-bg > g { filter: invert(1) hue-rotate(180deg); }' +
       'table { width: 100%; border-collapse: collapse; font-size: 10.5px; }' +
       'th { text-align: left; background: var(--ink); color: #fff; font-weight: 500; padding: 6px 8px; }' +
       'td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }' +
