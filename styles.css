@@ -2144,3 +2144,7 @@ body.plan-claro #svg-background { fill: #ffffff; }
 body.plan-claro #terrain-fill { fill: #f8f6f4; }
 body.plan-claro #layer-bg > g { filter: invert(1) hue-rotate(180deg); }
 body.plan-claro #grid-pattern line { stroke: rgba(0, 0, 0, 0.08); }
+body.plan-claro #svg-ruler-h > rect, body.plan-claro #svg-ruler-v > rect { fill: #f4f1ee; }
+body.plan-claro #svg-ruler-h text, body.plan-claro #svg-ruler-v text { fill: #6D6D6D; }
+body.plan-claro #svg-ruler-h line, body.plan-claro #svg-ruler-v line { stroke: #b9b2ab; }
+body.plan-claro .canvas-hint { background: rgba(255, 255, 255, 0.92); color: #6D6D6D; }
