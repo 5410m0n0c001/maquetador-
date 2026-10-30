@@ -2364,6 +2364,16 @@
     if (briefHtml) html += '<section class="section"><h2>Información del evento</h2><div class="info-cols">' + briefHtml + '</div></section>';
 
     // Mobiliario por mesa (las mesas con el mismo montaje se agrupan en una sola fila)
+    // Números consecutivos como rango: 1, 2, 3, 5 → 1–3, 5
+    function rangos(lista) {
+      var n = lista.map(Number).sort(function (x, y) { return x - y; }), out = [];
+      for (var i = 0; i < n.length; i++) {
+        var ini = n[i];
+        while (i + 1 < n.length && n[i + 1] === n[i] + 1) i++;
+        out.push(n[i] - ini >= 2 ? ini + '–' + n[i] : (n[i] === ini ? String(ini) : ini + ', ' + n[i]));
+      }
+      return out.join(', ');
+    }
     if (tablesList.length) {
       html += '<section class="section"><h2>Mobiliario y montaje por mesa</h2><table><thead><tr>' +
         '<th style="width:13%">Mesa(s)</th><th style="width:16%">Tipo</th><th style="width:9%">Sillas</th>' +
@@ -2404,7 +2414,7 @@
           ? tipoNombre + (r.nums.length > 1 ? '<br><span class="muted">' + r.nums.length + ' piezas</span>' : '')
           : nums.length === 1
           ? (r.prefix || 'Mesa ') + nums[0]
-          : (r.prefix || 'Mesas ') + nums.join(', ') + '<br><span class="muted">' + nums.length + ' mesas</span>';
+          : (r.prefix || 'Mesas ') + rangos(r.nums.filter(Boolean)) + '<br><span class="muted">' + nums.length + ' mesas</span>';
         html += '<tr><td><strong>' + label + '</strong></td>' + r.cells + '</tr>';
       });
       html += '</tbody></table></section>';
