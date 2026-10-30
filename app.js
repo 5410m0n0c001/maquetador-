@@ -2244,7 +2244,17 @@
       '.signs div { border-top: 1px solid var(--ink); padding-top: 6px; }' +
       '.footer { margin-top: 26px; padding-top: 8px; border-top: 1px solid var(--gold); text-align: center; font-size: 8.5px; color: var(--gray); }' +
       '.page-break { break-before: page; page-break-before: always; }' +
-      '@media print { body { padding: 0; } .toolbar { display: none; } .plan { height: 470px; } }' +
+      // Impresión compacta: que la ficha quepa en ~3 hojas carta
+      '@media print { body { padding: 0; font-size: 9.5px; line-height: 1.35; } .toolbar { display: none; }' +
+        ' .letterhead { padding-bottom: 8px; } .brand img { width: 46px; height: 46px; } .qr svg { width: 72px; height: 72px; }' +
+        ' .hero { margin: 8px 0 8px; } .hero h1 { font-size: 20px; } .cards { gap: 6px; margin-bottom: 10px; } .card { padding: 5px 8px; }' +
+        ' .section { margin-top: 10px; } .section h2 { font-size: 13px; margin-bottom: 6px; } .plan { height: 400px; }' +
+        ' th, td { padding: 3px 6px; } table { font-size: 9px; } .kv { grid-template-columns: repeat(3, 1fr); gap: 0 14px; } .kv div { padding: 3px 0; }' +
+        ' .block { margin-bottom: 6px; } .block h3 { font-size: 11px; margin-bottom: 2px; }' +
+        ' .info-cols { column-count: 2; column-gap: 18px; } .info-cols .kv { display: block; } .info-cols .kv div { padding: 1px 0; }' +
+        ' .info-cols .kv b { display: inline; font-size: 8px; } .info-cols .kv b::after { content: ": "; }' +
+        ' .photos { grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; } .photos img { height: 110px; }' +
+        ' .signs { margin-top: 26px; } .footer { margin-top: 12px; } }' +
       '</style></head><body>';
 
     html += '<div class="toolbar"><span>Vista previa · Ficha técnica</span><button onclick="window.print()">Imprimir / Guardar PDF</button></div>';
@@ -2338,7 +2348,7 @@
         return '<div' + (wide ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(fmt(f)) + '</div>';
       }).join('') + '</div></div>';
     });
-    if (briefHtml) html += '<section class="section page-break"><h2>Información del evento</h2>' + briefHtml + '</section>';
+    if (briefHtml) html += '<section class="section"><h2>Información del evento</h2><div class="info-cols">' + briefHtml + '</div></section>';
 
     // Mobiliario por mesa (las mesas con el mismo montaje se agrupan en una sola fila)
     if (tablesList.length) {
@@ -2387,11 +2397,18 @@
     // Áreas y equipamiento
     if (otherElementsList.length) {
       html += '<section class="section"><h2>Áreas y equipamiento</h2><table><thead><tr><th>Elemento</th><th style="width:22%">Categoría</th><th style="width:18%">Medidas</th></tr></thead><tbody>';
+      // Elementos iguales (mismo nombre y medidas) en una sola fila con su cantidad
+      var areas = [];
       otherElementsList.forEach(function (e) {
         var cat = window.getCatalogEntry ? window.getCatalogEntry(e.type) : null;
-        html += '<tr><td><strong>' + esc(e.name || (cat ? cat.name : e.type)) + '</strong></td>' +
-          '<td>' + esc(cat ? cap(cat.category) : '-') + '</td>' +
-          '<td>' + (e.w && e.h ? esc(e.w + ' × ' + e.h + ' m') : '-') + '</td></tr>';
+        var nombre = e.name || (cat ? cat.name : e.type);
+        var medidas = e.w && e.h ? e.w + ' × ' + e.h + ' m' : '-';
+        var r = areas.find(function (x) { return x.nombre === nombre && x.medidas === medidas; });
+        if (r) r.n++; else areas.push({ nombre: nombre, medidas: medidas, cat: cat ? cap(cat.category) : '-', n: 1 });
+      });
+      areas.forEach(function (r) {
+        html += '<tr><td><strong>' + esc(r.nombre) + '</strong>' + (r.n > 1 ? ' × ' + r.n : '') + '</td>' +
+          '<td>' + esc(r.cat) + '</td><td>' + esc(r.medidas) + '</td></tr>';
       });
       html += '</tbody></table></section>';
     }

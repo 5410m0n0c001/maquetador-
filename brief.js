@@ -286,6 +286,7 @@
 
   // ── Estado ────────────────────────────────────────────────
   var _step = 0;
+  var _conflictoAvisado = false;
   var _sb = null;
   var _event = null;          // { id, nombre, fecha_evento, venue_id, data: { brief, minuto, montaje, layout } }
   var _isPlanner = false;
@@ -376,16 +377,26 @@
     _event.venue_id = (_event.data.layout && _event.data.layout.venueId) || null;
     saveLocalCopy();
     updateEventBar();
-    client().from(TABLE).update({
+    // Solo se guarda si nadie más lo modificó desde que se abrió (si no, se sobrescribirían sus cambios)
+    var q = client().from(TABLE).update({
       nombre: _event.nombre,
       fecha_evento: _event.fecha_evento,
       venue_id: _event.venue_id,
       data: _event.data
-    }).eq('id', _event.id).then(function (res) {
+    }).eq('id', _event.id);
+    if (_event.updated_at) q = q.eq('updated_at', _event.updated_at);
+    q.select('updated_at').then(function (res) {
       if (res.error) {
         setStatus('Sin conexión · guardado en este equipo', 'error');
         console.warn('[Eventos] Error al guardar:', res.error);
+      } else if (!res.data || !res.data.length) {
+        setStatus('No guardado: cambió en otro dispositivo', 'error');
+        if (!_conflictoAvisado) {
+          _conflictoAvisado = true;
+          alert('Este evento se modificó en otro dispositivo o pestaña después de que lo abriste. Para no borrar esos cambios, lo que hiciste aquí NO se guardó. Recarga la página para ver la versión más reciente.');
+        }
       } else {
+        _event.updated_at = res.data[0].updated_at;
         setStatus('Guardado', 'ok');
       }
     });
