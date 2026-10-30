@@ -2402,7 +2402,8 @@
       otherElementsList.forEach(function (e) {
         var cat = window.getCatalogEntry ? window.getCatalogEntry(e.type) : null;
         var nombre = e.name || (cat ? cat.name : e.type);
-        var medidas = e.w && e.h ? e.w + ' × ' + e.h + ' m' : '-';
+        // La pantalla se lista sin medidas (su huella en el plano no es la medida real de la pantalla)
+        var medidas = e.type !== 'projector_screen' && e.w && e.h ? e.w + ' × ' + e.h + ' m' : '-';
         var r = areas.find(function (x) { return x.nombre === nombre && x.medidas === medidas; });
         if (r) r.n++; else areas.push({ nombre: nombre, medidas: medidas, cat: cat ? cap(cat.category) : '-', n: 1 });
       });
