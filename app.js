@@ -195,7 +195,9 @@
     }
 
     var isMesa = cat.defaultChairs > 0 || type.startsWith('table_') || type === 'lounge_set';
-    if (isMesa) {
+    // Periqueras y salas lounge no llevan número de mesa
+    var numerada = isMesa && type !== 'table_periquera' && type !== 'lounge_set';
+    if (numerada) {
       _tableCounter++;
     }
     var elem = {
@@ -214,7 +216,7 @@
       removable: true,
       layer: cat.layer || cat.category,
       mesaConfig: {
-        mesaNum: isMesa ? _tableCounter : 0,
+        mesaNum: numerada ? _tableCounter : 0,
         capacidadMax: null,
         mantelColor: (type.indexOf('campirana') > -1 || type.indexOf('marble') > -1) ? 'sin_mantel' : 'blanco',
         caminoColor: 'dorado',
@@ -2395,8 +2397,11 @@
         else rowsBySig.push({ cells: cells, prefix: prefix, nums: [c.mesaNum || ''] });
       });
       rowsBySig.forEach(function (r) {
-        var nums = r.nums.map(esc);
-        var label = nums.length === 1
+        var nums = r.nums.filter(Boolean).map(esc);
+        var tipoNombre = r.cells.split('</td>')[0].replace('<td>', '');
+        var label = !nums.length
+          ? tipoNombre + (r.nums.length > 1 ? '<br><span class="muted">' + r.nums.length + ' piezas</span>' : '')
+          : nums.length === 1
           ? (r.prefix || 'Mesa ') + nums[0]
           : (r.prefix || 'Mesas ') + nums.join(', ') + '<br><span class="muted">' + nums.length + ' mesas</span>';
         html += '<tr><td><strong>' + label + '</strong></td>' + r.cells + '</tr>';

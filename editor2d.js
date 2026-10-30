@@ -652,7 +652,7 @@ window.Editor2D = (function () {
     });
     // Shorten long names
     var displayName = elem.name || (cat ? cat.name : elem.type);
-    var isRealTable = elem.type.startsWith('table_') || elem.type === 'lounge_set';
+    var isRealTable = elem.type.startsWith('table_') && elem.type !== 'table_periquera';
     if (isRealTable && elem.mesaConfig && elem.mesaConfig.mesaNum) {
       displayName = 'Mesa ' + elem.mesaConfig.mesaNum;
     }
