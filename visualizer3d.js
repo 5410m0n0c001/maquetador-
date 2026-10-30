@@ -2746,6 +2746,35 @@ window.Visualizer3D = (function () {
         group.add(light);
       }
 
+    } else if (elem.type === 'giant_letters_xv') {
+      // Letras XV iluminadas: una X y una V de 1.80 m con foquitos
+      var xvMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4, emissive: 0xffedd5, emissiveIntensity: 0.15 });
+      var alto = 1.8, grosor = 0.22, prof = 0.25;
+      var ancho = Math.min(w / 2, 1.1);
+      var trazo = function (x, y, ang, largo) {
+        var b = new THREE.Mesh(new THREE.BoxGeometry(grosor, largo, prof), xvMat);
+        b.position.set(x, y, 0);
+        b.rotation.z = ang;
+        b.castShadow = true;
+        group.add(b);
+      };
+      var cx = -w / 4, cv = w / 4;
+      var diag = Math.sqrt(ancho * ancho + alto * alto);
+      var angX = Math.atan2(ancho, alto);
+      // X: dos diagonales cruzadas
+      trazo(cx, alto / 2, angX, diag);
+      trazo(cx, alto / 2, -angX, diag);
+      // V: dos trazos que se juntan abajo
+      var mitad = Math.sqrt((ancho / 2) * (ancho / 2) + alto * alto);
+      var angV = Math.atan2(ancho / 2, alto);
+      trazo(cv - ancho / 4, alto / 2, angV, mitad);
+      trazo(cv + ancho / 4, alto / 2, -angV, mitad);
+      [cx, cv].forEach(function (lx) {
+        var foco = new THREE.PointLight(0xffedd5, 0.35, 3);
+        foco.position.set(lx, alto * 0.6, 0.4);
+        group.add(foco);
+      });
+
     } else if (elem.type === 'sparklers') {
       // Sparkler column (chispero)
       var sparklerBase = new THREE.Mesh(

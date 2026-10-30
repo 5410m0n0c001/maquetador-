@@ -971,7 +971,7 @@
 
   var AMENIDAD_ELEMENTO = {
     'DJ profesional': ['dj_booth', 'Cabina de DJ'],
-    'Letra gigante XV (1.10 / 1.80 m)': ['giant_letters', 'Letra gigante XV'],
+    'Letra gigante XV (1.10 / 1.80 m)': ['giant_letters_xv', 'Letras XV'],
     'Letras L-O-V-E': ['giant_letters', 'Letras L-O-V-E'],
     'Corazón gigante iluminado': ['heart_illuminated', 'Corazón iluminado'],
     'Set de chisperos en frío (4 inalámbricos)': ['sparklers', 'Chisperos en frío'],

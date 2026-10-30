@@ -806,6 +806,20 @@ window.ELEMENTS_CATALOG = [
     planoOnly: false
   },
   {
+    type: 'giant_letters_xv',
+    name: 'Letras XV',
+    category: 'entretenimiento',
+    icon: 'fa-font',
+    defaultW: 2.2,
+    defaultH: 0.5,
+    shape: 'rect',
+    color: '#f59e0b',
+    defaultChairs: 0,
+    description: 'Letras gigantes iluminadas XV (1.10 / 1.80 m de alto).',
+    layer: 'entretenimiento',
+    planoOnly: false
+  },
+  {
     type: 'heart_illuminated',
     name: 'Corazón Iluminado',
     category: 'entretenimiento',
