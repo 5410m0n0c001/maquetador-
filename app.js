@@ -2112,6 +2112,7 @@
     var ev = PE && PE.getEvent ? PE.getEvent() : null;
     var isPlanner = PE && PE.isPlanner ? PE.isPlanner() : true;
     var schema = PE && PE.getSchema ? PE.getSchema() : { sections: [], montajeFields: [] };
+    if (ev && PE.syncMinuto) PE.syncMinuto();
     var data = ev ? ev.data : { brief: {}, minuto: [], montaje: { fotos: [] } };
     var b = data.brief || {};
     var eventName = ev ? ev.nombre : (localStorage.getItem(LS_KEY + '_name') || 'Plano de evento');

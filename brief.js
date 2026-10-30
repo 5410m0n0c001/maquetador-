@@ -369,6 +369,7 @@
 
   function saveNow() {
     if (!_event || !_isPlanner || !client()) return;
+    syncMinuto(_event.data);
     var b = _event.data.brief || {};
     _event.nombre = b.festejados || b.cliente_nombre || _event.nombre || 'Evento sin nombre';
     _event.fecha_evento = b.fecha_evento || null;
@@ -720,18 +721,19 @@
     var html = '<div class="minuto-list">';
     if (!rows.length) html += '<p class="brief-empty">Aún no hay actividades en el minuto a minuto.</p>';
     rows.forEach(function (r, i) {
-      html += '<div class="minuto-row" data-i="' + i + '">' +
-        '<input class="form-input" type="time" data-m="hora" value="' + esc(r.hora) + '"' + dis + ' />' +
-        '<input class="form-input" data-m="actividad" placeholder="Actividad" value="' + esc(r.actividad) + '"' + dis + ' />' +
-        '<input class="form-input" data-m="responsable" placeholder="Responsable" value="' + esc(r.responsable) + '"' + dis + ' />' +
-        (ro ? '' : '<button type="button" class="minuto-del" title="Quitar"><i class="fa-solid fa-xmark"></i></button>') +
+      var fijo = ro || r.origen ? ' disabled' : '';
+      html += '<div class="minuto-row' + (r.origen ? ' del-brief' : '') + '" data-i="' + i + '"' + (r.origen && !ro ? ' title="Viene del brief: se edita en su sección"' : '') + '>' +
+        '<input class="form-input" type="time" data-m="hora" value="' + esc(r.hora) + '"' + fijo + ' />' +
+        '<input class="form-input" data-m="actividad" placeholder="Actividad" value="' + esc(r.actividad) + '"' + fijo + ' />' +
+        '<input class="form-input" data-m="responsable" placeholder="Responsable" value="' + esc(r.responsable) + '"' + fijo + ' />' +
+        (ro ? '' : r.origen ? '<span class="minuto-badge" title="Se edita en el brief">brief</span>' : '<button type="button" class="minuto-del" title="Quitar"><i class="fa-solid fa-xmark"></i></button>') +
         '</div>';
     });
     html += '</div>';
     if (!ro) {
-      html += '<div class="minuto-actions">' +
+      html += '<p class="panel-hint">Las ceremonias, momentos, protocolo, tiempos del banquete y proveedores con hora se agregan solos (marcados "brief") y se editan en su sección. Aquí puedes agregar otras actividades.</p>' +
+        '<div class="minuto-actions">' +
         '<button type="button" class="btn-ghost" id="minuto-add"><i class="fa-solid fa-plus"></i> Agregar actividad</button>' +
-        '<button type="button" class="btn-gold" id="minuto-import"><i class="fa-solid fa-clock-rotate-left"></i> Traer horarios del brief</button>' +
         '</div>';
     }
     return html;
@@ -802,11 +804,49 @@
           var it = val[n] || {};
           if (!it.hora) return;
           var extra = [it.lugar, it.platillo].filter(Boolean).join(' · ');
-          rows.push({ hora: it.hora, actividad: n + (extra ? ' — ' + extra : ''), responsable: it.quien || '' });
+          rows.push({ hora: it.hora, actividad: n + (extra ? ' — ' + extra : ''), responsable: it.quien || '', origen: f.k + '|' + n });
         });
       });
     });
     return rows;
+  }
+
+  // Todo lo que tiene hora en el brief y en los proveedores externos
+  function horariosDelEvento(d) {
+    var rows = timedFromBrief(d.brief || {});
+    (d.proveedores || []).forEach(function (p) {
+      if (!p._id) p._id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      var quien = [p.servicio, p.nombre].filter(Boolean).join(' — ') || 'Proveedor externo';
+      [['llegada', 'Llegada y montaje: '], ['inicio', 'Inicia: '], ['fin', 'Termina: ']].forEach(function (h) {
+        if (p[h[0]]) rows.push({ hora: p[h[0]], actividad: h[1] + quien, responsable: p.telefono || '', origen: 'prov|' + p._id + '|' + h[0] });
+      });
+    });
+    return rows;
+  }
+
+  // El minuto a minuto se mantiene al día con el brief: agrega, actualiza y quita
+  // las actividades que vienen del brief; las que se agregaron a mano no se tocan.
+  function syncMinuto(d) {
+    var antes = JSON.stringify(d.minuto || []);
+    var gen = horariosDelEvento(d);
+    var vivos = {};
+    var minuto = d.minuto || [];
+    gen.forEach(function (g) {
+      vivos[g.origen] = true;
+      var m = minuto.find(function (x) { return x.origen === g.origen; }) ||
+        // Actividades traídas antes con el botón (sin origen): se adoptan para no duplicarlas
+        minuto.find(function (x) { return !x.origen && x.actividad === g.actividad; });
+      if (m) {
+        m.origen = g.origen;
+        m.hora = g.hora;
+        m.actividad = g.actividad;
+        if (g.responsable) m.responsable = g.responsable;
+      } else {
+        minuto.push(g);
+      }
+    });
+    d.minuto = minuto.filter(function (x) { return !x.origen || vivos[x.origen]; }).sort(porHora);
+    return JSON.stringify(d.minuto) !== antes;
   }
 
   // Texto legible de cualquier valor del brief (lo usa también la ficha PDF)
@@ -1163,7 +1203,10 @@
       var sec = byId[id];
       if (!sec || (ro && sec.internal)) return;
       html += '<section class="brief-section" id="brief-' + sec.id + '"><h3>' + esc(sec.title) + '</h3>';
-      if (sec.id === 'minuto') html += minutoHtml(d.minuto || [], ro);
+      if (sec.id === 'minuto') {
+        if (!ro && syncMinuto(d)) scheduleSave();
+        html += minutoHtml(d.minuto || [], ro);
+      }
       else if (sec.id === 'montaje_elegido') html += montajeHtml(d.montaje || { fotos: [] }, ro);
       else if (sec.id === 'proveedores') html += proveedoresHtml(d.proveedores || [], ro);
       else {
@@ -1236,11 +1279,13 @@
       };
     });
     _panel.querySelectorAll('[data-dk]').forEach(function (el) {
-      el.addEventListener('input', function () {
+      var guarda = function () {
         var obj = d.brief[el.getAttribute('data-dk')];
         obj[el.getAttribute('data-dv')][el.getAttribute('data-ds')] = el.value;
         scheduleSave();
-      });
+      };
+      el.addEventListener('input', guarda);
+      el.addEventListener('change', guarda);
     });
     _panel.querySelectorAll('.detail-add').forEach(function (b) {
       b.onclick = function () {
@@ -1266,11 +1311,13 @@
     }
 
     _panel.querySelectorAll('[data-k]:not(.brief-chip)').forEach(function (el) {
-      el.addEventListener('input', function () {
+      var guarda = function () {
         d.brief[el.getAttribute('data-k')] = el.value;
         autoMarca(el.getAttribute('data-k'), el.value);
         scheduleSave();
-      });
+      };
+      el.addEventListener('input', guarda);
+      el.addEventListener('change', guarda);
     });
     _panel.querySelectorAll('.brief-chip').forEach(function (chip) {
       chip.onclick = function () {
@@ -1304,11 +1351,13 @@
       var p = d.proveedores[parseInt(card.getAttribute('data-pi'), 10)];
       card.querySelectorAll('[data-pk]').forEach(function (el) {
         var k = el.getAttribute('data-pk');
-        el.addEventListener(el.tagName === 'SELECT' || el.type === 'checkbox' ? 'change' : 'input', function () {
+        var guarda = function (e) {
           p[k] = el.type === 'checkbox' ? el.checked : el.value;
           scheduleSave();
-          if (k === 'servicio') renderPanel(); // muestra/oculta el aviso de pirotecnia
-        });
+          if (k === 'servicio' && e.type === 'change') renderPanel(); // muestra/oculta el aviso de pirotecnia
+        };
+        el.addEventListener('change', guarda);
+        if (el.tagName !== 'SELECT' && el.type !== 'checkbox') el.addEventListener('input', guarda);
       });
       card.querySelector('.prov-del').onclick = function () {
         if (!confirm('¿Quitar este proveedor?')) return;
@@ -1323,10 +1372,13 @@
     // Minuto a minuto
     _panel.querySelectorAll('.minuto-row').forEach(function (row) {
       var i = parseInt(row.getAttribute('data-i'), 10);
-      row.querySelectorAll('[data-m]').forEach(function (el) {
-        el.addEventListener('input', function () { d.minuto[i][el.getAttribute('data-m')] = el.value; scheduleSave(); });
+      row.querySelectorAll('[data-m]:not(:disabled)').forEach(function (el) {
+        var guarda = function () { d.minuto[i][el.getAttribute('data-m')] = el.value; scheduleSave(); };
+        el.addEventListener('input', guarda);
+        el.addEventListener('change', guarda);
       });
-      row.querySelector('[data-m="hora"]').addEventListener('change', function () {
+      var hora = row.querySelector('[data-m="hora"]:not(:disabled)');
+      if (hora) hora.addEventListener('change', function () {
         d.minuto.sort(porHora);
         renderPanel();
       });
@@ -1335,25 +1387,6 @@
     });
     var add = $('minuto-add');
     if (add) add.onclick = function () { d.minuto.push({ hora: '', actividad: '', responsable: '' }); renderPanel(); };
-    var imp = $('minuto-import');
-    if (imp) imp.onclick = function () {
-      var timed = timedFromBrief(d.brief);
-      (d.proveedores || []).forEach(function (p) {
-        var quien = [p.servicio, p.nombre].filter(Boolean).join(' — ') || 'Proveedor externo';
-        if (p.llegada) timed.push({ hora: p.llegada, actividad: 'Llegada y montaje: ' + quien, responsable: p.telefono || '' });
-        if (p.inicio) timed.push({ hora: p.inicio, actividad: 'Inicia: ' + quien, responsable: p.telefono || '' });
-        if (p.fin) timed.push({ hora: p.fin, actividad: 'Termina: ' + quien, responsable: p.telefono || '' });
-      });
-      var nuevos = timed.filter(function (r) {
-        return !d.minuto.some(function (m) { return m.hora === r.hora && m.actividad === r.actividad; });
-      });
-      if (!nuevos.length) { toast('No hay horarios nuevos en el brief. Marca ceremonias, momentos o tiempos y anota su hora.', 'info'); return; }
-      d.minuto = d.minuto.concat(nuevos).sort(porHora);
-      scheduleSave();
-      renderPanel();
-      toast(nuevos.length + ' actividad(es) agregadas al minuto a minuto.', 'success');
-    };
-
     // Montaje elegido
     _panel.querySelectorAll('[data-mt]').forEach(function (el) {
       el.addEventListener('input', function () { d.montaje[el.getAttribute('data-mt')] = el.value; scheduleSave(); });
@@ -1454,6 +1487,7 @@
     getEvent: function () { return _event; },
     getSchema: function () { return { sections: SECTIONS, montajeFields: MONTAJE_FIELDS }; },
     formatValue: formatValue,
+    syncMinuto: function () { if (_event) syncMinuto(_event.data); },
     isPlanner: function () { return _isPlanner; }
   };
 })();

@@ -2126,3 +2126,7 @@ body.peg-view-only .minuto-row { grid-template-columns: 120px 1fr 200px; }
 .prov-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); cursor: pointer; }
 .prov-red { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(201, 169, 110, 0.5); border-radius: 999px; padding: 1px 8px; margin-left: 6px; }
 .prov-horario { color: var(--gold); margin-top: 4px; }
+
+/* Minuto a minuto: actividades que vienen del brief */
+.minuto-row.del-brief .form-input:disabled { opacity: 1; color: var(--peg-ivory); border-color: rgba(201, 169, 110, 0.25); }
+.minuto-badge { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(201, 169, 110, 0.5); border-radius: 999px; padding: 2px 8px; text-align: center; }
