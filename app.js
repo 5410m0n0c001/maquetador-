@@ -1942,7 +1942,8 @@
     AppState.venueId = data.venueId || null;
     AppState.elements.forEach(function (e) {
       // Clean up corrupted characters caused by broken UTF-8 encoding
-      if (typeof e.name === 'string') {
+      // Solo se reparan nombres con acentos dañados por codificación (Ã… o �); los demás se respetan
+      if (typeof e.name === 'string' && /[Ã�]/.test(e.name)) {
         var nClean = e.name.trim();
         
         // 1. Árbol Decorativo (\u00C1rbol)
@@ -2285,7 +2286,7 @@
       ['Tipo de evento', tipo],
       ['Invitados', b.invitados ? b.invitados + (b.adultos || b.ninos ? ' (' + (b.adultos || 0) + ' adultos · ' + (b.ninos || 0) + ' niños)' : '') : ''],
       ['Venue', venueName],
-      ['Mesas · capacidad', tablesList.length + ' mesas · ' + capacity + ' lugares'],
+      ['Mesas · capacidad', tablesList.filter(function (t) { return t.mesaConfig && t.mesaConfig.mesaNum; }).length + ' mesas · ' + capacity + ' lugares'],
       ['Formalidad', b.formalidad],
       ['Temática', b.tematica],
       ['Paleta de colores', [].concat(b.paletas || [], b.paleta ? [b.paleta] : []).join(' · ')],
