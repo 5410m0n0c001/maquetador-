@@ -2329,6 +2329,7 @@
       };
       var rows = s.fields.filter(function (f) {
         if (!f.k || (!isPlanner && f.internal)) return false;
+        if (f.timed) return false; // lo que tiene hora ya sale en el minuto a minuto
         return fmt(f) !== '';
       });
       if (!rows.length) return;
