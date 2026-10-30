@@ -2229,6 +2229,7 @@
       // Plano en versión clara para imprimir
       '.plan { background: #fff; } .plan #svg-background { fill: #fff; } .plan #terrain-fill { fill: #f8f6f4; }' +
       '.plan #layer-bg > g { filter: invert(1) hue-rotate(180deg); }' +
+      '.plan .elem-label, .plan .elem-badge { fill: #1F1F1F; stroke: rgba(255,255,255,0.9); stroke-width: 3px; paint-order: stroke; }' +
       'table { width: 100%; border-collapse: collapse; font-size: 10.5px; }' +
       'th { text-align: left; background: var(--ink); color: #fff; font-weight: 500; padding: 6px 8px; }' +
       'td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }' +
@@ -2341,6 +2342,8 @@
       if (!isPlanner && s.internal) return;
       var fmt = function (f) {
         var v = b[f.k];
+        if (f.k === 'tipo_evento' && v === 'Otro' && b.tipo_evento_otro) return b.tipo_evento_otro;
+        if (f.k === 'tipo_evento_otro') return ''; // ya se muestra como tipo de evento
         if (f.type === 'date') return fmtDate(v);
         return PE && PE.formatValue ? PE.formatValue(f, v) : (Array.isArray(v) ? v.join(' · ') : (v || ''));
       };

@@ -2148,3 +2148,5 @@ body.plan-claro #svg-ruler-h > rect, body.plan-claro #svg-ruler-v > rect { fill:
 body.plan-claro #svg-ruler-h text, body.plan-claro #svg-ruler-v text { fill: #6D6D6D; }
 body.plan-claro #svg-ruler-h line, body.plan-claro #svg-ruler-v line { stroke: #b9b2ab; }
 body.plan-claro .canvas-hint { background: rgba(255, 255, 255, 0.92); color: #6D6D6D; }
+/* Claro: números de mesa y etiquetas en negro con halo blanco */
+body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke: rgba(255, 255, 255, 0.9); stroke-width: 3px; paint-order: stroke; }

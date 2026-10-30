@@ -636,6 +636,7 @@ window.Editor2D = (function () {
       labelY = py - Math.max(ph, mToPx(0.35)) / 2 - labelFontSize * 1.2;
     }
     var labelEl = svgEl('text', {
+      'class': 'elem-label',
       x: px,
       y: labelY + (shape === 'arch' ? ph * 0.15 : 0),
       'text-anchor': 'middle',
@@ -662,6 +663,7 @@ window.Editor2D = (function () {
     // Chair / capacity badge
     if (elem.chairs && elem.chairs > 0) {
       var badge = svgEl('text', {
+        'class': 'elem-badge',
         x: px,
         y: py + labelFontSize * 1.4,
         'text-anchor': 'middle',
