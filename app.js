@@ -2152,15 +2152,21 @@
     if (zoomGroup) zoomGroup.removeAttribute('transform');
     // Encuadre: la zona donde están las mesas y elementos (con margen), no todo el terreno
     var vb = [0, 0, tw, th];
-    var piezas = AppState.elements.filter(function (e) { return !e.bg2d && e.category !== 'estructuras'; });
+    // Mesas y elementos del evento + el salón completo (aunque sea parte del croquis), para no cortarlo
+    var piezas = AppState.elements.filter(function (e) {
+      return (!e.bg2d && e.category !== 'estructuras') || /^(salon|salon_carpa|stage|bathroom|lobby_reception|kitchen)$/.test(e.type);
+    });
     if (piezas.length) {
       var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       piezas.forEach(function (e) {
-        var r = Math.max(e.w || 1, e.h || 1) / 2;
-        x0 = Math.min(x0, e.x - r); x1 = Math.max(x1, e.x + r);
-        y0 = Math.min(y0, e.y - r); y1 = Math.max(y1, e.y + r);
+        // Medidas reales; si está girado ~90° se intercambian ancho y largo
+        var rot = Math.abs(((e.rotation || 0) % 180 + 180) % 180);
+        var girado = rot > 45 && rot < 135;
+        var hw = ((girado ? e.h : e.w) || 1) / 2, hh = ((girado ? e.w : e.h) || 1) / 2;
+        x0 = Math.min(x0, e.x - hw); x1 = Math.max(x1, e.x + hw);
+        y0 = Math.min(y0, e.y - hh); y1 = Math.max(y1, e.y + hh);
       });
-      var m = 4;
+      var m = 5;
       x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m);
       x1 = Math.min(AppState.terrain.w, x1 + m); y1 = Math.min(AppState.terrain.h, y1 + m);
       if (x1 - x0 < 20) { var cxm = (x0 + x1) / 2; x0 = Math.max(0, cxm - 10); x1 = x0 + 20; }
