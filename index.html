@@ -22,7 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- App Styles -->
-  <link rel="stylesheet" href="styles.css?v=20261030_04" />
+  <link rel="stylesheet" href="styles.css?v=20261106_01" />
 </head>
 <body>
 
@@ -502,6 +502,13 @@
     <!-- Canvas Area -->
     <div class="canvas-area">
 
+      <!-- Pisos (modo bodega) -->
+      <div id="nivel-selector" class="nivel-selector hidden" role="group" aria-label="Piso">
+        <button type="button" data-nivel="1"><i class="fa-solid fa-layer-group"></i> 2º piso</button>
+        <button type="button" data-nivel="0">Planta baja</button>
+        <button type="button" data-nivel="-1">Sótano</button>
+      </div>
+
       <!-- Placement Banner -->
       <div id="placement-banner" class="placement-banner hidden">
         <i class="fa-solid fa-wand-magic-sparkles icon-spin"></i>
@@ -617,6 +624,8 @@
           </label>
           <input type="text" id="inspector-name" class="form-input" placeholder="Nombre del elemento" />
         </div>
+
+        <div id="inspector-bodega" class="hidden"></div>
 
         <div class="form-row">
           <div class="form-group half">
@@ -1005,13 +1014,14 @@
 
 <!-- SCRIPTS (order matters) -->
 <script src="elements-db.js?v=20261030_01" charset="utf-8"></script>
+<script src="bodega.js?v=20261106_01" charset="utf-8"></script>
 <script src="default-layout.js?v=20260718_01" charset="utf-8"></script>
 <script src="templates.js?v=20261030_01" charset="utf-8"></script>
-<script src="editor2d.js?v=20261030_04" charset="utf-8"></script>
-<script src="visualizer3d.js?v=20261030_03" charset="utf-8"></script>
+<script src="editor2d.js?v=20261106_01" charset="utf-8"></script>
+<script src="visualizer3d.js?v=20261106_01" charset="utf-8"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="brief.js?v=20261030_05" charset="utf-8"></script>
-<script src="app.js?v=20261030_15" charset="utf-8"></script>
+<script src="brief.js?v=20261106_01" charset="utf-8"></script>
+<script src="app.js?v=20261106_01" charset="utf-8"></script>
 
 </body>
 </html>

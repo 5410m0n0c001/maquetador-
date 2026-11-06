@@ -14,6 +14,8 @@
     elements: [],
     flows: [],          // polilíneas de circulación: { id, layer, color, points: [[x,y], ...] } en metros
     venueId: null,      // id de la plantilla de salón de origen (templates.js)
+    mode: 'evento',     // 'evento' o 'bodega'
+    nivel: 0,           // piso activo en modo bodega: -1 sótano, 0 planta baja, 1 segundo piso
     terrain: { w: 50, h: 60 },
     selectedId: null,
     activeView: '3d',
@@ -240,8 +242,16 @@
       }
     };
 
+    if (cat.bodega) {
+      delete elem.mesaConfig;
+      elem.nivel = AppState.nivel || 0;
+      window.BODEGA.inicializar(elem, cat);
+    }
+
     saveHistory();
     AppState.elements.push(elem);
+    // El segundo piso y el sótano tienen su propio nivel: se abre ese nivel para seguir trabajando
+    if (cat.bodega && elem.nivel !== AppState.nivel) _setNivel(elem.nivel);
     _refresh();
     updateCounters();
     selectElement(elem.id);
@@ -358,8 +368,124 @@
     var elem = AppState.elements.find(function (e) { return e.id === id; });
     if (!elem) return;
     Object.assign(elem, changes);
+    if (window.BODEGA && elem.nivel !== undefined && (changes.w !== undefined || changes.h !== undefined)) {
+      window.BODEGA.alRedimensionar(elem);
+    }
     _refresh();
     updateCounters();
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // MODO BODEGA
+  // ══════════════════════════════════════════════════════════
+  function _setNivel(nivel) {
+    AppState.nivel = nivel;
+    Array.prototype.forEach.call(document.querySelectorAll('#nivel-selector button'), function (b) {
+      b.classList.toggle('active', parseInt(b.getAttribute('data-nivel'), 10) === nivel);
+    });
+    var sel = AppState.elements.find(function (e) { return e.id === AppState.selectedId; });
+    if (sel && (sel.nivel || 0) !== nivel) deselectAll();
+    if (window.Editor2D) window.Editor2D.update(AppState.elements);
+  }
+
+  function _aplicarModo() {
+    var bodega = AppState.mode === 'bodega';
+    document.body.classList.toggle('modo-bodega', bodega);
+    var selector = document.getElementById('nivel-selector');
+    if (selector) selector.classList.toggle('hidden', !bodega);
+    _setNivel(AppState.nivel || 0);
+    _buildToolbox();
+  }
+
+  function _pintarInspectorBodega(elem) {
+    var panel = document.getElementById('inspector-bodega');
+    if (!panel) return;
+    var cat = window.getCatalogEntry ? window.getCatalogEntry(elem.type) : null;
+    var esBodega = !!(cat && cat.bodega);
+    panel.classList.toggle('hidden', !esBodega);
+    var lblNombre = document.querySelector('label[for="inspector-name"]');
+    if (lblNombre) lblNombre.innerHTML = '<i class="fa-solid fa-tag"></i> ' + (esBodega ? 'Nombre / Etiqueta' : 'Nombre');
+    var sillas = document.getElementById('inspector-chairs');
+    if (sillas) sillas.closest('.form-group').style.display = esBodega ? 'none' : '';
+    if (!esBodega) return;
+
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+    }
+    var html = '<div class="form-group"><label class="form-label"><i class="fa-solid fa-layer-group"></i> Piso</label>' +
+      '<select id="bod-nivel" class="form-input">' + window.BODEGA.NIVELES.map(function (n) {
+        return '<option value="' + n.id + '"' + ((elem.nivel || 0) === n.id ? ' selected' : '') + '>' + n.label + '</option>';
+      }).join('') + '</select></div>';
+
+    if (window.BODEGA.esPlegada(elem)) {
+      if (elem.type !== 'wh_fold_round') {
+        html += '<div class="form-group"><label class="form-label"><i class="fa-solid fa-arrows-up-down"></i> Cómo van paradas</label>' +
+          '<select id="bod-plegado" class="form-input">' +
+          '<option value="largo"' + (elem.plegado === 'largo' ? ' selected' : '') + '>A lo largo</option>' +
+          '<option value="ancho"' + (elem.plegado === 'ancho' ? ' selected' : '') + '>A lo ancho</option></select></div>';
+      }
+      html += '<div class="form-group"><label class="form-label"><i class="fa-solid fa-hashtag"></i> Mesas recargadas juntas</label>' +
+        '<input id="bod-cantidad" type="number" min="1" max="100" class="form-input" value="' + elem.cantidad + '"></div>';
+    }
+    if (elem.type === 'wh_chair_stack') {
+      html += '<div class="form-group"><label class="form-label"><i class="fa-solid fa-hashtag"></i> Sillas en la torre</label>' +
+        '<input id="bod-cantidad" type="number" min="1" max="40" class="form-input" value="' + elem.cantidad + '"></div>';
+    }
+    if (elem.type === 'wh_island') {
+      html += '<div class="form-group"><label class="form-label"><i class="fa-solid fa-table-cells"></i> Filas de mesas</label>' +
+        '<input id="bod-filas" type="number" min="1" max="20" class="form-input" value="' + elem.filas + '"></div>' +
+        '<div class="form-group"><label class="form-label"><i class="fa-solid fa-object-ungroup"></i> Secciones de la isla</label>';
+      elem.secciones.forEach(function (s, i) {
+        html += '<div class="bod-seccion" data-i="' + i + '">' +
+          '<input class="form-input bod-sec-nombre" value="' + esc(s.nombre) + '" placeholder="Nombre de la sección">' +
+          '<input class="form-input bod-sec-col" type="number" min="1" max="30" value="' + s.columnas + '" title="Mesas a lo largo">' +
+          '<button type="button" class="btn-icon-sm bod-sec-quitar" title="Quitar sección"' + (elem.secciones.length < 2 ? ' disabled' : '') + '><i class="fa-solid fa-xmark"></i></button>' +
+          '</div>';
+      });
+      html += '<p class="bod-ayuda">El número es cuántas mesas lleva cada sección a lo largo.</p>' +
+        '<button type="button" id="bod-sec-agregar" class="btn-icon-sm"><i class="fa-solid fa-plus"></i> Agregar sección</button></div>';
+    }
+    panel.innerHTML = html;
+
+    function aplicar() {
+      window.BODEGA.recalcular(elem);
+      updateInspectorField('inspector-w', parseFloat(elem.w).toFixed(2));
+      updateInspectorField('inspector-h', parseFloat(elem.h).toFixed(2));
+      _refresh();
+    }
+    function enlazar(id, fn) {
+      var el = panel.querySelector(id);
+      if (el) el.addEventListener('change', function () { saveHistory(); fn(el); aplicar(); });
+    }
+    enlazar('#bod-nivel', function (el) {
+      elem.nivel = parseInt(el.value, 10);
+      _setNivel(elem.nivel);
+    });
+    enlazar('#bod-plegado', function (el) { elem.plegado = el.value; });
+    enlazar('#bod-cantidad', function (el) { elem.cantidad = Math.max(1, parseInt(el.value, 10) || 1); });
+    enlazar('#bod-filas', function (el) { elem.filas = Math.max(1, parseInt(el.value, 10) || 1); });
+    Array.prototype.forEach.call(panel.querySelectorAll('.bod-seccion'), function (fila) {
+      var s = elem.secciones[parseInt(fila.getAttribute('data-i'), 10)];
+      fila.querySelector('.bod-sec-nombre').addEventListener('change', function (e) {
+        saveHistory(); s.nombre = e.target.value; aplicar();
+      });
+      fila.querySelector('.bod-sec-col').addEventListener('change', function (e) {
+        saveHistory(); s.columnas = Math.max(1, parseInt(e.target.value, 10) || 1); aplicar();
+      });
+      fila.querySelector('.bod-sec-quitar').addEventListener('click', function () {
+        saveHistory();
+        elem.secciones.splice(elem.secciones.indexOf(s), 1);
+        aplicar();
+        _pintarInspectorBodega(elem);
+      });
+    });
+    var agregar = panel.querySelector('#bod-sec-agregar');
+    if (agregar) agregar.addEventListener('click', function () {
+      saveHistory();
+      elem.secciones.push({ nombre: 'Sección ' + String.fromCharCode(65 + elem.secciones.length % 26), columnas: 1 });
+      aplicar();
+      _pintarInspectorBodega(elem);
+    });
   }
 
   function selectElement(id) {
@@ -723,6 +849,7 @@
   }
 
   function _populateInspector(elem) {
+    _pintarInspectorBodega(elem);
     function setVal(id, v) {
       var el = document.getElementById(id);
       if (!el) return;
@@ -1092,7 +1219,8 @@
     if (!container) return;
     container.innerHTML = '';
 
-    var cats = ['estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores'];
+    var enBodega = AppState.mode === 'bodega';
+    var cats = enBodega ? window.BODEGA.CATEGORIAS : ['estructuras', 'accesos', 'mobiliario', 'entretenimiento', 'decoracion', 'proveedores'];
 
     cats.forEach(function (cat) {
       var catMeta = window.ELEMENT_CATEGORIES[cat] || { label: cat, icon: 'fa-cube', color: '#888' };
@@ -1948,6 +2076,8 @@
     if (data.elements) AppState.elements = data.elements;
     if (data.terrain) AppState.terrain = data.terrain;
     if (data.layers) Object.assign(AppState.layers, data.layers);
+    AppState.mode = data.mode || (AppState.elements.some(function (e) { return e.type.indexOf('wh_') === 0; }) ? 'bodega' : 'evento');
+    AppState.nivel = 0;
     AppState.flows = data.flows || [];
     AppState.venueId = data.venueId || null;
     AppState.labelScale = data.labelScale || 1;
@@ -2100,6 +2230,96 @@
   // FICHA TÉCNICA (PDF) — membretada PEG, con QR al evento
   // Usa los datos del evento abierto (brief.js) y el plano actual.
   // ══════════════════════════════════════════════════════════
+  // Plano de la bodega: una vista por piso e inventario, con membrete
+  function _exportPDFBodega(svgEl, printWindow) {
+    function esc(v) {
+      return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    var PE = window.PEGEventos;
+    var ev = PE && PE.getEvent ? PE.getEvent() : null;
+    var nombre = ev ? ev.nombre : 'Bodega';
+    var logoUrl = new URL('assets/logo-primavera.png', location.href).href;
+    var nivelActual = AppState.nivel, seleccion = AppState.selectedId;
+    if (window.Editor2D) window.Editor2D.deselect();
+
+    var secciones = window.BODEGA.NIVELES.slice().reverse().map(function (n) {
+      var piezas = AppState.elements.filter(function (e) { return (e.nivel || 0) === n.id; });
+      if (!piezas.length) return '';
+      AppState.nivel = n.id;
+      window.Editor2D.update(AppState.elements);
+      var copia = svgEl.cloneNode(true);
+      ['.active-selection', '#svg-ruler-h', '#svg-ruler-v', '#svg-terrain-border'].forEach(function (sel) {
+        var nodo = copia.querySelector(sel);
+        if (nodo) nodo.remove();
+      });
+      Array.prototype.forEach.call(copia.querySelectorAll('.resize-handle, .ghost-nivel'), function (h) { h.remove(); });
+      var tw = AppState.terrain.w * 15, th = AppState.terrain.h * 15;
+      var fondo = copia.querySelector('#svg-background');
+      if (fondo) { fondo.setAttribute('width', tw); fondo.setAttribute('height', th); }
+      var zoom = copia.querySelector('#svg-zoom-group');
+      if (zoom) zoom.removeAttribute('transform');
+      copia.setAttribute('viewBox', '0 0 ' + tw + ' ' + th);
+      var escala = Math.min(725 / tw, 460 / th);
+      Array.prototype.forEach.call(copia.querySelectorAll('.elem-label'), function (l) {
+        l.setAttribute('font-size', 9 * (AppState.labelScale || 1) / escala);
+      });
+      copia.setAttribute('width', '100%');
+      copia.setAttribute('height', '100%');
+      copia.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+      var conteo = {};
+      piezas.forEach(function (e) {
+        var cat = window.getCatalogEntry(e.type);
+        var tipo = cat ? cat.name : e.type;
+        conteo[tipo] = (conteo[tipo] || 0) + 1;
+      });
+      var filas = Object.keys(conteo).sort().map(function (t) { return '<tr><td>' + esc(t) + '</td><td>' + conteo[t] + '</td></tr>'; }).join('');
+      var detalles = piezas.filter(function (e) {
+        var cat = window.getCatalogEntry(e.type);
+        return e.type === 'wh_shelf' || e.type === 'wh_island' || e.cantidad || (cat && e.name !== cat.name);
+      }).map(function (e) {
+        var txt = '';
+        if (e.type === 'wh_island') txt = e.secciones.map(function (s) { return s.nombre + ' (' + s.columnas + ' × ' + e.filas + ' mesas)'; }).join(', ');
+        else if (e.type === 'wh_chair_stack') txt = e.cantidad + ' sillas';
+        else if (window.BODEGA.esPlegada(e)) txt = e.cantidad + ' mesas, a lo ' + e.plegado;
+        return '<li><b>' + esc(e.name) + '</b>' + (txt ? ': ' + esc(txt) : '') + '</li>';
+      }).join('');
+      return '<section class="piso"><h2>' + esc(n.label) + '</h2><div class="plan">' + new XMLSerializer().serializeToString(copia) + '</div>' +
+        '<div class="cols"><table><tr><th>Elemento</th><th>Cantidad</th></tr>' + filas + '</table>' +
+        (detalles ? '<div><h3>Etiquetas y secciones</h3><ul>' + detalles + '</ul></div>' : '') + '</div></section>';
+    }).join('');
+
+    AppState.nivel = nivelActual;
+    if (seleccion && window.Editor2D) window.Editor2D.select(seleccion); else if (window.Editor2D) window.Editor2D.update(AppState.elements);
+
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>' + esc(nombre) + ' · Plano de bodega</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">' +
+      '<style>:root{--pink:#F65C7A;--gold:#C9A96E;--ink:#1F1F1F;--gray:#6D6D6D;--line:#EFE7E1}' +
+      '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      'html,body{background:#fff}body{font-family:Poppins,sans-serif;color:var(--ink);font-size:11px;margin:24px auto;max-width:800px;padding:0 16px}' +
+      'h1,h2,h3{font-family:"Playfair Display",serif;margin:0}' +
+      '.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;color:var(--gray)}.toolbar button{background:var(--pink);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer}' +
+      '.head{display:flex;align-items:center;gap:12px;padding-bottom:10px;border-bottom:2px solid var(--gold)}.head img{width:52px;height:52px;border-radius:50%;object-fit:cover}' +
+      '.marca{font-family:"Playfair Display",serif;font-size:16px;color:var(--pink)}.sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}' +
+      'h1{font-size:24px;margin:14px 0 2px}.piso{margin-top:18px;break-inside:avoid}.piso h2{font-size:15px;padding-left:10px;border-left:3px solid var(--pink);margin-bottom:8px}' +
+      '.plan{height:460px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}.plan svg{display:block}.plan #svg-background{fill:#fff}.plan #terrain-fill{fill:#f8f6f4}' +
+      '.plan .elem-label{fill:#1F1F1F;stroke:rgba(255,255,255,.9);stroke-width:3px;paint-order:stroke;font-weight:700}' +
+      '.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}table{width:100%;border-collapse:collapse}th{background:var(--ink);color:#fff;text-align:left;padding:5px 8px;font-weight:500}td{padding:5px 8px;border-bottom:1px solid var(--line)}' +
+      'h3{font-size:12px;margin-bottom:4px}ul{margin:0;padding-left:16px}li{margin-bottom:2px}' +
+      '.footer{margin-top:18px;padding-top:8px;border-top:1px solid var(--gold);font-size:9px;color:var(--gray);text-align:center}' +
+      '@media print{.toolbar{display:none}body{margin:0;max-width:none}@page{size:letter;margin:1.2cm}}</style></head><body>' +
+      '<div class="toolbar"><span>Vista previa · Plano de bodega</span><button onclick="window.print()">Imprimir / Guardar PDF</button></div>' +
+      '<header class="head"><img src="' + esc(logoUrl) + '" alt="Primavera Events Group"><div><div class="marca">Primavera Events Group®</div><div class="sub">Plano de bodega</div></div></header>' +
+      '<h1>' + esc(nombre) + '</h1><p>' + AppState.terrain.w + ' × ' + AppState.terrain.h + ' m</p>' +
+      (secciones || '<p>El plano todavía no tiene elementos.</p>') +
+      '<footer class="footer">Primavera Events Group® · primaveraeventsgroup.com</footer></body></html>';
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
+
   function exportPDF() {
     var svgEl = document.getElementById('svg-canvas');
     if (!svgEl) {
@@ -2110,6 +2330,11 @@
     var printWindow = window.open('', '_blank');
     if (!printWindow) {
       showToast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error');
+      return;
+    }
+
+    if (AppState.mode === 'bodega') {
+      _exportPDFBodega(svgEl, printWindow);
       return;
     }
 
@@ -2641,7 +2866,8 @@
       flows: AppState.flows,
       layers: AppState.layers,
       venueId: AppState.venueId,
-      labelScale: AppState.labelScale || 1
+      labelScale: AppState.labelScale || 1,
+      mode: AppState.mode
     };
   }
 
@@ -2663,6 +2889,7 @@
 
     if (window.Editor2D) window.Editor2D.setTerrain(AppState.terrain.w, AppState.terrain.h);
     _fit2dOnShow = AppState.activeView !== '2d';
+    _aplicarModo();
     _refresh();
     updateCounters();
   }
@@ -2931,6 +3158,16 @@
         updateElement(id, { name: name });
         updateInspectorField('inspector-name', name);
       },
+      onResizeStart: function () {
+        saveHistory();
+      },
+      onResize: function (id, medidas) {
+        updateElement(id, medidas);
+        updateInspectorField('inspector-x', parseFloat(medidas.x).toFixed(2));
+        updateInspectorField('inspector-y', parseFloat(medidas.y).toFixed(2));
+        updateInspectorField('inspector-w', medidas.w.toFixed(2));
+        updateInspectorField('inspector-h', medidas.h.toFixed(2));
+      },
       onContext_rotate: function (id) {
         rotateElement(id, 45);
       },
@@ -3047,6 +3284,10 @@
     // Build toolbox
     _buildToolbox();
     _wireSearch();
+    Array.prototype.forEach.call(document.querySelectorAll('#nivel-selector button'), function (b) {
+      b.onclick = function () { _setNivel(parseInt(b.getAttribute('data-nivel'), 10)); };
+    });
+    _aplicarModo();
 
     // Init 2D Editor
     var svgCanvas = document.getElementById('svg-canvas');

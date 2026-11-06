@@ -982,7 +982,7 @@ window.Visualizer3D = (function () {
     var elem = _currentElements.find(function (e) { return e.id === _selectedId; });
     if (!elem) return;
 
-    _selectionRing.position.set(group.position.x, 0.05, group.position.z);
+    _selectionRing.position.set(group.position.x, group.position.y + 0.05, group.position.z);
     var size = Math.max(elem.w, elem.h || elem.w) * 0.95;
     _selectionRing.scale.set(size, size, size);
   }
@@ -1024,7 +1024,7 @@ window.Visualizer3D = (function () {
       var group = _active3dElements[elem.id];
 
       // Layer visibility filter
-      var layerVisible = _getLayerVisibility(category);
+      var layerVisible = _getLayerVisibility(cat && cat.bodega ? cat.layer : category);
       if (!layerVisible) {
         if (group) {
           _scene.remove(group);
@@ -1045,6 +1045,8 @@ window.Visualizer3D = (function () {
             group.userData.type !== elem.type ||
             group.userData.salonType !== elem.salonType ||
             group.userData.elevation !== elem.elevation ||
+            group.userData.nivel !== elem.nivel ||
+            group.userData.claveBodega !== (cat && cat.bodega ? window.BODEGA.clave3D(elem) : undefined) ||
             group.userData.techos !== currentTechosVisible ||
             group.userData.mesaNum !== (elem.mesaConfig ? elem.mesaConfig.mesaNum : 0)) {
           needsRebuild = true;
@@ -1065,6 +1067,8 @@ window.Visualizer3D = (function () {
           color: elem.color,
           salonType: elem.salonType,
           elevation: elem.elevation,
+          nivel: elem.nivel,
+          claveBodega: cat && cat.bodega ? window.BODEGA.clave3D(elem) : undefined,
           techos: currentTechosVisible,
           mesaNum: elem.mesaConfig ? elem.mesaConfig.mesaNum : 0
         };
@@ -1072,22 +1076,42 @@ window.Visualizer3D = (function () {
         _buildProceduralMesh(group, elem);
 
         // Add 3D Label
-        var labelInfo = _getElementLabelInfo(elem);
-        var label = create3DLabel(labelInfo.title, labelInfo.subtitle, labelInfo.colorHex, "rgba(15, 23, 42, 0.85)", labelInfo.heightOffset);
-        label.name = "label-3d";
-        group.add(label);
+        if (!cat || !cat.bodega || window.BODEGA.llevaEtiqueta3D(elem, cat)) {
+          var labelInfo = cat && cat.bodega ? window.BODEGA.etiqueta3D(elem, cat) : _getElementLabelInfo(elem);
+          var label = create3DLabel(labelInfo.title, labelInfo.subtitle, labelInfo.colorHex, "rgba(15, 23, 42, 0.85)", labelInfo.heightOffset);
+          label.name = "label-3d";
+          // La bodega tiene muchas piezas juntas: rótulos más chicos para no taparlas
+          if (cat && cat.bodega) {
+            label.traverse(function (o) {
+              if (o.is3DLabel) { o.userData.baseScaleX *= 0.5; o.userData.baseScaleY *= 0.5; }
+            });
+          }
+          group.add(label);
+        }
 
         _scene.add(group);
         _active3dElements[elem.id] = group;
       }
 
       // Update positions (x -> X, y -> Z)
-      var elev = parseFloat(elem.elevation) || 0.0;
+      var elev = (parseFloat(elem.elevation) || 0.0) + (elem.nivel || 0) * (window.BODEGA ? window.BODEGA.ALTURA_NIVEL : 0);
       group.position.set(elem.x, elev, elem.y);
       group.rotation.y = -(elem.rotation || 0) * Math.PI / 180;
     });
 
+    _updatePisoBodega(st);
     _updateSelectionRing();
+  }
+
+  // Bodega: piso de concreto; si hay sótano, el piso se vuelve translúcido para verlo debajo
+  function _updatePisoBodega(st) {
+    if (!_terrainMesh) return;
+    var bodega = !!(st && st.mode === 'bodega');
+    var conSotano = bodega && _currentElements.some(function (e) { return (e.nivel || 0) < 0; });
+    var mat = _terrainMesh.material;
+    mat.color.setHex(bodega ? 0x8a8f98 : COLORS.floorOutdoor);
+    mat.transparent = conSotano;
+    mat.opacity = conSotano ? 0.3 : 1;
   }
 
   // ─── Animate loop ─────────────────────────────────────────
@@ -1132,6 +1156,11 @@ window.Visualizer3D = (function () {
     var type = elem.type;
     var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
     var category = (cat && cat.category) ? cat.category : 'mobiliario';
+
+    if (cat && cat.bodega) {
+      window.BODEGA.construir3D(group, elem);
+      return;
+    }
 
     switch (category) {
       case 'estructuras':

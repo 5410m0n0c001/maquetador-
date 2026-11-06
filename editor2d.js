@@ -294,8 +294,17 @@ window.Editor2D = (function () {
 
     var cat = window.getCatalogEntry ? window.getCatalogEntry(elem.type) : null;
     var shape = (cat && cat.shape) ? cat.shape : 'rect';
+    var esBodega = !!(cat && cat.bodega);
 
-    var isSelected = (elem.id === _selectedId);
+    // Modo bodega: se dibuja el piso activo; el de abajo queda tenue como guía
+    var esGuia = false;
+    if (state.mode === 'bodega') {
+      var nivelElem = elem.nivel || 0, nivelActivo = state.nivel || 0;
+      if (nivelElem === nivelActivo - 1) esGuia = true;
+      else if (nivelElem !== nivelActivo) return;
+    }
+
+    var isSelected = (elem.id === _selectedId) && !esGuia;
     var color = elem.color || (cat ? cat.color : '#888888');
     var colorLight = lighten(color, 0.3);
     var px = mToPx(elem.x);
@@ -317,7 +326,12 @@ window.Editor2D = (function () {
     g.setAttribute('transform', 'rotate(' + rot + ',' + px + ',' + py + ')');
 
     // ── Shape rendering ───────────────────────────────────
-    if (shape === 'circle') {
+    if (esBodega) {
+      window.BODEGA.dibujar2D(svgEl, g, elem, {
+        px: px, py: py, pw: pw, ph: ph, color: color, light: colorLight, selected: isSelected, mToPx: mToPx,
+        font: Math.min(Math.max(mToPx(0.5) * _zoom, 10), 14) / _zoom * (state.labelScale || 1)
+      });
+    } else if (shape === 'circle') {
       var r = pw / 2;
       var circ = svgEl('circle', {
         cx: px, cy: py, r: r,
@@ -626,7 +640,9 @@ window.Editor2D = (function () {
     // Entre 10 y 14 px en pantalla, sin importar el zoom (antes bajaba a 7 px y no se leía)
     var labelFontSize = Math.min(Math.max(mToPx(0.5) * _zoom, 10), 14) / _zoom * (state.labelScale || 1);
     var labelY = py;
-    if (elem.type === 'dressing_room') {
+    if (cat && cat.etiquetaArriba) {
+      labelY = py - ph / 2 - labelFontSize;
+    } else if (elem.type === 'dressing_room') {
       labelY = py - 18;
     } else if (elem.type === 'bathroom') {
       labelY = py + 18;
@@ -659,7 +675,8 @@ window.Editor2D = (function () {
     }
     if (displayName.length > 18) displayName = displayName.slice(0, 16) + '…';
     labelEl.textContent = displayName;
-    g.appendChild(labelEl);
+    // Muros y columnas sin renombrar no llevan texto, para no saturar el plano
+    if (!(cat && cat.sinEtiqueta && elem.name === cat.name)) g.appendChild(labelEl);
 
     // Chair / capacity badge
     if (elem.chairs && elem.chairs > 0) {
@@ -679,7 +696,9 @@ window.Editor2D = (function () {
     }
 
     // ── Selection ring ────────────────────────────────────
-    if (isSelected) {
+    if (isSelected && esBodega) {
+      _appendResizeHandles(g, elem, px, py, pw, ph);
+    } else if (isSelected) {
       var selR = Math.max(pw, ph) / 2 + 4;
       var selRing = svgEl('circle', {
         cx: px, cy: py, r: selR,
@@ -691,6 +710,15 @@ window.Editor2D = (function () {
         opacity: 0.8
       });
       g.appendChild(selRing);
+    }
+
+    // El piso de abajo solo es referencia: no se puede tocar
+    if (esGuia) {
+      g.setAttribute('class', 'elem-group ghost-nivel');
+      g.setAttribute('opacity', 0.22);
+      g.setAttribute('pointer-events', 'none');
+      group.appendChild(g);
+      return;
     }
 
     // ── Events ────────────────────────────────────────────
@@ -714,6 +742,69 @@ window.Editor2D = (function () {
     });
 
     group.appendChild(g);
+  }
+
+  // ─── Jaladeras para cambiar el tamaño (modo bodega) ───────
+  function _appendResizeHandles(g, elem, px, py, pw, ph) {
+    var size = 9 / _zoom;
+    g.appendChild(svgEl('rect', {
+      'class': 'resize-handle',
+      x: px - pw / 2, y: py - ph / 2, width: pw, height: ph,
+      fill: 'none', stroke: '#F65C7A', 'stroke-width': 1.5 / _zoom, 'stroke-dasharray': (6 / _zoom) + ' ' + (3 / _zoom),
+      'pointer-events': 'none'
+    }));
+    [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]].forEach(function (s) {
+      var h = svgEl('rect', {
+        'class': 'resize-handle',
+        x: px + s[0] * pw / 2 - size / 2, y: py + s[1] * ph / 2 - size / 2,
+        width: size, height: size,
+        fill: '#fff', stroke: '#F65C7A', 'stroke-width': 1.5 / _zoom,
+        cursor: (s[0] === 0 ? 'ns' : s[1] === 0 ? 'ew' : (s[0] === s[1] ? 'nwse' : 'nesw')) + '-resize'
+      });
+      h.addEventListener('mousedown', function (e) {
+        if (e.button === 2) return;
+        e.stopPropagation();
+        e.preventDefault();
+        _startResize(elem, s[0], s[1]);
+      });
+      h.addEventListener('click', function (e) { e.stopPropagation(); });
+      g.appendChild(h);
+    });
+  }
+
+  // El lado opuesto a la jaladera se queda fijo, aunque el elemento esté girado
+  function _startResize(elem, sx, sy) {
+    var rad = (elem.rotation || 0) * Math.PI / 180;
+    var cos = Math.cos(rad), sin = Math.sin(rad);
+    var ax = -sx * elem.w / 2, ay = -sy * elem.h / 2;
+    var anclaX = elem.x + ax * cos - ay * sin;
+    var anclaY = elem.y + ax * sin + ay * cos;
+    var w0 = elem.w, h0 = elem.h;
+    if (_callbacks.onResizeStart) _callbacks.onResizeStart(elem.id);
+
+    function mover(e) {
+      var ms = getMouseSVG(e);
+      var m = svgToMeters(ms.x, ms.y);
+      var dx = m.x - anclaX, dy = m.y - anclaY;
+      var lx = dx * cos + dy * sin, ly = -dx * sin + dy * cos;
+      var w = sx ? Math.max(0.1, snapVal(lx * sx)) : w0;
+      var h = sy ? Math.max(0.1, snapVal(ly * sy)) : h0;
+      var cx = sx * w / 2, cy = sy * h / 2;
+      if (_callbacks.onResize) {
+        _callbacks.onResize(elem.id, {
+          w: Math.round(w * 100) / 100,
+          h: Math.round(h * 100) / 100,
+          x: anclaX + cx * cos - cy * sin,
+          y: anclaY + cx * sin + cy * cos
+        });
+      }
+    }
+    function soltar() {
+      document.removeEventListener('mousemove', mover);
+      document.removeEventListener('mouseup', soltar);
+    }
+    document.addEventListener('mousemove', mover);
+    document.addEventListener('mouseup', soltar);
   }
 
   function _appendChairs(g, elem, cx, cy, radius, shape, isSelected) {

@@ -2150,3 +2150,23 @@ body.plan-claro #svg-ruler-h line, body.plan-claro #svg-ruler-v line { stroke: #
 body.plan-claro .canvas-hint { background: rgba(255, 255, 255, 0.92); color: #6D6D6D; }
 /* Claro: números de mesa y etiquetas en negro con halo blanco */
 body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke: rgba(255, 255, 255, 0.9); stroke-width: 3px; paint-order: stroke; }
+
+/* ── Modo bodega ─────────────────────────────────────────── */
+.modo-bodega #btn-open-venues,
+.modo-bodega #btn-brief,
+.modo-bodega .counters-row { display: none !important; }
+.modo-bodega #event-name { cursor: pointer; }
+.nivel-selector {
+  position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); z-index: 30;
+  display: flex; gap: 2px; padding: 3px; border-radius: 999px;
+  background: rgba(31, 31, 31, 0.92); border: 1px solid rgba(201, 169, 110, 0.4);
+}
+.nivel-selector.hidden { display: none; }
+.nivel-selector button {
+  border: 0; background: transparent; color: #cbd5e1; cursor: pointer; white-space: nowrap;
+  border-radius: 999px; padding: 7px 14px; font: 500 12px Poppins, sans-serif;
+}
+.nivel-selector button.active { background: #F65C7A; color: #fff; }
+.bod-seccion { display: grid; grid-template-columns: 1fr 58px 30px; gap: 4px; margin-bottom: 4px; }
+#bod-sec-agregar { width: 100%; height: auto; padding: 8px; font-size: 12px; white-space: nowrap; }
+.bod-ayuda { font-size: 10px; color: var(--text-secondary, #94a3b8); margin: 4px 0 6px; }

@@ -470,6 +470,31 @@
     });
   }
 
+  function esBodega() {
+    return !!(_event && _event.data.layout && _event.data.layout.mode === 'bodega');
+  }
+
+  function createBodega() {
+    if (!client()) { toast('No hay conexión con Supabase.', 'error'); return; }
+    var data = emptyData();
+    data.layout = { terrain: Object.assign({}, window.BODEGA.TERRENO), elements: [], flows: [], layers: {}, venueId: null, mode: 'bodega' };
+    if (window.App && window.App.loadLayout) window.App.loadLayout(data.layout);
+    client().from(TABLE).insert({ nombre: 'Nueva bodega', venue_id: null, data: data }).select('id').single().then(function (res) {
+      if (res.error) { toast('No se pudo crear la bodega: ' + res.error.message, 'error'); return; }
+      goToEvent(res.data.id);
+    });
+  }
+
+  // En bodega no hay brief de donde tomar el nombre: se escribe directo
+  function renombrarBodega() {
+    if (!esBodega() || !_isPlanner) return;
+    var nombre = prompt('Nombre de la bodega:', _event.nombre);
+    if (!nombre || !nombre.trim()) return;
+    _event.nombre = nombre.trim();
+    updateEventBar();
+    scheduleSave();
+  }
+
   function updateEventBar() {
     var name = $('event-name');
     var has = !!_event;
@@ -479,7 +504,7 @@
     }
     // El planner siempre ve "Brief" (si no hay evento, lo crea); los demás solo dentro de un evento
     var brief = $('btn-brief');
-    if (brief) brief.classList.toggle('hidden', !has && !_isPlanner);
+    if (brief) brief.classList.toggle('hidden', esBodega() || (!has && !_isPlanner));
     var share = $('btn-share-event');
     if (share) share.classList.toggle('hidden', !has);
   }
@@ -552,8 +577,10 @@
             '<strong>Llenar el brief</strong><span>Cuestionario del evento con el cliente: datos, menú, montaje, minuto a minuto y fotos.</span></button>' +
           '<button class="venue-card" data-go="maquetar"><i class="fa-solid fa-map-location-dot"></i>' +
             '<strong>Maquetar</strong><span>Elige un salón ya maquetado o empieza desde cero.</span></button>' +
+          '<button class="venue-card" data-go="bodega"><i class="fa-solid fa-warehouse"></i>' +
+            '<strong>Maquetar bodega</strong><span>Repisas, islas de mesas, pisos, vehículos y más, sin brief.</span></button>' +
           '<button class="venue-card venue-card-empty" data-go="abrir"><i class="fa-solid fa-folder-open"></i>' +
-            '<strong>Abrir un evento</strong><span>Continúa un evento guardado.</span></button>' +
+            '<strong>Abrir un evento</strong><span>Continúa un evento o una bodega guardada.</span></button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(modal);
@@ -566,6 +593,7 @@
         ensurePlanner(function () {
           close();
           if (go === 'brief') createEvent();
+          else if (go === 'bodega') createBodega();
           else if (go === 'maquetar') { if (window.App && window.App.openVenuePicker) window.App.openVenuePicker(); }
           else openEventsModal();
         });
@@ -603,6 +631,8 @@
         '<div class="venue-grid" id="events-grid">' +
           '<button class="venue-card venue-card-empty" id="btn-new-event"><i class="fa-solid fa-plus"></i>' +
           '<strong>Nuevo evento</strong><span>Empieza en blanco: primero el brief, luego el plano</span></button>' +
+          '<button class="venue-card venue-card-empty" id="btn-new-bodega"><i class="fa-solid fa-warehouse"></i>' +
+          '<strong>Nueva bodega</strong><span>Plano de bodega, sin brief</span></button>' +
         '</div>' +
         '<div class="usage-meter" id="usage-meter">Calculando espacio usado…</div>' +
       '</div>';
@@ -611,8 +641,9 @@
     modal.querySelector('.venue-picker-close').onclick = close;
     modal.onclick = function (e) { if (e.target === modal) close(); };
     $('btn-new-event').onclick = createEvent;
+    $('btn-new-bodega').onclick = function () { close(); createBodega(); };
 
-    client().from(TABLE).select('id,nombre,fecha_evento,venue_id,updated_at')
+    client().from(TABLE).select('id,nombre,fecha_evento,venue_id,updated_at,modo:data->layout->>mode')
       .order('updated_at', { ascending: false }).limit(60)
       .then(function (res) {
         var grid = $('events-grid');
@@ -622,10 +653,11 @@
           var card = document.createElement('button');
           card.className = 'venue-card';
           var fecha = ev.fecha_evento ? new Date(ev.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha';
-          card.innerHTML = '<i class="fa-solid fa-champagne-glasses"></i><strong>' + esc(ev.nombre) + '</strong>' +
-            '<span>' + esc(fecha) + '</span>' +
+          var evBodega = ev.modo === 'bodega';
+          card.innerHTML = '<i class="fa-solid ' + (evBodega ? 'fa-warehouse' : 'fa-champagne-glasses') + '"></i><strong>' + esc(ev.nombre) + '</strong>' +
+            '<span>' + (evBodega ? 'Bodega' : esc(fecha)) + '</span>' +
             '<small>Editado ' + esc(new Date(ev.updated_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })) + '</small>';
-          card.onclick = function () { closeModals(); goToEvent(ev.id, function () { openPanel(); }); };
+          card.onclick = function () { closeModals(); goToEvent(ev.id, function () { if (!evBodega) openPanel(); }); };
           grid.appendChild(card);
         });
       });
@@ -1489,11 +1521,12 @@
     bind('btn-eventos', openEventsModal);
     bind('btn-brief', openPanel);
     bind('btn-share-event', shareEvent);
+    bind('event-name', renombrarBodega);
     watchLayout();
 
     var id = eventIdFromUrl();
     if (id) {
-      loadEvent(id).then(function (row) { if (row) openEventWelcome(); });
+      loadEvent(id).then(function (row) { if (row && !esBodega()) openEventWelcome(); });
     } else {
       openStartChooser();
     }
