@@ -1426,6 +1426,11 @@
             // Segundo resize por si hay layout tardío
             setTimeout(function () {
               if (window.Visualizer3D) window.Visualizer3D.resize();
+              // Recién cargado un plano/evento: encuadrar la cámara ya con el tamaño final del lienzo
+              if (_fit3dOnShow && window.Visualizer3D) {
+                _fit3dOnShow = false;
+                window.Visualizer3D.resetCamera();
+              }
             }, 100);
           }
         });
@@ -2835,6 +2840,7 @@
   // VENUE PICKER (plantillas de salones / desde cero)
   // ══════════════════════════════════════════════════════════
   var _fit2dOnShow = false;
+  var _fit3dOnShow = true;
 
   function _venueOptions() {
     var opts = [];
@@ -2889,9 +2895,12 @@
 
     if (window.Editor2D) window.Editor2D.setTerrain(AppState.terrain.w, AppState.terrain.h);
     _fit2dOnShow = AppState.activeView !== '2d';
+    _fit3dOnShow = true;
     _aplicarModo();
     _refresh();
     updateCounters();
+    // Si el 3D ya está a la vista, encuadrarlo de una vez sobre el plano nuevo
+    if (AppState.activeView === '3d' && window.App_setView) window.App_setView('3d');
   }
 
   function _openVenuePicker(isStart) {

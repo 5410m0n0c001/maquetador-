@@ -32,6 +32,7 @@ window.Visualizer3D = (function () {
   var _camera = null;
   var _renderer = null;
   var _controls = null;
+  var _camaraMovida = false; // true en cuanto el usuario orbita/acerca la cámara
   var _container = null;
   
   var _active3dElements = {}; // id -> THREE.Group
@@ -686,6 +687,8 @@ window.Visualizer3D = (function () {
     _controls.maxPolarAngle = Math.PI / 2 - 0.05; // don't go below ground
     _controls.target.set(_terrain.w / 2, 0, _terrain.h / 2);
     _controls.update();
+    // Si el usuario mueve la cámara, ya no se reencuadra sola al cambiar el tamaño del lienzo
+    _controls.addEventListener('start', function () { _camaraMovida = true; });
 
     // 5. Lighting
     _setupLighting();
@@ -703,6 +706,8 @@ window.Visualizer3D = (function () {
     _animate();
 
     window.addEventListener('resize', _onResize);
+    // El lienzo también cambia de tamaño sin que cambie la ventana (paneles del modo planner, inspector)
+    if (window.ResizeObserver) new ResizeObserver(function () { _onResize(); }).observe(_container);
     console.log('[Visualizer3D] Initialized.');
   }
 
@@ -730,6 +735,13 @@ window.Visualizer3D = (function () {
     _camera.aspect = width / height;
     _camera.updateProjectionMatrix();
     _renderer.setSize(width, height);
+    // Mientras nadie haya movido la cámara, mantener el terreno completo y centrado
+    // (p. ej. al abrir/cerrar los paneles del modo planner el lienzo cambia de ancho)
+    if (!_camaraMovida && _controls) {
+      _controls.target.set(_terrain.w / 2, 0, _terrain.h / 2);
+      _camera.position.copy(_fitCameraPosition());
+      _controls.update();
+    }
   }
 
   // Posición de cámara que deja ver todo el terreno según el campo de visión y el ancho del lienzo
@@ -746,6 +758,7 @@ window.Visualizer3D = (function () {
 
   function resetCamera() {
     if (!_camera || !_controls) return;
+    _camaraMovida = false;
     var startPos = _camera.position.clone();
     var startTarget = _controls.target.clone();
     var endPos = _fitCameraPosition();
@@ -997,6 +1010,7 @@ window.Visualizer3D = (function () {
     var st = _getState ? _getState() : null;
     if (st && st.terrain && (st.terrain.w !== _terrain.w || st.terrain.h !== _terrain.h)) {
       setTerrain(st.terrain.w, st.terrain.h);
+      _camaraMovida = false;
       if (_camera) {
         _camera.position.copy(_fitCameraPosition());
         _controls.maxDistance = Math.max(_controls.maxDistance, _camera.position.distanceTo(_controls.target) * 1.5);
