@@ -513,19 +513,28 @@
     updateVersionSelector();
   }
 
-  // Selector de versiones: si el evento trae data.versiones ([{ id, nombre }]), se puede saltar entre ellas
+  // Versiones: si el evento trae data.versiones ([{ id, nombre }]), un botón por versión sobre el plano
   function updateVersionSelector() {
-    var wrap = $('event-version-wrap'), sel = $('event-version');
-    if (!wrap || !sel) return;
+    var wrap = $('event-version-wrap');
+    if (!wrap) return;
     var versiones = _event && _event.data && Array.isArray(_event.data.versiones) ? _event.data.versiones : [];
-    if (versiones.length < 2) { wrap.classList.add('hidden'); return; }
-    sel.innerHTML = versiones.map(function (v) {
-      return '<option value="' + esc(v.id) + '"' + (v.id === _event.id ? ' selected' : '') + '>' + esc(v.nombre) + '</option>';
-    }).join('');
+    if (versiones.length < 2) { wrap.classList.add('hidden'); wrap.innerHTML = ''; return; }
+    wrap.innerHTML = '<span class="version-label"><i class="fa-solid fa-code-branch"></i> Versiones</span>' +
+      versiones.map(function (v) {
+        var activa = v.id === _event.id;
+        return '<button type="button" data-version="' + esc(v.id) + '"' + (activa ? ' class="active" aria-pressed="true"' : ' aria-pressed="false"') + '>' +
+          (activa ? '<i class="fa-solid fa-check"></i> ' : '') + esc(v.nombre) + '</button>';
+      }).join('');
     wrap.classList.remove('hidden');
-    sel.onchange = function () {
-      if (sel.value && sel.value !== _event.id) goToEvent(sel.value);
-    };
+    Array.prototype.forEach.call(wrap.querySelectorAll('button[data-version]'), function (btn) {
+      btn.onclick = function () {
+        var id = btn.getAttribute('data-version');
+        if (id === _event.id) return;
+        Array.prototype.forEach.call(wrap.querySelectorAll('button'), function (b) { b.classList.remove('active'); });
+        btn.classList.add('active', 'cargando');
+        goToEvent(id);
+      };
+    });
   }
 
   // Pide la contraseña si hace falta y luego continúa

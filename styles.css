@@ -1691,32 +1691,31 @@ select.form-input option { background: var(--bg-secondary); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.event-version {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 4px 0 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(246, 92, 122, 0.55);
-  background: rgba(10, 9, 10, 0.5);
-  color: var(--gold);
-  font-size: 12px;
+/* Versiones del plano: un botón por versión, flotando arriba del plano (también en solo lectura) */
+.version-selector {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 30;
+  display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 6px;
+  width: max-content; max-width: calc(100% - 24px); padding: 6px; border-radius: 18px;
+  background: rgba(31, 31, 31, 0.94); border: 1px solid rgba(246, 92, 122, 0.6);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
-.event-version.hidden { display: none; }
-.event-version select {
-  height: 30px;
-  max-width: 230px;
-  border: 0;
-  background: transparent;
-  color: var(--peg-ivory);
-  font-size: 12px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
+.version-selector.hidden { display: none; }
+.version-selector .version-label {
+  color: #C9A96E; font: 600 11px Poppins, sans-serif; letter-spacing: 1px; text-transform: uppercase; padding: 0 6px 0 8px;
 }
-.event-version select option { background: #1f1f1f; color: #fff; }
+.version-selector button {
+  border: 1px solid rgba(201, 169, 110, 0.45); background: rgba(255, 255, 255, 0.04); color: #f1ece4;
+  cursor: pointer; white-space: nowrap; border-radius: 999px; padding: 9px 16px; font: 600 13px Poppins, sans-serif;
+  transition: background .15s, border-color .15s;
+}
+.version-selector button:hover { border-color: #F65C7A; background: rgba(246, 92, 122, 0.15); }
+.version-selector button.active { background: #F65C7A; border-color: #F65C7A; color: #fff; }
+.version-selector button.cargando { opacity: .7; }
+@media (max-width: 768px) {
+  .version-selector { top: 8px; padding: 5px; gap: 4px; }
+  .version-selector .version-label { width: 100%; text-align: center; padding: 2px 0; }
+  .version-selector button { padding: 7px 11px; font-size: 12px; }
+}
 .event-status { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 .event-status.ok { color: var(--success); }
 .event-status.pending { color: var(--gold); }
