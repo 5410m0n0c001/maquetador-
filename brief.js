@@ -507,6 +507,22 @@
     if (brief) brief.classList.toggle('hidden', esBodega() || (!has && !_isPlanner));
     var share = $('btn-share-event');
     if (share) share.classList.toggle('hidden', !has);
+    updateVersionSelector();
+  }
+
+  // Selector de versiones: si el evento trae data.versiones ([{ id, nombre }]), se puede saltar entre ellas
+  function updateVersionSelector() {
+    var wrap = $('event-version-wrap'), sel = $('event-version');
+    if (!wrap || !sel) return;
+    var versiones = _event && _event.data && Array.isArray(_event.data.versiones) ? _event.data.versiones : [];
+    if (versiones.length < 2) { wrap.classList.add('hidden'); return; }
+    sel.innerHTML = versiones.map(function (v) {
+      return '<option value="' + esc(v.id) + '"' + (v.id === _event.id ? ' selected' : '') + '>' + esc(v.nombre) + '</option>';
+    }).join('');
+    wrap.classList.remove('hidden');
+    sel.onchange = function () {
+      if (sel.value && sel.value !== _event.id) goToEvent(sel.value);
+    };
   }
 
   // Pide la contraseña si hace falta y luego continúa

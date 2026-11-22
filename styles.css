@@ -1691,6 +1691,32 @@ select.form-input option { background: var(--bg-secondary); }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.event-version {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 4px 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(246, 92, 122, 0.55);
+  background: rgba(10, 9, 10, 0.5);
+  color: var(--gold);
+  font-size: 12px;
+}
+.event-version.hidden { display: none; }
+.event-version select {
+  height: 30px;
+  max-width: 230px;
+  border: 0;
+  background: transparent;
+  color: var(--peg-ivory);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.event-version select option { background: #1f1f1f; color: #fff; }
 .event-status { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 .event-status.ok { color: var(--success); }
 .event-status.pending { color: var(--gold); }

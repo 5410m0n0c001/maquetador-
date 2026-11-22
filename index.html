@@ -22,7 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- App Styles -->
-  <link rel="stylesheet" href="styles.css?v=20261106_01" />
+  <link rel="stylesheet" href="styles.css?v=20261122_01" />
 </head>
 <body>
 
@@ -467,6 +467,11 @@
         <!-- Evento: brief, mis eventos, compartir y modo planner (brief.js) -->
         <div class="event-bar">
           <span id="event-name" class="event-name hidden"></span>
+          <!-- Versiones del mismo evento (data.versiones): cambia de plano sin perder el modo planner -->
+          <label id="event-version-wrap" class="event-version hidden" title="Ver otra versión del plano">
+            <i class="fa-solid fa-code-branch"></i>
+            <select id="event-version" aria-label="Versión del plano"></select>
+          </label>
           <span id="event-save-status" class="event-status"></span>
           <button id="btn-brief" class="event-btn hidden" title="Brief del evento">
             <i class="fa-solid fa-clipboard-list"></i> <span>Brief</span>
@@ -1020,7 +1025,7 @@
 <script src="editor2d.js?v=20261106_01" charset="utf-8"></script>
 <script src="visualizer3d.js?v=20261121_01" charset="utf-8"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="brief.js?v=20261106_01" charset="utf-8"></script>
+<script src="brief.js?v=20261122_01" charset="utf-8"></script>
 <script src="app.js?v=20261121_01" charset="utf-8"></script>
 
 </body>
