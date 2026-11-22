@@ -422,13 +422,16 @@
   }
 
   // ── Cargar / crear eventos ────────────────────────────────
+  var _cargaActual = 0; // solo la última carga pedida puede aplicarse (evita que una respuesta lenta pise a otra)
   function loadEvent(id) {
+    var miCarga = ++_cargaActual;
     setStatus('Cargando evento…', 'pending');
     var local = null;
     try { local = JSON.parse(localStorage.getItem(LOCAL_PREFIX + id) || 'null'); } catch (e) { local = null; }
     var sb = client();
     var req = sb ? sb.from(TABLE).select('*').eq('id', id).maybeSingle() : Promise.resolve({ error: { message: 'Sin Supabase' } });
     return req.then(function (res) {
+      if (miCarga !== _cargaActual) return null; // ya se pidió otro evento después
       var row = res && !res.error ? res.data : null;
       if (!row && local) {
         row = local;
