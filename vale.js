@@ -11,7 +11,6 @@
   var ORDEN_CATEGORIAS = ['Mesas y periqueras', 'Identificadores de mesa', 'Sillas y bancos', 'Salas y sombrillas', 'Mantelería', 'Loza', 'Cubiertos',
     'Cristalería', 'Barra y cocina', 'Bebidas y hielo', 'Cocina e insumos', 'Snacks y estaciones', 'Kits de fiesta', 'Decoración y estructuras', 'Arreglos florales', 'Letras gigantes',
     'Iluminación y eléctrico', 'Utilería', 'Limpieza', 'Equipo del staff', 'Otros'];
-  var KIT_BARRA = ['Exprimidor de limon', 'Cuchillo de barra', 'Tarja para hielo', 'Pinzas para hielo', 'Pica hielo', 'Licuadora'];
   var PASOS = [
     { n: 1, titulo: 'Surtido', quien: 'Bodega' },
     { n: 2, titulo: 'Carga', quien: 'Chofer' },
@@ -83,15 +82,6 @@
     if (ya) { if (cant !== '') ya.cant = (parseInt(ya.cant, 10) || 0) + cant; return; }
     v.items.push({ id: art.id || null, nombre: art.nombre, categoria: art.categoria || 'Otros', cant: cant, nota: '', origen: origen || 'manual' });
   }
-  function agregarKitBarra() {
-    KIT_BARRA.forEach(function (nombre) {
-      agregar(buscarArticulo(nombre) || { nombre: nombre, categoria: 'Barra y cocina' }, 1, 'kit');
-    });
-    guardar();
-    pintar();
-    toast('Kit de barra agregado.', 'success');
-  }
-
   // ── Ventana del vale ───────────────────────────────────────
   function abrir() {
     var ev = evento();
@@ -159,7 +149,6 @@
         (editar ? ' · Palomea en el inventario lo que se va a ocupar y escribe la cantidad de cada artículo.' : '') + '</p>' +
       '<div class="vale-acciones">' +
         (editar ? '<button type="button" class="event-btn" id="vale-inventario"><i class="fa-solid fa-list-check"></i> Imprimir requisición en blanco</button>' +
-          '<button type="button" class="event-btn" id="vale-kit"><i class="fa-solid fa-martini-glass"></i> Kit de barra</button>' +
           '<button type="button" class="event-btn" id="vale-libre"><i class="fa-solid fa-pen"></i> Artículo que no está en inventario</button>' : '') +
         '<button type="button" class="event-btn active" id="vale-imprimir"><i class="fa-solid fa-dolly"></i> Generar vale de salida</button>' +
       '</div>' +
@@ -177,7 +166,6 @@
     m.querySelector('#vale-imprimir').onclick = imprimir;
     if (!editar) return;
     m.querySelector('#vale-inventario').onclick = imprimirInventario;
-    m.querySelector('#vale-kit').onclick = agregarKitBarra;
     m.querySelector('#vale-libre').onclick = function () {
       var nombre = prompt('Artículo que no está en el inventario (por ejemplo: Refresco Coca-Cola 2 L):');
       if (!nombre || !nombre.trim()) return;
