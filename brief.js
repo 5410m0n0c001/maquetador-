@@ -510,6 +510,10 @@
     if (brief) brief.classList.toggle('hidden', esBodega() || (!has && !_isPlanner));
     var share = $('btn-share-event');
     if (share) share.classList.toggle('hidden', !has);
+    // Vale de salida: el planner lo arma; los demás lo ven e imprimen cuando ya tiene artículos
+    var vale = $('btn-vale');
+    var conVale = has && _event.data.vale && _event.data.vale.items && _event.data.vale.items.length;
+    if (vale) vale.classList.toggle('hidden', !has || esBodega() || (!_isPlanner && !conVale));
     updateVersionSelector();
   }
 
@@ -1569,6 +1573,8 @@
     getSchema: function () { return { sections: SECTIONS, montajeFields: MONTAJE_FIELDS }; },
     formatValue: formatValue,
     syncMinuto: function () { if (_event) syncMinuto(_event.data); },
-    isPlanner: function () { return _isPlanner; }
+    isPlanner: function () { return _isPlanner; },
+    client: client,
+    scheduleSave: scheduleSave
   };
 })();

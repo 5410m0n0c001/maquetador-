@@ -1,0 +1,355 @@
+// ============================================================
+// vale.js — Vale de salida de mobiliario
+// El planner elige del inventario de PEG lo que sale para el evento
+// y se imprime un vale que cuentan bodega, chofer y coordinador.
+// Se guarda en el evento: data.vale = { items: [{ id, nombre, categoria, cant, nota, origen }] }
+// ============================================================
+(function () {
+  'use strict';
+
+  var ORDEN_CATEGORIAS = ['Mesas y periqueras', 'Sillas y bancos', 'Salas y sombrillas', 'Mantelería', 'Loza', 'Cubiertos',
+    'Cristalería', 'Barra y cocina', 'Bebidas y hielo', 'Cocina e insumos', 'Snacks y estaciones', 'Kits de fiesta', 'Decoración y estructuras',
+    'Iluminación y eléctrico', 'Utilería', 'Limpieza', 'Equipo del staff', 'Otros'];
+  var POR_PERSONA = ['Loza', 'Cubiertos', 'Cristalería'];
+  var KIT_BARRA = ['Exprimidor de limon', 'Cuchillo de barra', 'Tarja para hielo', 'Pinzas para hielo', 'Pica hielo', 'Licuadora'];
+  var PASOS = [
+    { n: 1, titulo: 'Surtido', quien: 'Bodega' },
+    { n: 2, titulo: 'Carga', quien: 'Chofer' },
+    { n: 3, titulo: 'Recepción', quien: 'Coordinador en locación' },
+    { n: 4, titulo: 'Recolección', quien: 'Coordinador → chofer' },
+    { n: 5, titulo: 'Regreso', quien: 'Bodega' }
+  ];
+
+  var _inventario = null;
+  var _modal = null;
+  var _filtro = '';
+
+  function PE() { return window.PEGEventos; }
+  function evento() { return PE() && PE().getEvent ? PE().getEvent() : null; }
+  function esPlanner() { return !!(PE() && PE().isPlanner && PE().isPlanner()); }
+  function toast(m, t) { if (window.App && window.App.showToast) window.App.showToast(m, t); }
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function norm(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  function vale() {
+    var ev = evento();
+    if (!ev) return null;
+    if (!ev.data.vale) ev.data.vale = { items: [] };
+    return ev.data.vale;
+  }
+  function guardar() {
+    if (PE() && PE().scheduleSave) PE().scheduleSave();
+  }
+  function invitados() {
+    var ev = evento();
+    return parseInt(ev && ev.data.brief && ev.data.brief.invitados, 10) || 0;
+  }
+
+  function cargarInventario() {
+    if (_inventario) return Promise.resolve(_inventario);
+    var sb = PE() && PE().client ? PE().client() : null;
+    if (!sb) return Promise.reject(new Error('Sin conexión con la base'));
+    return sb.from('inventario_peg').select('id,nombre,categoria,existencia,notas').eq('activo', true).order('nombre')
+      .then(function (res) {
+        if (res.error) throw res.error;
+        _inventario = res.data;
+        return _inventario;
+      });
+  }
+  function buscarArticulo(nombre) {
+    var n = norm(nombre);
+    return (_inventario || []).find(function (a) { return norm(a.nombre) === n; }) || null;
+  }
+
+  // ── Lista del vale ─────────────────────────────────────────
+  function agregar(art, cant, origen) {
+    var v = vale();
+    var ya = v.items.find(function (i) { return art.id ? i.id === art.id : norm(i.nombre) === norm(art.nombre); });
+    if (ya) { ya.cant = (parseInt(ya.cant, 10) || 0) + cant; return; }
+    v.items.push({ id: art.id || null, nombre: art.nombre, categoria: art.categoria || 'Otros', cant: cant, nota: '', origen: origen || 'manual' });
+  }
+  function cantidadInicial(art) {
+    return POR_PERSONA.indexOf(art.categoria) > -1 && invitados() ? invitados() : 1;
+  }
+
+  // Lo que se puede saber del croquis: mesas, sillas, manteles, caminos y la loza de cada lugar
+  function llenarDesdePlano() {
+    var v = vale();
+    var layout = window.App && window.App.getLayout ? window.App.getLayout() : { elements: [] };
+    var cuenta = {};
+    function sumar(nombre, cant) {
+      if (!cant) return;
+      cuenta[nombre] = (cuenta[nombre] || 0) + cant;
+    }
+    var SILLAS = { tiffany: 'Silla Tiffany blanca', crossback: 'Silla cross back — elegir miel o nogal', metalica: 'Silla metálica — elegir Boss o Lotus' };
+    var MESAS = {
+      table_round: 'Mesa redonda', table_kids: 'Mesa infantil', lounge_set: 'Sala lounge madera', table_umbrella: 'Sombrilla',
+      table_square: 'Mesa cuadrada — elegir modelo', table_marble_square: 'Mesa cuadrada — elegir modelo',
+      table_rectangular: 'Mesa tablón', table_campirana: 'Mesa rectangular — elegir modelo', table_periquera: 'Periquera — elegir madera o metal'
+    };
+    var PLATO_BASE = { romano: 'Plato base romano', vintage: 'Plato base vintage', concha_dorado: 'Plato base concha dorado', chocolate: 'Plato base chocolate',
+      gotico: 'Plato base gótico', plateado: 'Plato base plateado', espiral: 'Plato base tipo espiral', cristal_aperlado: 'Plato base cristal aperlado' };
+    var TRINCHE = { redondo_blanco: 'Plato trinche 27cm', entremes_blanco: 'Plato entremés blanco' };
+    var CRISTAL = { standard: 'Copa de agua transparente', romana: 'Copa agua romana', vino: 'Copa de vino transparente', flauta: 'Copa flauta',
+      martinera: 'Copa martinera', cubero: 'Vaso cubero', old_fashion: 'Vaso old fashion', tequilero: 'Tequilero' };
+    var CUBIERTO = { plateado: 'plateado', dorado: 'dorado', gold_rose: 'gold rose', negro: 'negro' };
+
+    (layout.elements || []).forEach(function (e) {
+      if (e.bg2d) return;
+      if (e.type === 'table_imperial') sumar('Mesa tablón', e.tablones || Math.round((e.w || 2.4) / 2.4));
+      else if (MESAS[e.type]) sumar(MESAS[e.type], 1);
+      var mc = e.mesaConfig, sillas = parseInt(e.chairs, 10) || 0;
+      if (!mc || !sillas) return;
+      sumar(SILLAS[mc.tipoSilla] || (mc.tipoSilla ? 'Silla ' + mc.tipoSilla + ' — elegir modelo' : 'Silla — elegir modelo'), sillas);
+      if (PLATO_BASE[mc.platoBase]) sumar(PLATO_BASE[mc.platoBase], sillas);
+      if (TRINCHE[mc.platoTrinche]) sumar(TRINCHE[mc.platoTrinche], sillas);
+      if (CRISTAL[mc.cristal]) sumar(CRISTAL[mc.cristal], sillas);
+      if (CRISTAL[mc.cristal2]) sumar(CRISTAL[mc.cristal2], sillas);
+      if (CUBIERTO[mc.cubiertos]) {
+        sumar('Cuchillo ' + CUBIERTO[mc.cubiertos], sillas);
+        sumar('Tenedor ' + CUBIERTO[mc.cubiertos] + ' carne', sillas);
+      }
+      var color = String(mc.mantelColor || '').replace(/_/g, ' ');
+      if (color && color !== 'sin mantel' && color.charAt(0) !== '#') {
+        var forma = /round/.test(e.type) ? 'redondo' : /imperial|rectangular/.test(e.type) ? 'para tablón' : 'cuadrado';
+        sumar('Mantel ' + color + ' ' + forma, e.type === 'table_imperial' ? (e.tablones || 1) : 1);
+      }
+      if (mc.caminoColor && mc.caminoColor !== 'ninguno') sumar('Camino ' + mc.caminoColor.replace(/_/g, ' '), e.type === 'table_imperial' ? (e.tablones || 1) : 1);
+    });
+
+    v.items = v.items.filter(function (i) { return i.origen !== 'plano'; });
+    var sinInventario = [];
+    Object.keys(cuenta).forEach(function (nombre) {
+      var art = buscarArticulo(nombre);
+      if (!art) sinInventario.push(nombre);
+      agregar(art || { nombre: nombre, categoria: 'Otros' }, cuenta[nombre], 'plano');
+    });
+    guardar();
+    pintar();
+    var n = Object.keys(cuenta).length;
+    toast(n ? n + ' artículos tomados del plano' + (sinInventario.length ? '; ' + sinInventario.length + ' quedaron en "Otros" para que elijas el modelo.' : '.') : 'El plano no tiene mesas con sillas.', n ? 'success' : 'warning');
+  }
+
+  function agregarKitBarra() {
+    KIT_BARRA.forEach(function (nombre) {
+      agregar(buscarArticulo(nombre) || { nombre: nombre, categoria: 'Barra y cocina' }, 1, 'kit');
+    });
+    guardar();
+    pintar();
+    toast('Kit de barra agregado.', 'success');
+  }
+
+  // ── Ventana del vale ───────────────────────────────────────
+  function abrir() {
+    var ev = evento();
+    if (!ev) { toast('Abre un evento primero.', 'warning'); return; }
+    if (!_modal) {
+      _modal = document.createElement('div');
+      _modal.className = 'venue-picker-overlay vale-overlay';
+      _modal.addEventListener('click', function (e) { if (e.target === _modal) cerrar(); });
+    }
+    document.body.appendChild(_modal);
+    _modal.innerHTML = '<div class="venue-picker vale-modal"><p>Cargando inventario…</p></div>';
+    cargarInventario().then(pintar).catch(function (err) {
+      _modal.querySelector('.vale-modal').innerHTML = '<p>No se pudo cargar el inventario: ' + esc(err.message || err) + '</p>';
+    });
+  }
+  function cerrar() { if (_modal) _modal.remove(); }
+
+  function agrupar(items) {
+    var g = {};
+    items.forEach(function (i) { (g[i.categoria || 'Otros'] = g[i.categoria || 'Otros'] || []).push(i); });
+    return ORDEN_CATEGORIAS.concat(Object.keys(g).filter(function (c) { return ORDEN_CATEGORIAS.indexOf(c) < 0; }))
+      .filter(function (c) { return g[c]; }).map(function (c) { return { categoria: c, items: g[c] }; });
+  }
+
+  function pintar() {
+    if (!_modal || !_modal.isConnected) return;
+    var v = vale(), editar = esPlanner();
+    var total = v.items.reduce(function (s, i) { return s + (parseInt(i.cant, 10) || 0); }, 0);
+
+    var lista = agrupar(v.items).map(function (grupo) {
+      return '<tr class="vale-grupo"><td colspan="' + (editar ? 4 : 3) + '">' + esc(grupo.categoria) + '</td></tr>' +
+        grupo.items.map(function (i) {
+          var idx = v.items.indexOf(i);
+          return editar
+            ? '<tr data-i="' + idx + '"><td><input type="number" min="0" class="form-input vale-cant" value="' + esc(i.cant) + '"></td>' +
+              '<td>' + esc(i.nombre) + (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : '') + '</td>' +
+              '<td><input class="form-input vale-nota" placeholder="Color, medida…" value="' + esc(i.nota) + '"></td>' +
+              '<td><button type="button" class="btn-icon-sm vale-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button></td></tr>'
+            : '<tr><td><b>' + esc(i.cant) + '</b></td><td>' + esc(i.nombre) + '</td><td>' + esc(i.nota) + '</td></tr>';
+        }).join('');
+    }).join('');
+
+    var inventarioHtml = '';
+    if (editar) {
+      var f = norm(_filtro);
+      inventarioHtml = agrupar((_inventario || []).filter(function (a) { return !f || norm(a.nombre + ' ' + a.categoria).indexOf(f) > -1; }))
+        .map(function (grupo) {
+          return '<div class="vale-inv-cat">' + esc(grupo.categoria) + '</div>' + grupo.items.map(function (a) {
+            var dentro = v.items.some(function (i) { return i.id === a.id; });
+            return '<button type="button" class="vale-inv-item' + (dentro ? ' dentro' : '') + '" data-id="' + a.id + '" title="' + esc(a.notas || '') + '">' +
+              '<i class="fa-solid ' + (dentro ? 'fa-check' : 'fa-plus') + '"></i> ' + esc(a.nombre) +
+              (a.existencia != null ? ' <small>(' + a.existencia + ')</small>' : '') + '</button>';
+          }).join('');
+        }).join('') || '<p class="vale-vacio">Sin resultados.</p>';
+    }
+
+    _modal.querySelector('.vale-modal').innerHTML =
+      '<div class="venue-picker-head"><h2>Vale de salida · ' + esc(evento().nombre) + '</h2>' +
+        '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<p class="vale-sub">' + v.items.length + ' artículos · ' + total + ' piezas' + (invitados() ? ' · ' + invitados() + ' invitados' : '') +
+        (editar ? ' · La loza, los cubiertos y la cristalería se agregan con una pieza por invitado.' : '') + '</p>' +
+      '<div class="vale-acciones">' +
+        (editar ? '<button type="button" class="event-btn" id="vale-plano"><i class="fa-solid fa-map-location-dot"></i> Llenar desde el plano</button>' +
+          '<button type="button" class="event-btn" id="vale-kit"><i class="fa-solid fa-martini-glass"></i> Kit de barra</button>' +
+          '<button type="button" class="event-btn" id="vale-libre"><i class="fa-solid fa-pen"></i> Artículo que no está en inventario</button>' : '') +
+        '<button type="button" class="event-btn active" id="vale-imprimir"><i class="fa-solid fa-print"></i> Imprimir vale</button>' +
+      '</div>' +
+      '<div class="vale-cuerpo' + (editar ? '' : ' solo-lista') + '">' +
+        (editar ? '<div class="vale-inv"><input class="form-input" id="vale-buscar" placeholder="Buscar en el inventario…" value="' + esc(_filtro) + '">' +
+          '<div class="vale-inv-lista">' + inventarioHtml + '</div></div>' : '') +
+        '<div class="vale-lista">' + (v.items.length
+          ? '<table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th>' + (editar ? '<th></th>' : '') + '</tr></thead><tbody>' + lista + '</tbody></table>'
+          : '<p class="vale-vacio">' + (editar ? 'Elige del inventario o llena desde el plano.' : 'Este evento todavía no tiene vale.') + '</p>') +
+        '</div>' +
+      '</div>';
+
+    var m = _modal;
+    m.querySelector('.venue-picker-close').onclick = cerrar;
+    m.querySelector('#vale-imprimir').onclick = imprimir;
+    if (!editar) return;
+    m.querySelector('#vale-plano').onclick = function () {
+      if (v.items.some(function (i) { return i.origen === 'plano'; }) && !confirm('Se recalcularán los artículos que vienen del plano. Lo que agregaste a mano se queda. ¿Continuar?')) return;
+      llenarDesdePlano();
+    };
+    m.querySelector('#vale-kit').onclick = agregarKitBarra;
+    m.querySelector('#vale-libre').onclick = function () {
+      var nombre = prompt('Artículo que no está en el inventario (por ejemplo: Refresco Coca-Cola 2 L):');
+      if (!nombre || !nombre.trim()) return;
+      agregar({ nombre: nombre.trim(), categoria: 'Otros' }, 1, 'manual');
+      guardar();
+      pintar();
+    };
+    var buscar = m.querySelector('#vale-buscar');
+    buscar.oninput = function () {
+      _filtro = buscar.value;
+      var pos = buscar.selectionStart;
+      pintar();
+      var b = _modal.querySelector('#vale-buscar');
+      b.focus();
+      b.setSelectionRange(pos, pos);
+    };
+    Array.prototype.forEach.call(m.querySelectorAll('.vale-inv-item'), function (btn) {
+      btn.onclick = function () {
+        var art = _inventario.find(function (a) { return a.id === btn.getAttribute('data-id'); });
+        var ya = v.items.find(function (i) { return i.id === art.id; });
+        if (ya) v.items.splice(v.items.indexOf(ya), 1);
+        else agregar(art, cantidadInicial(art), 'manual');
+        guardar();
+        pintar();
+      };
+    });
+    Array.prototype.forEach.call(m.querySelectorAll('tr[data-i]'), function (tr) {
+      var item = v.items[parseInt(tr.getAttribute('data-i'), 10)];
+      tr.querySelector('.vale-cant').onchange = function (e) { item.cant = Math.max(0, parseInt(e.target.value, 10) || 0); guardar(); pintar(); };
+      tr.querySelector('.vale-nota').onchange = function (e) { item.nota = e.target.value; guardar(); };
+      tr.querySelector('.vale-quitar').onclick = function () { v.items.splice(v.items.indexOf(item), 1); guardar(); pintar(); };
+    });
+  }
+
+  // ── Vale impreso ───────────────────────────────────────────
+  function imprimir() {
+    var ev = evento(), v = vale();
+    if (!v.items.length) { toast('El vale está vacío.', 'warning'); return; }
+    var w = window.open('', '_blank');
+    if (!w) { toast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error'); return; }
+    var b = ev.data.brief || {};
+    var url = PE().publicEventUrl ? PE().publicEventUrl(ev.id) : '';
+    var qr = '';
+    if (url && window.qrcode) {
+      var q = window.qrcode(0, 'M');
+      q.addData(url);
+      q.make();
+      qr = q.createSvgTag({ cellSize: 3, margin: 0, scalable: true });
+    }
+    var fecha = b.fecha_evento ? new Date(b.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    var lugar = b.venue_red || b.venue_externo || '';
+    var logo = new URL('assets/logo-primavera.png', location.href).href;
+    var cajas = PASOS.map(function () { return '<td class="caja"></td>'; }).join('');
+    var n = 0;
+    var filas = agrupar(v.items).map(function (grupo) {
+      return '<tr class="grupo"><td colspan="' + (4 + PASOS.length) + '">' + esc(grupo.categoria) + '</td></tr>' + grupo.items.map(function (i) {
+        n++;
+        return '<tr><td class="num">' + n + '</td><td class="cant">' + esc(i.cant) + '</td><td>' + esc(i.nombre) +
+          (i.nota ? ' <span class="nota">· ' + esc(i.nota) + '</span>' : '') + '</td>' + cajas + '<td class="caja"></td></tr>';
+      }).join('');
+    }).join('');
+
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Vale de salida · ' + esc(ev.nombre) + '</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">' +
+      '<style>:root{--pink:#F65C7A;--gold:#C9A96E;--ink:#1F1F1F;--gray:#6D6D6D;--line:#E2D9D0;--soft:#F8F6F4}' +
+      '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      'html,body{background:#fff}body{font-family:Poppins,sans-serif;color:var(--ink);font-size:10px;margin:18px auto;max-width:1040px;padding:0 14px}' +
+      'h1,h2{font-family:"Playfair Display",serif;margin:0}' +
+      '.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:var(--gray)}.toolbar button{background:var(--pink);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer}' +
+      '.head{display:flex;align-items:center;gap:12px;padding-bottom:8px;border-bottom:2px solid var(--gold)}.head img{width:46px;height:46px;border-radius:50%;object-fit:cover}' +
+      '.marca{font-family:"Playfair Display",serif;font-size:15px;color:var(--pink)}.sub{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}' +
+      '.titulo{margin-left:auto;text-align:right}.titulo h1{font-size:17px}.titulo div{color:var(--gray)}.qr svg{width:64px;height:64px;display:block}' +
+      '.datos{display:grid;grid-template-columns:2fr 1.4fr 1fr 1.4fr;gap:4px 14px;margin:10px 0}.datos div{border-bottom:1px solid var(--line);padding:3px 0}.datos b{font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:block}' +
+      '.inst{background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:6px 10px;margin-bottom:8px;line-height:1.45}' +
+      'table{width:100%;border-collapse:collapse}th{background:var(--ink);color:#fff;font-weight:500;padding:4px 5px;text-align:center;font-size:9px;line-height:1.2}th small{display:block;color:#EFE7E1;font-weight:400}' +
+      'th.izq{text-align:left}td{border-bottom:1px solid var(--line);padding:3px 5px;vertical-align:middle}tr{break-inside:avoid}' +
+      'tr.grupo td{background:#FAF2ED;font-weight:600;color:var(--pink);padding:4px 5px}td.num{color:var(--gray);width:22px}td.cant{font-weight:600;width:40px;text-align:center}' +
+      'td.caja{width:62px;border-left:1px solid var(--line)}.nota{color:var(--gray)}' +
+      '.firmas{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;break-inside:avoid}.firma{border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:92px}' +
+      '.firma b{display:block;color:var(--pink);font-size:10px}.firma span{display:block;color:var(--gray);font-size:8.5px;margin-bottom:12px}.firma i{display:block;border-top:1px solid var(--ink);margin-top:14px;padding-top:2px;font-style:normal;color:var(--gray);font-size:8px}' +
+      '.obs{border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:50px;margin-top:8px;break-inside:avoid}.obs b{color:var(--gray)}' +
+      '.footer{margin-top:10px;padding-top:6px;border-top:1px solid var(--gold);font-size:8px;color:var(--gray);text-align:center}' +
+      '@media print{.toolbar{display:none}body{margin:0;max-width:none}@page{size:letter landscape;margin:1cm}thead{display:table-header-group}}</style></head><body>' +
+      '<div class="toolbar"><span>Vista previa · Vale de salida</span><button onclick="window.print()">Imprimir / Guardar PDF</button></div>' +
+      '<header class="head"><img src="' + esc(logo) + '" alt="Primavera Events Group"><div><div class="marca">Primavera Events Group®</div><div class="sub">Control de mobiliario</div></div>' +
+        '<div class="titulo"><h1>Vale de salida y regreso</h1><div>Folio PEG-' + esc(ev.id.slice(0, 6).toUpperCase()) + ' · Emitido ' + esc(new Date().toLocaleDateString('es-MX')) + '</div></div>' +
+        (qr ? '<div class="qr">' + qr + '</div>' : '') + '</header>' +
+      '<section class="datos"><div><b>Evento</b>' + esc(ev.nombre) + '</div><div><b>Fecha</b>' + esc(fecha || '______________') + '</div>' +
+        '<div><b>Personas</b>' + esc(b.invitados || '____') + '</div><div><b>Locación</b>' + esc(lugar || '______________') + '</div></section>' +
+      '<div class="inst"><b>Cómo se usa:</b> cada persona cuenta en su columna y anota la cantidad que recibe. Si su número no coincide con el de la columna anterior, lo anota en Observaciones antes de firmar. ' +
+        'Al regresar a bodega se marca la condición: <b>B</b> bien · <b>D</b> dañado · <b>F</b> faltante.</div>' +
+      '<table><thead><tr><th>#</th><th>Cant.</th><th class="izq">Artículo</th>' +
+        PASOS.map(function (p) { return '<th>' + p.n + '. ' + p.titulo + '<small>' + p.quien + '</small></th>'; }).join('') +
+        '<th>Condición<small>B / D / F</small></th></tr></thead><tbody>' + filas + '</tbody></table>' +
+      '<section class="firmas">' + PASOS.map(function (p) {
+        return '<div class="firma"><b>' + p.n + '. ' + p.titulo + '</b><span>' + p.quien + '</span><i>Nombre y firma</i><i>Fecha y hora</i></div>';
+      }).join('') + '</section>' +
+      '<div class="obs"><b>Observaciones (diferencias, daños, faltantes):</b></div>' +
+      '<footer class="footer">Primavera Events Group® · Documento de control interno de mobiliario · No es comprobante fiscal</footer></body></html>';
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
+
+  // Lista para la ficha técnica del coordinador
+  function filasFicha() {
+    var ev = evento();
+    var items = ev && ev.data.vale ? ev.data.vale.items : [];
+    if (!items.length) return '';
+    return agrupar(items).map(function (g) {
+      return '<tr><td colspan="3"><strong>' + esc(g.categoria) + '</strong></td></tr>' + g.items.map(function (i) {
+        return '<tr><td style="width:10%"><strong>' + esc(i.cant) + '</strong></td><td>' + esc(i.nombre) + '</td><td style="width:30%">' + esc(i.nota) + '</td></tr>';
+      }).join('');
+    }).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('btn-vale');
+    if (btn) btn.onclick = abrir;
+  });
+
+  window.PEGVale = { abrir: abrir, imprimir: imprimir, filasFicha: filasFicha };
+})();

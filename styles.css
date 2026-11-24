@@ -2195,3 +2195,27 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
 .bod-seccion { display: grid; grid-template-columns: 1fr 58px 30px; gap: 4px; margin-bottom: 4px; }
 #bod-sec-agregar { width: 100%; height: auto; padding: 8px; font-size: 12px; white-space: nowrap; }
 .bod-ayuda { font-size: 10px; color: var(--text-secondary, #94a3b8); margin: 4px 0 6px; }
+
+/* ── Vale de salida ───────────────────────────────────────── */
+.vale-modal { width: min(1100px, 100%); }
+.vale-sub { color: var(--text-secondary, #94a3b8); font-size: 12px; margin: 6px 0 10px; }
+.vale-acciones { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.vale-cuerpo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 14px; }
+.vale-cuerpo.solo-lista { grid-template-columns: 1fr; }
+.vale-inv { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.vale-inv-lista, .vale-lista { max-height: 56vh; overflow-y: auto; }
+.vale-inv-cat { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #C9A96E; margin: 10px 0 4px; }
+.vale-inv-item { display: block; width: 100%; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid rgba(201,169,110,0.16);
+  color: #e2e8f0; border-radius: 6px; padding: 6px 8px; margin-bottom: 3px; cursor: pointer; font: 12px Poppins, sans-serif; }
+.vale-inv-item:hover { border-color: #F65C7A; }
+.vale-inv-item.dentro { background: rgba(246,92,122,0.16); border-color: #F65C7A; }
+.vale-inv-item small { color: #94a3b8; }
+.vale-lista table { width: 100%; border-collapse: collapse; font-size: 12px; color: #e2e8f0; }
+.vale-lista th { text-align: left; color: #94a3b8; font-weight: 500; padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.vale-lista td { padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.vale-lista .vale-cant { width: 64px; }
+.vale-lista .vale-nota { width: 100%; }
+.vale-grupo td { color: #F65C7A; font-weight: 600; padding-top: 10px; }
+.vale-tag { font-size: 10px; color: #C9A96E; border: 1px solid #C9A96E; border-radius: 999px; padding: 0 5px; }
+.vale-vacio { color: #94a3b8; font-size: 13px; }
+@media (max-width: 760px) { .vale-cuerpo { grid-template-columns: 1fr; } }

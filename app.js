@@ -2585,6 +2585,12 @@
       html += '</tbody></table></section>';
     }
 
+    // Mobiliario del vale de salida: lo que el coordinador recibe en locación
+    var valeFilas = window.PEGVale ? window.PEGVale.filasFicha() : '';
+    if (valeFilas) {
+      html += '<section class="section"><h2>Mobiliario que sale de bodega (vale de salida)</h2><table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th></tr></thead><tbody>' + valeFilas + '</tbody></table></section>';
+    }
+
     // Proveedores externos contratados por el cliente
     var provs = (data.proveedores || []).filter(function (p) { return p.servicio || p.nombre; });
     if (provs.length) {
