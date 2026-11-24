@@ -2,6 +2,7 @@
 // vale.js — Vale de salida de mobiliario
 // El planner elige del inventario de PEG lo que sale para el evento
 // y se imprime un vale que cuentan bodega, chofer y coordinador.
+// También imprime el inventario completo en blanco para palomearlo a mano.
 // Se guarda en el evento: data.vale = { items: [{ id, nombre, categoria, cant, nota, origen }] }
 // ============================================================
 (function () {
@@ -10,7 +11,6 @@
   var ORDEN_CATEGORIAS = ['Mesas y periqueras', 'Sillas y bancos', 'Salas y sombrillas', 'Mantelería', 'Loza', 'Cubiertos',
     'Cristalería', 'Barra y cocina', 'Bebidas y hielo', 'Cocina e insumos', 'Snacks y estaciones', 'Kits de fiesta', 'Decoración y estructuras',
     'Iluminación y eléctrico', 'Utilería', 'Limpieza', 'Equipo del staff', 'Otros'];
-  var POR_PERSONA = ['Loza', 'Cubiertos', 'Cristalería'];
   var KIT_BARRA = ['Exprimidor de limon', 'Cuchillo de barra', 'Tarja para hielo', 'Pinzas para hielo', 'Pica hielo', 'Licuadora'];
   var PASOS = [
     { n: 1, titulo: 'Surtido', quien: 'Bodega' },
@@ -71,71 +71,9 @@
   function agregar(art, cant, origen) {
     var v = vale();
     var ya = v.items.find(function (i) { return art.id ? i.id === art.id : norm(i.nombre) === norm(art.nombre); });
-    if (ya) { ya.cant = (parseInt(ya.cant, 10) || 0) + cant; return; }
+    if (ya) { if (cant !== '') ya.cant = (parseInt(ya.cant, 10) || 0) + cant; return; }
     v.items.push({ id: art.id || null, nombre: art.nombre, categoria: art.categoria || 'Otros', cant: cant, nota: '', origen: origen || 'manual' });
   }
-  function cantidadInicial(art) {
-    return POR_PERSONA.indexOf(art.categoria) > -1 && invitados() ? invitados() : 1;
-  }
-
-  // Lo que se puede saber del croquis: mesas, sillas, manteles, caminos y la loza de cada lugar
-  function llenarDesdePlano() {
-    var v = vale();
-    var layout = window.App && window.App.getLayout ? window.App.getLayout() : { elements: [] };
-    var cuenta = {};
-    function sumar(nombre, cant) {
-      if (!cant) return;
-      cuenta[nombre] = (cuenta[nombre] || 0) + cant;
-    }
-    var SILLAS = { tiffany: 'Silla Tiffany blanca', crossback: 'Silla cross back — elegir miel o nogal', metalica: 'Silla metálica — elegir Boss o Lotus' };
-    var MESAS = {
-      table_round: 'Mesa redonda', table_kids: 'Mesa infantil', lounge_set: 'Sala lounge madera', table_umbrella: 'Sombrilla',
-      table_square: 'Mesa cuadrada — elegir modelo', table_marble_square: 'Mesa cuadrada — elegir modelo',
-      table_rectangular: 'Mesa tablón', table_campirana: 'Mesa rectangular — elegir modelo', table_periquera: 'Periquera — elegir madera o metal'
-    };
-    var PLATO_BASE = { romano: 'Plato base romano', vintage: 'Plato base vintage', concha_dorado: 'Plato base concha dorado', chocolate: 'Plato base chocolate',
-      gotico: 'Plato base gótico', plateado: 'Plato base plateado', espiral: 'Plato base tipo espiral', cristal_aperlado: 'Plato base cristal aperlado' };
-    var TRINCHE = { redondo_blanco: 'Plato trinche 27cm', entremes_blanco: 'Plato entremés blanco' };
-    var CRISTAL = { standard: 'Copa de agua transparente', romana: 'Copa agua romana', vino: 'Copa de vino transparente', flauta: 'Copa flauta',
-      martinera: 'Copa martinera', cubero: 'Vaso cubero', old_fashion: 'Vaso old fashion', tequilero: 'Tequilero' };
-    var CUBIERTO = { plateado: 'plateado', dorado: 'dorado', gold_rose: 'gold rose', negro: 'negro' };
-
-    (layout.elements || []).forEach(function (e) {
-      if (e.bg2d) return;
-      if (e.type === 'table_imperial') sumar('Mesa tablón', e.tablones || Math.round((e.w || 2.4) / 2.4));
-      else if (MESAS[e.type]) sumar(MESAS[e.type], 1);
-      var mc = e.mesaConfig, sillas = parseInt(e.chairs, 10) || 0;
-      if (!mc || !sillas) return;
-      sumar(SILLAS[mc.tipoSilla] || (mc.tipoSilla ? 'Silla ' + mc.tipoSilla + ' — elegir modelo' : 'Silla — elegir modelo'), sillas);
-      if (PLATO_BASE[mc.platoBase]) sumar(PLATO_BASE[mc.platoBase], sillas);
-      if (TRINCHE[mc.platoTrinche]) sumar(TRINCHE[mc.platoTrinche], sillas);
-      if (CRISTAL[mc.cristal]) sumar(CRISTAL[mc.cristal], sillas);
-      if (CRISTAL[mc.cristal2]) sumar(CRISTAL[mc.cristal2], sillas);
-      if (CUBIERTO[mc.cubiertos]) {
-        sumar('Cuchillo ' + CUBIERTO[mc.cubiertos], sillas);
-        sumar('Tenedor ' + CUBIERTO[mc.cubiertos] + ' carne', sillas);
-      }
-      var color = String(mc.mantelColor || '').replace(/_/g, ' ');
-      if (color && color !== 'sin mantel' && color.charAt(0) !== '#') {
-        var forma = /round/.test(e.type) ? 'redondo' : /imperial|rectangular/.test(e.type) ? 'para tablón' : 'cuadrado';
-        sumar('Mantel ' + color + ' ' + forma, e.type === 'table_imperial' ? (e.tablones || 1) : 1);
-      }
-      if (mc.caminoColor && mc.caminoColor !== 'ninguno') sumar('Camino ' + mc.caminoColor.replace(/_/g, ' '), e.type === 'table_imperial' ? (e.tablones || 1) : 1);
-    });
-
-    v.items = v.items.filter(function (i) { return i.origen !== 'plano'; });
-    var sinInventario = [];
-    Object.keys(cuenta).forEach(function (nombre) {
-      var art = buscarArticulo(nombre);
-      if (!art) sinInventario.push(nombre);
-      agregar(art || { nombre: nombre, categoria: 'Otros' }, cuenta[nombre], 'plano');
-    });
-    guardar();
-    pintar();
-    var n = Object.keys(cuenta).length;
-    toast(n ? n + ' artículos tomados del plano' + (sinInventario.length ? '; ' + sinInventario.length + ' quedaron en "Otros" para que elijas el modelo.' : '.') : 'El plano no tiene mesas con sillas.', n ? 'success' : 'warning');
-  }
-
   function agregarKitBarra() {
     KIT_BARRA.forEach(function (nombre) {
       agregar(buscarArticulo(nombre) || { nombre: nombre, categoria: 'Barra y cocina' }, 1, 'kit');
@@ -179,7 +117,7 @@
         grupo.items.map(function (i) {
           var idx = v.items.indexOf(i);
           return editar
-            ? '<tr data-i="' + idx + '"><td><input type="number" min="0" class="form-input vale-cant" value="' + esc(i.cant) + '"></td>' +
+            ? '<tr data-i="' + idx + '"><td><input type="number" min="0" class="form-input vale-cant" placeholder="¿?" value="' + esc(i.cant) + '"></td>' +
               '<td>' + esc(i.nombre) + (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : '') + '</td>' +
               '<td><input class="form-input vale-nota" placeholder="Color, medida…" value="' + esc(i.nota) + '"></td>' +
               '<td><button type="button" class="btn-icon-sm vale-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button></td></tr>'
@@ -205,9 +143,9 @@
       '<div class="venue-picker-head"><h2>Vale de salida · ' + esc(evento().nombre) + '</h2>' +
         '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
       '<p class="vale-sub">' + v.items.length + ' artículos · ' + total + ' piezas' + (invitados() ? ' · ' + invitados() + ' invitados' : '') +
-        (editar ? ' · La loza, los cubiertos y la cristalería se agregan con una pieza por invitado.' : '') + '</p>' +
+        (editar ? ' · Palomea en el inventario lo que se va a ocupar y escribe la cantidad de cada artículo.' : '') + '</p>' +
       '<div class="vale-acciones">' +
-        (editar ? '<button type="button" class="event-btn" id="vale-plano"><i class="fa-solid fa-map-location-dot"></i> Llenar desde el plano</button>' +
+        (editar ? '<button type="button" class="event-btn" id="vale-inventario"><i class="fa-solid fa-list-check"></i> Imprimir inventario para palomear</button>' +
           '<button type="button" class="event-btn" id="vale-kit"><i class="fa-solid fa-martini-glass"></i> Kit de barra</button>' +
           '<button type="button" class="event-btn" id="vale-libre"><i class="fa-solid fa-pen"></i> Artículo que no está en inventario</button>' : '') +
         '<button type="button" class="event-btn active" id="vale-imprimir"><i class="fa-solid fa-print"></i> Imprimir vale</button>' +
@@ -217,7 +155,7 @@
           '<div class="vale-inv-lista">' + inventarioHtml + '</div></div>' : '') +
         '<div class="vale-lista">' + (v.items.length
           ? '<table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th>' + (editar ? '<th></th>' : '') + '</tr></thead><tbody>' + lista + '</tbody></table>'
-          : '<p class="vale-vacio">' + (editar ? 'Elige del inventario o llena desde el plano.' : 'Este evento todavía no tiene vale.') + '</p>') +
+          : '<p class="vale-vacio">' + (editar ? 'Palomea en el inventario lo que vas a necesitar.' : 'Este evento todavía no tiene vale.') + '</p>') +
         '</div>' +
       '</div>';
 
@@ -225,15 +163,12 @@
     m.querySelector('.venue-picker-close').onclick = cerrar;
     m.querySelector('#vale-imprimir').onclick = imprimir;
     if (!editar) return;
-    m.querySelector('#vale-plano').onclick = function () {
-      if (v.items.some(function (i) { return i.origen === 'plano'; }) && !confirm('Se recalcularán los artículos que vienen del plano. Lo que agregaste a mano se queda. ¿Continuar?')) return;
-      llenarDesdePlano();
-    };
+    m.querySelector('#vale-inventario').onclick = imprimirInventario;
     m.querySelector('#vale-kit').onclick = agregarKitBarra;
     m.querySelector('#vale-libre').onclick = function () {
       var nombre = prompt('Artículo que no está en el inventario (por ejemplo: Refresco Coca-Cola 2 L):');
       if (!nombre || !nombre.trim()) return;
-      agregar({ nombre: nombre.trim(), categoria: 'Otros' }, 1, 'manual');
+      agregar({ nombre: nombre.trim(), categoria: 'Otros' }, '', 'manual');
       guardar();
       pintar();
     };
@@ -251,14 +186,14 @@
         var art = _inventario.find(function (a) { return a.id === btn.getAttribute('data-id'); });
         var ya = v.items.find(function (i) { return i.id === art.id; });
         if (ya) v.items.splice(v.items.indexOf(ya), 1);
-        else agregar(art, cantidadInicial(art), 'manual');
+        else agregar(art, '', 'manual');
         guardar();
         pintar();
       };
     });
     Array.prototype.forEach.call(m.querySelectorAll('tr[data-i]'), function (tr) {
       var item = v.items[parseInt(tr.getAttribute('data-i'), 10)];
-      tr.querySelector('.vale-cant').onchange = function (e) { item.cant = Math.max(0, parseInt(e.target.value, 10) || 0); guardar(); pintar(); };
+      tr.querySelector('.vale-cant').onchange = function (e) { item.cant = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0); guardar(); pintar(); };
       tr.querySelector('.vale-nota').onchange = function (e) { item.nota = e.target.value; guardar(); };
       tr.querySelector('.vale-quitar').onclick = function () { v.items.splice(v.items.indexOf(item), 1); guardar(); pintar(); };
     });
@@ -268,6 +203,8 @@
   function imprimir() {
     var ev = evento(), v = vale();
     if (!v.items.length) { toast('El vale está vacío.', 'warning'); return; }
+    var sinCant = v.items.filter(function (i) { return i.cant === '' || i.cant == null; }).length;
+    if (sinCant && !confirm(sinCant + ' artículos no tienen cantidad. ¿Imprimir así?')) return;
     var w = window.open('', '_blank');
     if (!w) { toast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error'); return; }
     var b = ev.data.brief || {};
@@ -334,6 +271,57 @@
     w.document.close();
   }
 
+
+  // ── Inventario completo para palomear ──────────────────────
+  // Todo lo que tiene PEG, en blanco: el planner marca lo que ocupa y anota la cantidad
+  function imprimirInventario() {
+    var w = window.open('', '_blank');
+    if (!w) { toast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error'); return; }
+    var ev = evento(), b = ev ? ev.data.brief || {} : {};
+    var fecha = b.fecha_evento ? new Date(b.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    var logo = new URL('assets/logo-primavera.png', location.href).href;
+    var grupos = agrupar(_inventario || []).map(function (g) {
+      return '<section class="grupo"><h3>' + esc(g.categoria) + '</h3>' + g.items.map(function (a) {
+        return '<div class="art"><span class="caja"></span><span class="nom">' + esc(a.nombre) + '</span><span class="cant"></span></div>';
+      }).join('') + '</section>';
+    }).join('');
+    var libres = '';
+    for (var i = 0; i < 8; i++) libres += '<div class="art"><span class="caja"></span><span class="nom linea"></span><span class="cant"></span></div>';
+
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Inventario PEG para palomear</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">' +
+      '<style>:root{--pink:#F65C7A;--gold:#C9A96E;--ink:#1F1F1F;--gray:#6D6D6D;--line:#E2D9D0}' +
+      '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      'html,body{background:#fff}body{font-family:Poppins,sans-serif;color:var(--ink);font-size:9.5px;margin:18px auto;max-width:800px;padding:0 14px}' +
+      'h1,h3{font-family:"Playfair Display",serif;margin:0}' +
+      '.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:var(--gray)}.toolbar button{background:var(--pink);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer}' +
+      '.head{display:flex;align-items:center;gap:12px;padding-bottom:8px;border-bottom:2px solid var(--gold)}.head img{width:44px;height:44px;border-radius:50%;object-fit:cover}' +
+      '.marca{font-family:"Playfair Display",serif;font-size:15px;color:var(--pink)}.sub{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}' +
+      '.titulo{margin-left:auto;text-align:right}.titulo h1{font-size:16px}.titulo div{color:var(--gray)}' +
+      '.datos{display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:4px 14px;margin:10px 0}.datos div{border-bottom:1px solid var(--line);padding:3px 0;min-height:30px}.datos b{font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);display:block}' +
+      '.inst{color:var(--gray);margin-bottom:8px}' +
+      '.cols{column-count:2;column-gap:22px}.grupo{break-inside:auto;margin-bottom:8px}' +
+      '.grupo h3{font-size:11px;color:var(--pink);border-bottom:1px solid var(--gold);padding-bottom:1px;margin-bottom:2px;break-after:avoid}' +
+      '.art{display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px dotted var(--line);break-inside:avoid}' +
+      '.caja{width:10px;height:10px;border:1px solid var(--ink);border-radius:2px;flex:none}.nom{flex:1}.nom.linea{border-bottom:1px solid var(--gray);height:11px}' +
+      '.cant{width:52px;border-bottom:1px solid var(--gray);height:11px;flex:none}' +
+      '.firma{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:22px;break-inside:avoid}.firma div{border-top:1px solid var(--ink);padding-top:3px;color:var(--gray)}' +
+      '.footer{margin-top:12px;padding-top:6px;border-top:1px solid var(--gold);font-size:8px;color:var(--gray);text-align:center}' +
+      '@media print{.toolbar{display:none}body{margin:0;max-width:none}@page{size:letter;margin:1cm}}</style></head><body>' +
+      '<div class="toolbar"><span>Vista previa · Inventario para palomear</span><button onclick="window.print()">Imprimir / Guardar PDF</button></div>' +
+      '<header class="head"><img src="' + esc(logo) + '" alt="Primavera Events Group"><div><div class="marca">Primavera Events Group®</div><div class="sub">Inventario de mobiliario y suministros</div></div>' +
+        '<div class="titulo"><h1>Selección para evento</h1><div>' + (_inventario || []).length + ' artículos</div></div></header>' +
+      '<section class="datos"><div><b>Evento</b>' + esc(ev ? ev.nombre : '') + '</div><div><b>Fecha</b>' + esc(fecha) + '</div>' +
+        '<div><b>Personas</b>' + esc(b.invitados || '') + '</div><div><b>Planner</b></div></section>' +
+      '<p class="inst">Marca con ✓ lo que se va a ocupar y escribe la cantidad en la línea. Lo que no esté en la lista, anótalo en "Otros" al final.</p>' +
+      '<div class="cols">' + grupos + '<section class="grupo"><h3>Otros (no está en el inventario)</h3>' + libres + '</section></div>' +
+      '<div class="firma"><div>Nombre y firma del planner</div><div>Fecha</div></div>' +
+      '<footer class="footer">Primavera Events Group® · Documento de control interno</footer></body></html>';
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
+
   // Lista para la ficha técnica del coordinador
   function filasFicha() {
     var ev = evento();
@@ -351,5 +339,5 @@
     if (btn) btn.onclick = abrir;
   });
 
-  window.PEGVale = { abrir: abrir, imprimir: imprimir, filasFicha: filasFicha };
+  window.PEGVale = { abrir: abrir, imprimir: imprimir, imprimirInventario: imprimirInventario, filasFicha: filasFicha };
 })();
