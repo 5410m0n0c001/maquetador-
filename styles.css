@@ -2343,3 +2343,4 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
   .vale-lista tr.vale-grupo, .vale-lista tr.vale-prov-fila { display: block; }
   .vale-lista tr.vale-grupo td, .vale-lista tr.vale-prov-fila td { display: block; }
 }
+.wifi-aviso { color: #C9A96E; font-size: 13px; margin-top: -4px; }

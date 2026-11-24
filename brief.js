@@ -72,6 +72,8 @@
     venue_red: ['tiene_venue', 'Venue de la red Primavera'],
     venue_externo: ['tiene_venue', 'Sí (propio / externo)'],
     tipo_evento_otro: ['tipo_evento', 'Otro'],
+    wifi_red: ['wifi', 'Sí'],
+    wifi_clave: ['wifi', 'Sí'],
     chambelanes_cuantos: ['chambelanes', 'Sí'],
     chambelanes_nombres: ['chambelanes', 'Sí'],
     menu_infantil_cant: ['menu_infantil', 'Sí'],
@@ -191,7 +193,10 @@
       { k: 'zona', label: 'Zona / municipio' },
       { k: 'area_techada', label: 'Área techada', type: 'radio', options: SI_NO },
       { k: 'capacidad', label: 'Capacidad requerida (pax)', type: 'number' },
-      { k: 'plan_lluvia', label: 'Plan en caso de lluvia', type: 'radio', options: ['Carpa', 'Salón', 'N/A'] }
+      { k: 'plan_lluvia', label: 'Plan en caso de lluvia', type: 'radio', options: ['Carpa', 'Salón', 'N/A'] },
+      { k: 'wifi', label: 'Wi-Fi para invitados', type: 'radio', options: ['Sí', 'No', 'Por confirmar'] },
+      { k: 'wifi_red', label: 'Nombre de la red Wi-Fi' },
+      { k: 'wifi_clave', label: 'Contraseña del Wi-Fi para invitados' }
     ] },
     { id: 'menu', title: 'Banquete / Menú', fields: [
       { k: 'tipo_servicio', label: 'Tipo de servicio', type: 'radio', options: ['Emplatado (a la mesa)', 'Buffet', 'Estaciones de autor', 'Familiar', 'Taquiza', 'Parrillada de cortes'] },
@@ -591,6 +596,7 @@
         '<div class="venue-picker-head"><h2>' + esc(_event.nombre) + '</h2>' +
         '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
         '<p>' + (fecha ? esc(fecha.charAt(0).toUpperCase() + fecha.slice(1)) + ' · ' : '') + 'Estás en <strong>solo lectura</strong>. ¿Qué quieres hacer?</p>' +
+        (b.wifi_red || b.wifi_clave ? '<p class="wifi-aviso"><i class="fa-solid fa-wifi"></i> Wi-Fi para invitados: <strong>' + esc(b.wifi_red || '') + '</strong>' + (b.wifi_clave ? ' · Contraseña: <strong>' + esc(b.wifi_clave) + '</strong>' : '') + '</p>' : '') +
         '<div class="venue-grid">' +
           '<button class="venue-card" data-w="brief"><i class="fa-solid fa-clipboard-list"></i><strong>Ver el brief</strong><span>Datos del evento, minuto a minuto y fotos del montaje.</span></button>' +
           '<button class="venue-card" data-w="plano"><i class="fa-solid fa-map-location-dot"></i><strong>Ver el plano</strong><span>Distribución del salón en 2D y 3D.</span></button>' +
