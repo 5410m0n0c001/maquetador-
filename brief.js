@@ -514,6 +514,9 @@
     var vale = $('btn-vale');
     var conVale = has && _event.data.vale && _event.data.vale.items && _event.data.vale.items.length;
     if (vale) vale.classList.toggle('hidden', !has || esBodega() || (!_isPlanner && !conVale));
+    var staffBtn = $('btn-staff');
+    var conStaff = has && Array.isArray(_event.data.staff) && _event.data.staff.length;
+    if (staffBtn) staffBtn.classList.toggle('hidden', !has || esBodega() || (!_isPlanner && !conStaff));
     updateVersionSelector();
   }
 

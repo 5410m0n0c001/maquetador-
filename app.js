@@ -2591,6 +2591,12 @@
       html += '<section class="section"><h2>Mobiliario que sale de bodega (vale de salida)</h2><table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th></tr></thead><tbody>' + valeFilas + '</tbody></table></section>';
     }
 
+    // Staff: quién va, su teléfono, mesas y radio
+    var staffFilas = window.PEGStaff ? window.PEGStaff.filasFicha() : '';
+    if (staffFilas) {
+      html += '<section class="section"><h2>Staff del evento</h2><p class="muted">' + esc(window.PEGStaff.resumen()) + '</p><table><thead><tr><th>Rol</th><th>Nombre</th><th>Teléfono</th><th>Mesas</th><th>Radio</th></tr></thead><tbody>' + staffFilas + '</tbody></table></section>';
+    }
+
     // Proveedores externos contratados por el cliente
     var provs = (data.proveedores || []).filter(function (p) { return p.servicio || p.nombre; });
     if (provs.length) {

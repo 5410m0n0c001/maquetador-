@@ -2236,3 +2236,18 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
   .minuto-row .minuto-del, .minuto-row .minuto-badge { grid-area: d; }
   .vale-prov { grid-template-columns: 1fr 1fr; padding-left: 0; }
 }
+
+/* ── Staff del evento ─────────────────────────────────────── */
+.staff-modal { width: min(900px, 100%); }
+.staff-lista { display: flex; flex-direction: column; gap: 8px; max-height: 58vh; overflow-y: auto; }
+.staff-persona { border: 1px solid rgba(201, 169, 110, 0.2); border-radius: 10px; padding: 8px; background: rgba(255, 255, 255, 0.02); }
+.staff-datos { display: grid; grid-template-columns: 130px 1.4fr 1fr 110px 32px; gap: 6px; align-items: center; }
+.staff-mesas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; font-size: 11px; color: #94a3b8; }
+.staff-mesa { min-width: 30px; padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(201, 169, 110, 0.3); background: transparent; color: #e2e8f0; cursor: pointer; font: 11px Poppins, sans-serif; }
+.staff-mesa.mia { background: #F65C7A; border-color: #F65C7A; color: #fff; }
+.staff-mesa.otra { opacity: 0.35; }
+@media (max-width: 768px) {
+  .staff-datos { grid-template-columns: 1fr 1fr 32px; grid-template-areas: "rol nom x" "tel rad rad"; }
+  .staff-datos [data-k="rol"] { grid-area: rol; } .staff-datos [data-k="nombre"] { grid-area: nom; }
+  .staff-datos [data-k="telefono"] { grid-area: tel; } .staff-datos [data-k="radio"] { grid-area: rad; } .staff-datos .staff-quitar { grid-area: x; }
+}
