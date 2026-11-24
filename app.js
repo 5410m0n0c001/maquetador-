@@ -2598,7 +2598,7 @@
       provs.forEach(function (p) {
         var horario = [p.llegada && 'Llega ' + p.llegada, p.inicio && 'Inicia ' + p.inicio, p.fin && 'Termina ' + p.fin].filter(Boolean).join('<br>');
         html += '<tr><td><strong>' + esc(p.servicio || '-') + '</strong>' + (p.red ? '<br><span class="muted">Red Primavera</span>' : '') + '</td>' +
-          '<td>' + esc(p.nombre || '-') + (p.telefono ? '<br>' + esc(p.telefono) : '') + '</td>' +
+          '<td>' + esc(p.nombre || '-') + (p.telefono ? '<br>' + esc(p.telefono) : '') + (p.recibe ? '<br><span class="muted">Recibe: ' + esc(p.recibe) + '</span>' : '') + '</td>' +
           '<td>' + (horario || '-') + '</td>' +
           '<td>' + [p.condiciones && '<b>Condiciones:</b> ' + esc(p.condiciones), p.requerimientos && '<b>Requerimientos:</b> ' + esc(p.requerimientos)].filter(Boolean).join('<br>') + '</td></tr>';
       });

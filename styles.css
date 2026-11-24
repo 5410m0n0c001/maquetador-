@@ -2219,3 +2219,20 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
 .vale-tag { font-size: 10px; color: #C9A96E; border: 1px solid #C9A96E; border-radius: 999px; padding: 0 5px; }
 .vale-vacio { color: #94a3b8; font-size: 13px; }
 @media (max-width: 760px) { .vale-cuerpo { grid-template-columns: 1fr; } }
+
+/* Proveedor responsable en el minuto a minuto y en la requisición */
+.minuto-aviso { color: #fda4af; font-size: 12px; margin: 0 0 8px; }
+.form-input.sin-prov { border-color: #F65C7A; box-shadow: 0 0 0 1px rgba(246, 92, 122, 0.45); }
+.vale-surte { width: 100%; font-size: 11px; padding: 4px; }
+.vale-prov-fila td { padding-top: 0; }
+.vale-prov { display: grid; grid-template-columns: 1.4fr 1fr 82px 1fr 1fr; gap: 4px; padding: 0 0 6px 18px; }
+.vale-prov .form-input { font-size: 11px; padding: 5px 6px; }
+.vale-externo { font-size: 11px; color: #C9A96E; }
+@media (max-width: 768px) {
+  .minuto-row, body.peg-view-only .minuto-row { grid-template-columns: 96px 1fr 36px; grid-template-areas: "h a d" "r r r"; }
+  .minuto-row [data-m="hora"] { grid-area: h; }
+  .minuto-row [data-m="actividad"] { grid-area: a; }
+  .minuto-row [data-m="responsable"] { grid-area: r; }
+  .minuto-row .minuto-del, .minuto-row .minuto-badge { grid-area: d; }
+  .vale-prov { grid-template-columns: 1fr 1fr; padding-left: 0; }
+}

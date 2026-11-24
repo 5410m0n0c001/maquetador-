@@ -799,16 +799,24 @@
     return html + '</div>';
   }
 
-  function minutoHtml(rows, ro) {
+  // Quién hace cada actividad: PEG (coordinación, cocina, meseros, bodega) o un proveedor externo del brief
+  var RESPONSABLES_PEG = ['PEG — Coordinación', 'PEG — Capitán de meseros', 'PEG — Meseros', 'PEG — Cocina', 'PEG — Barra', 'PEG — Bodega / chofer'];
+  function minutoHtml(rows, ro, provs) {
     var dis = ro ? ' disabled' : '';
-    var html = '<div class="minuto-list">';
+    var sinProv = rows.filter(function (r) { return !String(r.responsable || '').trim(); }).length;
+    var html = (!ro && sinProv ? '<p class="minuto-aviso"><i class="fa-solid fa-triangle-exclamation"></i> ' + sinProv + (sinProv === 1 ? ' actividad no tiene' : ' actividades no tienen') + ' quién la hace. Todo el minuto a minuto debe tener a PEG o a un proveedor responsable.</p>' : '') +
+      '<datalist id="minuto-provs">' + RESPONSABLES_PEG.concat((provs || []).filter(function (p) { return p.servicio || p.nombre; }).map(function (p) {
+        return 'Externo: ' + [p.servicio, p.nombre].filter(Boolean).join(' — ') + (p.telefono ? ' · ' + p.telefono : '');
+      })).map(function (o) { return '<option value="' + esc(o) + '"></option>'; }).join('') + '</datalist>' +
+      '<div class="minuto-list">';
     if (!rows.length) html += '<p class="brief-empty">Aún no hay actividades en el minuto a minuto.</p>';
     rows.forEach(function (r, i) {
       var fijo = ro || r.origen ? ' disabled' : '';
       html += '<div class="minuto-row' + (r.origen ? ' del-brief' : '') + '" data-i="' + i + '"' + (r.origen && !ro ? ' title="Viene del brief: se edita en su sección"' : '') + '>' +
         '<input class="form-input" type="time" data-m="hora" value="' + esc(r.hora) + '"' + fijo + ' />' +
         '<input class="form-input" data-m="actividad" placeholder="Actividad" value="' + esc(r.actividad) + '"' + fijo + ' />' +
-        '<input class="form-input" data-m="responsable" placeholder="Responsable" value="' + esc(r.responsable) + '"' + fijo + ' />' +
+        '<input class="form-input' + (!ro && !String(r.responsable || '').trim() ? ' sin-prov' : '') + '" data-m="responsable" list="minuto-provs" placeholder="¿Quién lo hace? PEG o proveedor" value="' + esc(r.responsable) + '"' +
+          (ro || String(r.origen || '').indexOf('prov|') === 0 ? ' disabled' : '') + ' />' +
         (ro ? '' : r.origen ? '<span class="minuto-badge" title="Se edita en el brief">brief</span>' : '<button type="button" class="minuto-del" title="Quitar"><i class="fa-solid fa-xmark"></i></button>') +
         '</div>';
     });
@@ -825,6 +833,7 @@
   var PROV_CAMPOS = [
     { k: 'nombre', label: 'Nombre del proveedor' },
     { k: 'telefono', label: 'Teléfono / WhatsApp', type: 'tel' },
+    { k: 'recibe', label: 'Quién lo recibe en locación (coordinador, capitán…)' },
     { k: 'llegada', label: 'Llegada / montaje', type: 'time' },
     { k: 'inicio', label: 'Inicia', type: 'time' },
     { k: 'fin', label: 'Termina', type: 'time' },
@@ -843,6 +852,7 @@
         html += '<div class="prov-card"><strong>' + esc(p.servicio || 'Proveedor') + (p.red ? ' <span class="prov-red">Red Primavera</span>' : '') + '</strong>' +
           (p.nombre ? '<div>' + esc(p.nombre) + (p.telefono ? ' · <a href="tel:' + esc(p.telefono) + '">' + esc(p.telefono) + '</a>' : '') + '</div>' : '') +
           (horario ? '<div class="prov-horario"><i class="fa-regular fa-clock"></i> ' + esc(horario) + '</div>' : '') +
+          (p.recibe ? '<div><b>Lo recibe:</b> ' + esc(p.recibe) + '</div>' : '') +
           (p.condiciones ? '<p><b>Condiciones:</b> ' + esc(p.condiciones) + '</p>' : '') +
           (p.requerimientos ? '<p><b>Requerimientos:</b> ' + esc(p.requerimientos) + '</p>' : '') + '</div>';
         return;
@@ -901,7 +911,7 @@
       if (!p._id) p._id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       var quien = [p.servicio, p.nombre].filter(Boolean).join(' — ') || 'Proveedor externo';
       [['llegada', 'Llegada y montaje: '], ['inicio', 'Inicia: '], ['fin', 'Termina: ']].forEach(function (h) {
-        if (p[h[0]]) rows.push({ hora: p[h[0]], actividad: h[1] + quien, responsable: p.telefono || '', origen: 'prov|' + p._id + '|' + h[0] });
+        if (p[h[0]]) rows.push({ hora: p[h[0]], actividad: h[1] + quien, responsable: 'Externo: ' + quien + (p.telefono ? ' · ' + p.telefono : '') + (p.recibe ? ' · recibe ' + p.recibe : ''), origen: 'prov|' + p._id + '|' + h[0] });
       });
     });
     return rows;
@@ -1288,7 +1298,7 @@
       html += '<section class="brief-section" id="brief-' + sec.id + '"><h3>' + esc(sec.title) + '</h3>';
       if (sec.id === 'minuto') {
         if (!ro && syncMinuto(d)) scheduleSave();
-        html += minutoHtml(d.minuto || [], ro);
+        html += minutoHtml(d.minuto || [], ro, d.proveedores);
       }
       else if (sec.id === 'montaje_elegido') html += montajeHtml(d.montaje || { fotos: [] }, ro);
       else if (sec.id === 'proveedores') html += proveedoresHtml(d.proveedores || [], ro);
@@ -1456,7 +1466,11 @@
     _panel.querySelectorAll('.minuto-row').forEach(function (row) {
       var i = parseInt(row.getAttribute('data-i'), 10);
       row.querySelectorAll('[data-m]:not(:disabled)').forEach(function (el) {
-        var guarda = function () { d.minuto[i][el.getAttribute('data-m')] = el.value; scheduleSave(); };
+        var guarda = function () {
+          d.minuto[i][el.getAttribute('data-m')] = el.value;
+          if (el.getAttribute('data-m') === 'responsable') el.classList.toggle('sin-prov', !el.value.trim());
+          scheduleSave();
+        };
         el.addEventListener('input', guarda);
         el.addEventListener('change', guarda);
       });

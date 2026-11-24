@@ -20,6 +20,15 @@
     { n: 5, titulo: 'Regreso', quien: 'Bodega' }
   ];
 
+  var PROV_CAMPOS = [["nombre","Proveedor"],["telefono","Teléfono"],["hora","Hora"],["entrega","Quién entrega"],["recibe","Quién recibe"]];
+
+  // "Hielo Polar · 777 123 4567 · 4:00 PM · entrega Juan · recibe capitán"
+  function textoProveedor(i) {
+    var p = i.prov || {};
+    var hora = p.hora && PE() && PE().hora12 ? PE().hora12(p.hora) : p.hora;
+    return [p.nombre || 'Proveedor externo', p.telefono, hora, p.entrega && 'entrega ' + p.entrega, p.recibe && 'recibe ' + p.recibe].filter(Boolean).join(' · ');
+  }
+
   var _inventario = null;
   var _modal = null;
   var _filtro = '';
@@ -113,15 +122,19 @@
     var total = v.items.reduce(function (s, i) { return s + (parseInt(i.cant, 10) || 0); }, 0);
 
     var lista = agrupar(v.items).map(function (grupo) {
-      return '<tr class="vale-grupo"><td colspan="' + (editar ? 4 : 3) + '">' + esc(grupo.categoria) + '</td></tr>' +
+      return '<tr class="vale-grupo"><td colspan="' + (editar ? 5 : 3) + '">' + esc(grupo.categoria) + '</td></tr>' +
         grupo.items.map(function (i) {
           var idx = v.items.indexOf(i);
           return editar
             ? '<tr data-i="' + idx + '"><td><input type="number" min="0" class="form-input vale-cant" placeholder="¿?" value="' + esc(i.cant) + '"></td>' +
               '<td>' + esc(i.nombre) + (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : '') + '</td>' +
               '<td><input class="form-input vale-nota" placeholder="Color, medida…" value="' + esc(i.nota) + '"></td>' +
-              '<td><button type="button" class="btn-icon-sm vale-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button></td></tr>'
-            : '<tr><td><b>' + esc(i.cant) + '</b></td><td>' + esc(i.nombre) + '</td><td>' + esc(i.nota) + '</td></tr>';
+              '<td><select class="form-input vale-surte" title="Quién lo surte"><option value="">Bodega PEG</option><option value="externo"' + (i.surte === 'externo' ? ' selected' : '') + '>Proveedor externo</option></select></td>' +
+              '<td><button type="button" class="btn-icon-sm vale-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button></td></tr>' +
+              (i.surte === 'externo' ? '<tr class="vale-prov-fila" data-p="' + idx + '"><td colspan="5"><div class="vale-prov">' + PROV_CAMPOS.map(function (c) {
+                return '<input class="form-input" data-pk="' + c[0] + '"' + (c[0] === 'hora' ? ' type="time"' : c[0] === 'telefono' ? ' type="tel"' : '') + ' placeholder="' + c[1] + '" title="' + c[1] + '" value="' + esc((i.prov || {})[c[0]]) + '">';
+              }).join('') + '</div></td></tr>' : '')
+            : '<tr><td><b>' + esc(i.cant) + '</b></td><td>' + esc(i.nombre) + (i.surte === 'externo' ? '<br><span class="vale-externo">' + esc(textoProveedor(i)) + '</span>' : '') + '</td><td>' + esc(i.nota) + '</td></tr>';
         }).join('');
     }).join('');
 
@@ -154,7 +167,7 @@
         (editar ? '<div class="vale-inv"><input class="form-input" id="vale-buscar" placeholder="Buscar en el inventario…" value="' + esc(_filtro) + '">' +
           '<div class="vale-inv-lista">' + inventarioHtml + '</div></div>' : '') +
         '<div class="vale-lista">' + (v.items.length
-          ? '<table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th>' + (editar ? '<th></th>' : '') + '</tr></thead><tbody>' + lista + '</tbody></table>'
+          ? '<table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th>' + (editar ? '<th>Surte</th><th></th>' : '') + '</tr></thead><tbody>' + lista + '</tbody></table>'
           : '<p class="vale-vacio">' + (editar ? 'Palomea en el inventario lo que vas a necesitar.' : 'Este evento todavía no tiene requisición de material.') + '</p>') +
         '</div>' +
       '</div>';
@@ -196,6 +209,18 @@
       tr.querySelector('.vale-cant').onchange = function (e) { item.cant = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0); guardar(); pintar(); };
       tr.querySelector('.vale-nota').onchange = function (e) { item.nota = e.target.value; guardar(); };
       tr.querySelector('.vale-quitar').onclick = function () { v.items.splice(v.items.indexOf(item), 1); guardar(); pintar(); };
+      tr.querySelector('.vale-surte').onchange = function (e) {
+        item.surte = e.target.value;
+        if (item.surte && !item.prov) item.prov = {};
+        guardar();
+        pintar();
+      };
+    });
+    Array.prototype.forEach.call(m.querySelectorAll('tr[data-p]'), function (tr) {
+      var item = v.items[parseInt(tr.getAttribute('data-p'), 10)];
+      Array.prototype.forEach.call(tr.querySelectorAll('[data-pk]'), function (el) {
+        el.onchange = function () { item.prov = item.prov || {}; item.prov[el.getAttribute('data-pk')] = el.value; guardar(); };
+      });
     });
   }
 
@@ -221,7 +246,9 @@
     var logo = new URL('assets/logo-primavera.png', location.href).href;
     var cajas = PASOS.map(function () { return '<td class="caja"></td>'; }).join('');
     var n = 0;
-    var filas = agrupar(v.items).map(function (grupo) {
+    var dePEG = v.items.filter(function (i) { return i.surte !== 'externo'; });
+    var externos = v.items.filter(function (i) { return i.surte === 'externo'; });
+    var filas = agrupar(dePEG).map(function (grupo) {
       return '<tr class="grupo"><td colspan="' + (4 + PASOS.length) + '">' + esc(grupo.categoria) + '</td></tr>' + grupo.items.map(function (i) {
         n++;
         return '<tr><td class="num">' + n + '</td><td class="cant">' + esc(i.cant) + '</td><td>' + esc(i.nombre) +
@@ -245,6 +272,7 @@
       'th.izq{text-align:left}td{border-bottom:1px solid var(--line);padding:3px 5px;vertical-align:middle}tr{break-inside:avoid}' +
       'tr.grupo td{background:#FAF2ED;font-weight:600;color:var(--pink);padding:4px 5px}td.num{color:var(--gray);width:22px}td.cant{font-weight:600;width:40px;text-align:center}' +
       'td.caja{width:62px;border-left:1px solid var(--line)}.nota{color:var(--gray)}' +
+      'h2.externos{font-size:13px;color:var(--pink);margin:14px 0 6px}table.ext td{font-size:9.5px}td.centro{text-align:center}' +
       '.firmas{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;break-inside:avoid}.firma{border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:92px}' +
       '.firma b{display:block;color:var(--pink);font-size:10px}.firma span{display:block;color:var(--gray);font-size:8.5px;margin-bottom:12px}.firma i{display:block;border-top:1px solid var(--ink);margin-top:14px;padding-top:2px;font-style:normal;color:var(--gray);font-size:8px}' +
       '.obs{border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:50px;margin-top:8px;break-inside:avoid}.obs b{color:var(--gray)}' +
@@ -260,7 +288,15 @@
         'Al regresar a bodega se marca la condición: <b>B</b> bien · <b>D</b> dañado · <b>F</b> faltante.</div>' +
       '<table><thead><tr><th>#</th><th>Solicitado</th><th class="izq">Artículo</th>' +
         PASOS.map(function (p) { return '<th>' + p.n + '. ' + p.titulo + '<small>' + p.quien + '</small></th>'; }).join('') +
-        '<th>Condición<small>B / D / F</small></th></tr></thead><tbody>' + filas + '</tbody></table>' +
+        '<th>Condición<small>B / D / F</small></th></tr></thead><tbody>' + (filas || '<tr><td colspan="' + (4 + PASOS.length) + '">Todo lo surte un proveedor externo.</td></tr>') + '</tbody></table>' +
+      (externos.length ? '<h2 class="externos">Lo surte un proveedor externo (no pasa por bodega)</h2><table class="ext"><thead><tr><th>#</th><th>Solicitado</th><th class="izq">Artículo</th><th class="izq">Proveedor y teléfono</th><th>Hora</th><th>Entrega</th><th>Recibe (firma)</th><th>Cant. recibida</th></tr></thead><tbody>' +
+        externos.map(function (i) {
+          n++;
+          var p = i.prov || {};
+          var hora = p.hora && PE().hora12 ? PE().hora12(p.hora) : (p.hora || '');
+          return '<tr><td class="num">' + n + '</td><td class="cant">' + esc(i.cant) + '</td><td>' + esc(i.nombre) + (i.nota ? ' <span class="nota">· ' + esc(i.nota) + '</span>' : '') + '</td>' +
+            '<td>' + esc(p.nombre || '') + (p.telefono ? '<br>' + esc(p.telefono) : '') + '</td><td class="centro">' + esc(hora) + '</td><td>' + esc(p.entrega || '') + '</td><td>' + esc(p.recibe || '') + '</td><td class="caja"></td></tr>';
+        }).join('') + '</tbody></table>' : '') +
       '<section class="firmas">' + PASOS.map(function (p) {
         return '<div class="firma"><b>' + p.n + '. ' + p.titulo + '</b><span>' + p.quien + '</span><i>Nombre y firma</i><i>Fecha y hora</i></div>';
       }).join('') + '</section>' +
@@ -329,7 +365,8 @@
     if (!items.length) return '';
     return agrupar(items).map(function (g) {
       return '<tr><td colspan="3"><strong>' + esc(g.categoria) + '</strong></td></tr>' + g.items.map(function (i) {
-        return '<tr><td style="width:10%"><strong>' + esc(i.cant) + '</strong></td><td>' + esc(i.nombre) + '</td><td style="width:30%">' + esc(i.nota) + '</td></tr>';
+        return '<tr><td style="width:10%"><strong>' + esc(i.cant) + '</strong></td><td>' + esc(i.nombre) + '</td><td style="width:38%">' + esc(i.nota) +
+          (i.surte === 'externo' ? (i.nota ? '<br>' : '') + 'Lo surte: ' + esc(textoProveedor(i)) : '') + '</td></tr>';
       }).join('');
     }).join('');
   }
