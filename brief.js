@@ -517,6 +517,8 @@
     var staffBtn = $('btn-staff');
     var conStaff = has && Array.isArray(_event.data.staff) && _event.data.staff.length;
     if (staffBtn) staffBtn.classList.toggle('hidden', !has || esBodega() || (!_isPlanner && !conStaff));
+    var coordBtn = $('btn-coord');
+    if (coordBtn) coordBtn.classList.toggle('hidden', !has || esBodega() || (!_isPlanner && !_event.data.coordinacion));
     updateVersionSelector();
   }
 
@@ -1592,6 +1594,7 @@
     syncMinuto: function () { if (_event) syncMinuto(_event.data); },
     isPlanner: function () { return _isPlanner; },
     client: client,
-    scheduleSave: scheduleSave
+    scheduleSave: scheduleSave,
+    comprimirFoto: compressImage
   };
 })();
