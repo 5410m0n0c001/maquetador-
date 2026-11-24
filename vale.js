@@ -31,6 +31,7 @@
   var _inventario = null;
   var _modal = null;
   var _filtro = '';
+  var _enfocar = null; // renglón recién agregado: se muestra y se pone el cursor en su cantidad
 
   function PE() { return window.PEGEventos; }
   function evento() { return PE() && PE().getEvent ? PE().getEvent() : null; }
@@ -108,6 +109,8 @@
 
   function pintar() {
     if (!_modal || !_modal.isConnected) return;
+    // Al redibujar se conserva dónde ibas en el inventario y en la lista
+    var scrolls = ['.vale-modal', '.vale-inv-lista', '.vale-lista'].map(function (sel) { var el = _modal.querySelector(sel); return el ? el.scrollTop : 0; });
     var v = vale(), editar = esPlanner();
     var total = v.items.reduce(function (s, i) { return s + (parseInt(i.cant, 10) || 0); }, 0);
 
@@ -162,6 +165,17 @@
       '</div>';
 
     var m = _modal;
+    ['.vale-modal', '.vale-inv-lista', '.vale-lista'].forEach(function (sel, k) { var el = m.querySelector(sel); if (el) el.scrollTop = scrolls[k]; });
+    if (_enfocar != null) {
+      var fila = m.querySelector('tr[data-i="' + _enfocar + '"]');
+      _enfocar = null;
+      if (fila) {
+        fila.classList.add('vale-nuevo');
+        fila.scrollIntoView({ block: 'center' });
+        var cant = fila.querySelector('.vale-cant');
+        if (cant) cant.focus({ preventScroll: true });
+      }
+    }
     m.querySelector('.venue-picker-close').onclick = cerrar;
     m.querySelector('#vale-imprimir').onclick = imprimir;
     if (!editar) return;
@@ -170,6 +184,7 @@
       var nombre = prompt('Artículo que no está en el inventario (por ejemplo: Refresco Coca-Cola 2 L):');
       if (!nombre || !nombre.trim()) return;
       agregar({ nombre: nombre.trim(), categoria: 'Otros' }, '', 'manual');
+      _enfocar = vale().items.length - 1;
       guardar();
       pintar();
     };
@@ -187,7 +202,7 @@
         var art = _inventario.find(function (a) { return a.id === btn.getAttribute('data-id'); });
         var ya = v.items.find(function (i) { return i.id === art.id; });
         if (ya) v.items.splice(v.items.indexOf(ya), 1);
-        else agregar(art, '', 'manual');
+        else { agregar(art, '', 'manual'); _enfocar = v.items.length - 1; }
         guardar();
         pintar();
       };
