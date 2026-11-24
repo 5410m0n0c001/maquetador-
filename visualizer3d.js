@@ -708,6 +708,18 @@ window.Visualizer3D = (function () {
     window.addEventListener('resize', _onResize);
     // El lienzo también cambia de tamaño sin que cambie la ventana (paneles del modo planner, inspector)
     if (window.ResizeObserver) new ResizeObserver(function () { _onResize(); }).observe(_container);
+
+    // Tocar/clic sin arrastrar sobre un elemento → avisa a la app (p. ej. lista de invitados de la mesa)
+    var _toque = null;
+    _renderer.domElement.addEventListener('pointerdown', function (e) { _toque = { x: e.clientX, y: e.clientY }; });
+    _renderer.domElement.addEventListener('pointerup', function (e) {
+      if (!_toque) return;
+      var movido = Math.abs(e.clientX - _toque.x) + Math.abs(e.clientY - _toque.y);
+      _toque = null;
+      if (movido > 8) return; // fue para girar o mover la cámara
+      var id = _elementoEnPantalla(e.clientX, e.clientY);
+      if (id) window.dispatchEvent(new CustomEvent('plano:tocar', { detail: { id: id } }));
+    });
     console.log('[Visualizer3D] Initialized.');
   }
 
@@ -725,6 +737,30 @@ window.Visualizer3D = (function () {
     _controls = null;
     _active3dElements = {};
     console.log('[Visualizer3D] Destroyed.');
+  }
+
+  // Id del elemento que está bajo un punto de la pantalla (o null)
+  function _elementoEnPantalla(cx, cy) {
+    if (!_renderer || !_camera) return null;
+    var r = _renderer.domElement.getBoundingClientRect();
+    var ndc = new THREE.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+    var ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, _camera);
+    var ids = Object.keys(_active3dElements);
+    var grupos = ids.map(function (k) { return _active3dElements[k]; });
+    var hits = ray.intersectObjects(grupos, true);
+    var primero = null;
+    for (var i = 0; i < hits.length; i++) {
+      var o = hits[i].object;
+      while (o && grupos.indexOf(o) === -1) o = o.parent;
+      if (!o) continue;
+      var id = ids[grupos.indexOf(o)];
+      var el = _currentElements.find(function (x) { return x.id === id; });
+      if (!el || el.type === 'terrain') continue; // el terreno no cuenta
+      if (el.mesaConfig) return id;               // una mesa gana aunque haya un área debajo
+      if (!primero) primero = id;
+    }
+    return primero;
   }
 
   function _onResize() {
@@ -1146,17 +1182,23 @@ window.Visualizer3D = (function () {
     }
 
     if (_renderer && _scene && _camera) {
-      // Dynamic scaling of labels based on camera distance
+      // Tamaño de los rótulos: crecen un poco al alejarse para seguir legibles, pero nunca más
+      // anchos que una fracción del terreno (si no, en vista lejana o en celular tapan las mesas).
+      // Respetan A−/A+ (labelScale) y se achican en lienzos angostos.
+      var stL = _getState ? _getState() : null;
+      var escalaUsuario = (stL && stL.labelScale) || 1;
+      var anchoLienzo = (_container && _container.clientWidth) || 1100;
+      var factorPantalla = Math.max(0.65, Math.min(1, anchoLienzo / 1100));
+      var anchoMax = Math.max(_terrain.w, _terrain.h) / 6; // metros
+      var worldPos = new THREE.Vector3();
       _scene.traverse(function (object) {
         if (object.is3DLabel) {
-          var worldPos = new THREE.Vector3();
           object.getWorldPosition(worldPos);
           var dist = _camera.position.distanceTo(worldPos);
-          // Scale factor: grows as camera gets further, clamped between 0.6 and 4.5
-          var scaleFactor = Math.max(0.6, Math.min(4.5, dist / 30.0));
-          
           var baseScaleX = object.userData.baseScaleX || 6.0;
           var baseScaleY = object.userData.baseScaleY || 0.75;
+          var scaleFactor = Math.max(0.35, Math.min(4.5, dist / 30.0));
+          scaleFactor = Math.min(scaleFactor, anchoMax / baseScaleX) * escalaUsuario * factorPantalla;
           object.scale.set(baseScaleX * scaleFactor, baseScaleY * scaleFactor, 1);
         }
       });

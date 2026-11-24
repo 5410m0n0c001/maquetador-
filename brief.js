@@ -79,6 +79,17 @@
     foto_extras: ['foto_incluye', 'Sí']
   };
 
+  // Horas siempre en formato de 12 horas: "15:00" → "3:00 PM"
+  function hora12(h) {
+    var m = /^(\d{1,2}):(\d{2})/.exec(h || '');
+    if (!m) return h || '';
+    var H = parseInt(m[1], 10);
+    return ((H % 12) || 12) + ':' + m[2] + ' ' + (H < 12 ? 'AM' : 'PM');
+  }
+  // En solo lectura las horas se muestran como texto AM/PM (el selector de hora del navegador usa 24 h según el equipo)
+  function inputTipo(type, ro) { return ro && type === 'time' ? 'text' : (type || 'text'); }
+  function inputValor(type, v, ro) { return ro && type === 'time' ? hora12(v) : v; }
+
   function vacio(v) {
     if (v == null || v === '') return true;
     if (Array.isArray(v)) return !v.length;
@@ -779,7 +790,7 @@
             var attrs = ' data-dk="' + f.k + '" data-dv="' + esc(n) + '" data-ds="' + s.k + '"' + dis;
             return s.type === 'textarea'
               ? '<textarea class="form-input detail-wide" placeholder="' + esc(s.label) + '"' + attrs + '>' + esc(sv) + '</textarea>'
-              : '<input class="form-input" type="' + (s.type || 'text') + '" placeholder="' + esc(s.label) + '" title="' + esc(s.label) + '" value="' + esc(sv) + '"' + attrs + ' />';
+              : '<input class="form-input" type="' + inputTipo(s.type, ro) + '" placeholder="' + esc(s.label) + '" title="' + esc(s.label) + '" value="' + esc(inputValor(s.type, sv, ro)) + '"' + attrs + ' />';
           }).join('') + '</div>';
         }
         return row + '</div>';
@@ -798,7 +809,7 @@
     } else if (f.type === 'textarea') {
       html += '<textarea class="form-input form-textarea" data-k="' + f.k + '"' + dis + '>' + esc(v) + '</textarea>';
     } else {
-      html += '<input class="form-input" type="' + (f.type || 'text') + '" data-k="' + f.k + '" value="' + esc(v) + '"' +
+      html += '<input class="form-input" type="' + inputTipo(f.type, ro) + '" data-k="' + f.k + '" value="' + esc(inputValor(f.type, v, ro)) + '"' +
         (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + dis + ' />';
     }
     return html + '</div>';
@@ -818,7 +829,7 @@
     rows.forEach(function (r, i) {
       var fijo = ro || r.origen ? ' disabled' : '';
       html += '<div class="minuto-row' + (r.origen ? ' del-brief' : '') + '" data-i="' + i + '"' + (r.origen && !ro ? ' title="Viene del brief: se edita en su sección"' : '') + '>' +
-        '<input class="form-input" type="time" data-m="hora" value="' + esc(r.hora) + '"' + fijo + ' />' +
+        '<input class="form-input" type="' + inputTipo('time', ro) + '" data-m="hora" value="' + esc(inputValor('time', r.hora, ro)) + '"' + fijo + ' />' +
         '<input class="form-input" data-m="actividad" placeholder="Actividad" value="' + esc(r.actividad) + '"' + fijo + ' />' +
         '<input class="form-input' + (!ro && !String(r.responsable || '').trim() ? ' sin-prov' : '') + '" data-m="responsable" list="minuto-provs" placeholder="¿Quién lo hace? PEG o proveedor" value="' + esc(r.responsable) + '"' +
           (ro || String(r.origen || '').indexOf('prov|') === 0 ? ' disabled' : '') + ' />' +
@@ -953,10 +964,11 @@
     if (f.type === 'detail') {
       return Object.keys(v || {}).map(function (n) {
         var it = v[n] || {};
-        var parts = f.sub.map(function (s) { return it[s.k]; }).filter(Boolean);
+        var parts = f.sub.map(function (s) { return s.type === 'time' ? hora12(it[s.k]) : it[s.k]; }).filter(Boolean);
         return n + (parts.length ? ': ' + parts.join(' · ') : '');
       }).join('\n');
     }
+    if (f.type === 'time') return hora12(v);
     if (Array.isArray(v)) return v.join(' · ');
     return String(v);
   }
@@ -1591,6 +1603,7 @@
     publicEventUrl: publicEventUrl,
     getSchema: function () { return { sections: SECTIONS, montajeFields: MONTAJE_FIELDS }; },
     formatValue: formatValue,
+    hora12: hora12,
     syncMinuto: function () { if (_event) syncMinuto(_event.data); },
     isPlanner: function () { return _isPlanner; },
     client: client,

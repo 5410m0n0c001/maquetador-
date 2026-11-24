@@ -2444,7 +2444,8 @@
     var venueTpl = (window.VENUE_TEMPLATES || []).find(function (t) { return t.id === AppState.venueId; });
     var venueName = b.venue_red || b.venue_externo || (venueTpl ? venueTpl.name : '');
     var tipo = b.tipo_evento === 'Otro' ? (b.tipo_evento_otro || 'Otro') : b.tipo_evento;
-    var horario = [b.hora_inicio, b.hora_cierre].filter(Boolean).join(' – ');
+    var h12 = window.PEGEventos && window.PEGEventos.hora12 ? window.PEGEventos.hora12 : function (h) { return h; };
+    var horario = [b.hora_inicio, b.hora_cierre].filter(Boolean).map(h12).join(' – ');
 
     // ── QR al evento ──
     var qrSvg = '';
@@ -2580,7 +2581,7 @@
     if (minuto.length) {
       html += '<section class="section"><h2>Minuto a minuto</h2><table><thead><tr><th style="width:14%">Hora</th><th>Actividad</th><th style="width:28%">Responsable</th></tr></thead><tbody>';
       minuto.forEach(function (r) {
-        html += '<tr><td><strong>' + esc(r.hora) + '</strong></td><td>' + esc(r.actividad) + '</td><td>' + esc(r.responsable) + '</td></tr>';
+        html += '<tr><td><strong>' + esc(h12(r.hora)) + '</strong></td><td>' + esc(r.actividad) + '</td><td>' + esc(r.responsable) + '</td></tr>';
       });
       html += '</tbody></table></section>';
     }
@@ -3287,6 +3288,65 @@
   // ══════════════════════════════════════════════════════════
   // INITIALIZE
   // ══════════════════════════════════════════════════════════
+  // ── Lista de invitados al tocar una mesa (2D en solo lectura y 3D) ──
+  function _escHtml(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  // Mesa bajo un punto en metros (con margen para las sillas); si hay varias, la más cercana
+  function _mesaEnPunto(x, y) {
+    var mejor = null, mejorD = Infinity;
+    AppState.elements.forEach(function (el) {
+      if (!el.mesaConfig) return;
+      var rad = -(el.rotation || 0) * Math.PI / 180;
+      var dx = x - el.x, dy = y - el.y;
+      var lx = dx * Math.cos(rad) - dy * Math.sin(rad), ly = dx * Math.sin(rad) + dy * Math.cos(rad);
+      var mx = (el.w || 1) / 2 + 0.6, my = (el.h || el.w || 1) / 2 + 0.8;
+      if (Math.abs(lx) <= mx && Math.abs(ly) <= my) {
+        var d = dx * dx + dy * dy;
+        if (d < mejorD) { mejorD = d; mejor = el; }
+      }
+    });
+    return mejor;
+  }
+  function _cerrarInvitadosMesa() {
+    var v = document.getElementById('mesa-invitados-pop');
+    if (v) v.remove();
+  }
+  function _mostrarInvitadosMesa(el) {
+    _cerrarInvitadosMesa();
+    var mc = el.mesaConfig || {};
+    var inv = Array.isArray(mc.invitados) ? mc.invitados : [];
+    var total = inv.reduce(function (s, g) { return s + (g.pases || 0); }, 0);
+    var titulo = mc.mesaNum ? 'Mesa ' + mc.mesaNum : (el.name || 'Mesa');
+    var pop = document.createElement('div');
+    pop.id = 'mesa-invitados-pop';
+    pop.className = 'mesa-pop';
+    pop.innerHTML =
+      '<div class="mesa-pop-card" role="dialog" aria-label="Invitados de ' + _escHtml(titulo) + '">' +
+      '  <div class="mesa-pop-head"><span class="mesa-pop-title">' + _escHtml(titulo) + '</span>' +
+      '    <span class="mesa-pop-total">' + total + ' persona' + (total === 1 ? '' : 's') + '</span>' +
+      '    <button type="button" class="mesa-pop-close" aria-label="Cerrar">✕</button></div>' +
+      (inv.length
+        ? '<ul class="mesa-pop-list">' + inv.map(function (g) {
+            return '<li><span>' + _escHtml(g.nombre) + '</span><b>' + (g.pases || 1) + '</b></li>';
+          }).join('') + '</ul>'
+        : '<p class="mesa-pop-vacia">Sin invitados asignados.</p>') +
+      '  <div class="mesa-pop-pie">Número = lugares (invitado + acompañantes)</div>' +
+      '</div>';
+    pop.addEventListener('click', function (e) {
+      if (e.target === pop || e.target.closest('.mesa-pop-close')) _cerrarInvitadosMesa();
+    });
+    document.body.appendChild(pop);
+  }
+  window.addEventListener('plano:tocar', function (ev) {
+    var d = ev.detail || {};
+    var el = d.id ? AppState.elements.find(function (x) { return x.id === d.id; }) : _mesaEnPunto(d.x, d.y);
+    if (el && el.mesaConfig) _mostrarInvitadosMesa(el);
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') _cerrarInvitadosMesa(); });
+
   function init() {
     console.log('[App] Initializing Universal Venue Planner...');
 

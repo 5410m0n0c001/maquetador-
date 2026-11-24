@@ -73,6 +73,9 @@ window.Editor2D = (function () {
   // ─── Coordinate helpers ───────────────────────────────────
   function mToPx(m) { return m * SCALE; }
   function pxToM(px) { return px / SCALE; }
+  // Tamaño mínimo de las etiquetas en pantalla: en lienzos angostos (celular) más chico para que no se encimen
+  function _etiquetaMinPx() { return (_svg && _svg.clientWidth && _svg.clientWidth < 700) ? 7 : 10; }
+  function _etiquetaMaxPx() { return (_svg && _svg.clientWidth && _svg.clientWidth < 700) ? 11 : 14; }
 
   function snapVal(v) {
     if (!_useGrid) return v;
@@ -329,7 +332,7 @@ window.Editor2D = (function () {
     if (esBodega) {
       window.BODEGA.dibujar2D(svgEl, g, elem, {
         px: px, py: py, pw: pw, ph: ph, color: color, light: colorLight, selected: isSelected, mToPx: mToPx,
-        font: Math.min(Math.max(mToPx(0.5) * _zoom, 10), 14) / _zoom * (state.labelScale || 1)
+        font: Math.min(Math.max(mToPx(0.5) * _zoom, _etiquetaMinPx()), _etiquetaMaxPx()) / _zoom * (state.labelScale || 1)
       });
     } else if (shape === 'circle') {
       var r = pw / 2;
@@ -637,8 +640,8 @@ window.Editor2D = (function () {
     }
 
     // ── Label ─────────────────────────────────────────────
-    // Entre 10 y 14 px en pantalla, sin importar el zoom (antes bajaba a 7 px y no se leía)
-    var labelFontSize = Math.min(Math.max(mToPx(0.5) * _zoom, 10), 14) / _zoom * (state.labelScale || 1);
+    // Entre 10 y 14 px en pantalla (7 a 11 px en celular), sin importar el zoom
+    var labelFontSize = Math.min(Math.max(mToPx(0.5) * _zoom, _etiquetaMinPx()), _etiquetaMaxPx()) / _zoom * (state.labelScale || 1);
     var labelY = py;
     if (cat && cat.etiquetaArriba) {
       labelY = py - ph / 2 - labelFontSize;
@@ -1067,6 +1070,12 @@ window.Editor2D = (function () {
         _callbacks.onPlaceElement(state.pendingType, x, y);
       }
       return;
+    }
+    // Solo lectura: los elementos no reciben clics (para no moverlos); avisar dónde se tocó
+    // para que la app muestre, por ejemplo, la lista de invitados de la mesa
+    if (document.body.classList.contains('peg-view-only')) {
+      var mt = getMouseSVG(e), pt = svgToMeters(mt.x, mt.y);
+      window.dispatchEvent(new CustomEvent('plano:tocar', { detail: { x: pt.x, y: pt.y } }));
     }
     // Deselect
     if (!_isDraggingElem) {
