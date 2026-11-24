@@ -1,8 +1,8 @@
 // ============================================================
-// vale.js — Vale de salida de mobiliario
-// El planner elige del inventario de PEG lo que sale para el evento
-// y se imprime un vale que cuentan bodega, chofer y coordinador.
-// También imprime el inventario completo en blanco para palomearlo a mano.
+// vale.js — Requisición de material y vale de salida
+// 1. Requisición: el planner palomea del inventario completo de PEG lo que necesita
+//    (en la app o en la versión impresa en blanco).
+// 2. Vale de salida: se genera de la requisición y lo cuentan bodega, chofer y coordinador.
 // Se guarda en el evento: data.vale = { items: [{ id, nombre, categoria, cant, nota, origen }] }
 // ============================================================
 (function () {
@@ -140,22 +140,22 @@
     }
 
     _modal.querySelector('.vale-modal').innerHTML =
-      '<div class="venue-picker-head"><h2>Vale de salida · ' + esc(evento().nombre) + '</h2>' +
+      '<div class="venue-picker-head"><h2>Requisición de material · ' + esc(evento().nombre) + '</h2>' +
         '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
       '<p class="vale-sub">' + v.items.length + ' artículos · ' + total + ' piezas' + (invitados() ? ' · ' + invitados() + ' invitados' : '') +
         (editar ? ' · Palomea en el inventario lo que se va a ocupar y escribe la cantidad de cada artículo.' : '') + '</p>' +
       '<div class="vale-acciones">' +
-        (editar ? '<button type="button" class="event-btn" id="vale-inventario"><i class="fa-solid fa-list-check"></i> Imprimir inventario para palomear</button>' +
+        (editar ? '<button type="button" class="event-btn" id="vale-inventario"><i class="fa-solid fa-list-check"></i> Imprimir requisición en blanco</button>' +
           '<button type="button" class="event-btn" id="vale-kit"><i class="fa-solid fa-martini-glass"></i> Kit de barra</button>' +
           '<button type="button" class="event-btn" id="vale-libre"><i class="fa-solid fa-pen"></i> Artículo que no está en inventario</button>' : '') +
-        '<button type="button" class="event-btn active" id="vale-imprimir"><i class="fa-solid fa-print"></i> Imprimir vale</button>' +
+        '<button type="button" class="event-btn active" id="vale-imprimir"><i class="fa-solid fa-dolly"></i> Generar vale de salida</button>' +
       '</div>' +
       '<div class="vale-cuerpo' + (editar ? '' : ' solo-lista') + '">' +
         (editar ? '<div class="vale-inv"><input class="form-input" id="vale-buscar" placeholder="Buscar en el inventario…" value="' + esc(_filtro) + '">' +
           '<div class="vale-inv-lista">' + inventarioHtml + '</div></div>' : '') +
         '<div class="vale-lista">' + (v.items.length
           ? '<table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th>' + (editar ? '<th></th>' : '') + '</tr></thead><tbody>' + lista + '</tbody></table>'
-          : '<p class="vale-vacio">' + (editar ? 'Palomea en el inventario lo que vas a necesitar.' : 'Este evento todavía no tiene vale.') + '</p>') +
+          : '<p class="vale-vacio">' + (editar ? 'Palomea en el inventario lo que vas a necesitar.' : 'Este evento todavía no tiene requisición de material.') + '</p>') +
         '</div>' +
       '</div>';
 
@@ -202,7 +202,7 @@
   // ── Vale impreso ───────────────────────────────────────────
   function imprimir() {
     var ev = evento(), v = vale();
-    if (!v.items.length) { toast('El vale está vacío.', 'warning'); return; }
+    if (!v.items.length) { toast('La requisición está vacía: palomea primero lo que se va a ocupar.', 'warning'); return; }
     var sinCant = v.items.filter(function (i) { return i.cant === '' || i.cant == null; }).length;
     if (sinCant && !confirm(sinCant + ' artículos no tienen cantidad. ¿Imprimir así?')) return;
     var w = window.open('', '_blank');
@@ -256,9 +256,9 @@
         (qr ? '<div class="qr">' + qr + '</div>' : '') + '</header>' +
       '<section class="datos"><div><b>Evento</b>' + esc(ev.nombre) + '</div><div><b>Fecha</b>' + esc(fecha || '______________') + '</div>' +
         '<div><b>Personas</b>' + esc(b.invitados || '____') + '</div><div><b>Locación</b>' + esc(lugar || '______________') + '</div></section>' +
-      '<div class="inst"><b>Cómo se usa:</b> cada persona cuenta en su columna y anota la cantidad que recibe. Si su número no coincide con el de la columna anterior, lo anota en Observaciones antes de firmar. ' +
+      '<div class="inst"><b>Cómo se usa:</b> la columna Solicitado viene de la requisición de material. Cada persona cuenta en su columna y anota la cantidad que recibe. Si su número no coincide con el de la columna anterior, lo anota en Observaciones antes de firmar. ' +
         'Al regresar a bodega se marca la condición: <b>B</b> bien · <b>D</b> dañado · <b>F</b> faltante.</div>' +
-      '<table><thead><tr><th>#</th><th>Cant.</th><th class="izq">Artículo</th>' +
+      '<table><thead><tr><th>#</th><th>Solicitado</th><th class="izq">Artículo</th>' +
         PASOS.map(function (p) { return '<th>' + p.n + '. ' + p.titulo + '<small>' + p.quien + '</small></th>'; }).join('') +
         '<th>Condición<small>B / D / F</small></th></tr></thead><tbody>' + filas + '</tbody></table>' +
       '<section class="firmas">' + PASOS.map(function (p) {
@@ -272,8 +272,8 @@
   }
 
 
-  // ── Inventario completo para palomear ──────────────────────
-  // Todo lo que tiene PEG, en blanco: el planner marca lo que ocupa y anota la cantidad
+  // ── Requisición de material en blanco ─────────────────────
+  // Todo el inventario de PEG: el planner marca lo que ocupa y anota la cantidad
   function imprimirInventario() {
     var w = window.open('', '_blank');
     if (!w) { toast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error'); return; }
@@ -288,7 +288,7 @@
     var libres = '';
     for (var i = 0; i < 8; i++) libres += '<div class="art"><span class="caja"></span><span class="nom linea"></span><span class="cant"></span></div>';
 
-    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Inventario PEG para palomear</title>' +
+    var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Requisición de material</title>' +
       '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">' +
       '<style>:root{--pink:#F65C7A;--gold:#C9A96E;--ink:#1F1F1F;--gray:#6D6D6D;--line:#E2D9D0}' +
       '*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
@@ -308,9 +308,9 @@
       '.firma{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:22px;break-inside:avoid}.firma div{border-top:1px solid var(--ink);padding-top:3px;color:var(--gray)}' +
       '.footer{margin-top:12px;padding-top:6px;border-top:1px solid var(--gold);font-size:8px;color:var(--gray);text-align:center}' +
       '@media print{.toolbar{display:none}body{margin:0;max-width:none}@page{size:letter;margin:1cm}}</style></head><body>' +
-      '<div class="toolbar"><span>Vista previa · Inventario para palomear</span><button onclick="window.print()">Imprimir / Guardar PDF</button></div>' +
+      '<div class="toolbar"><span>Vista previa · Requisición de material</span><button onclick="window.print()">Imprimir / Guardar PDF</button></div>' +
       '<header class="head"><img src="' + esc(logo) + '" alt="Primavera Events Group"><div><div class="marca">Primavera Events Group®</div><div class="sub">Inventario de mobiliario y suministros</div></div>' +
-        '<div class="titulo"><h1>Selección para evento</h1><div>' + (_inventario || []).length + ' artículos</div></div></header>' +
+        '<div class="titulo"><h1>Requisición de material</h1><div>' + (_inventario || []).length + ' artículos</div></div></header>' +
       '<section class="datos"><div><b>Evento</b>' + esc(ev ? ev.nombre : '') + '</div><div><b>Fecha</b>' + esc(fecha) + '</div>' +
         '<div><b>Personas</b>' + esc(b.invitados || '') + '</div><div><b>Planner</b></div></section>' +
       '<p class="inst">Marca con ✓ lo que se va a ocupar y escribe la cantidad en la línea. Lo que no esté en la lista, anótalo en "Otros" al final.</p>' +
