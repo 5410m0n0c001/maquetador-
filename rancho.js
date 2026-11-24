@@ -58,6 +58,45 @@
       g.appendChild(svgEl('circle', Object.assign({ cx: o.px, cy: o.py, r: o.pw * 0.3, fill: '#2f6b35' }, NP)));
       g.appendChild(svgEl('circle', Object.assign({ cx: o.px, cy: o.py, r: o.pw * 0.1, fill: '#b08d57', stroke: '#5b3d1e' }, NP)));
     },
+    // Salón abierto: arcos en norte y oriente, barandal en sur (con el acceso del puente) y poniente
+    rancho_salon: function (svgEl, g, e, o) {
+      base(svgEl, g, o, { fill: '#2a2420', opacity: 0.9, stroke: 'rgba(255,255,255,0.15)' });
+      var x0 = o.px - o.pw / 2, y0 = o.py - o.ph / 2, x1 = o.px + o.pw / 2, y1 = o.py + o.ph / 2;
+      var hierro = { stroke: '#d1d5db', 'stroke-width': 1.5, 'stroke-dasharray': '3 2', fill: 'none' };
+      // Sur: barandal con hueco donde llega el puente
+      var hueco = o.mToPx(e.accesoAncho || 3), cx = o.px + o.mToPx(e.accesoSur || 0);
+      g.appendChild(svgEl('line', Object.assign({ x1: x0, y1: y1, x2: cx - hueco / 2, y2: y1 }, hierro, NP)));
+      g.appendChild(svgEl('line', Object.assign({ x1: cx + hueco / 2, y1: y1, x2: x1, y2: y1 }, hierro, NP)));
+      g.appendChild(svgEl('line', Object.assign({ x1: x0, y1: y0, x2: x0, y2: y1 }, hierro, NP)));
+      // Norte y oriente: 4 arcos por lado
+      function arcos(ax, ay, bx, by, haciaAfuera) {
+        var n = e.arcos || 4;
+        for (var i = 0; i < n; i++) {
+          var t0 = (i + 0.15) / n, t1 = (i + 0.85) / n;
+          var p0 = { x: ax + (bx - ax) * t0, y: ay + (by - ay) * t0 }, p1 = { x: ax + (bx - ax) * t1, y: ay + (by - ay) * t1 };
+          var r = Math.hypot(p1.x - p0.x, p1.y - p0.y) / 2;
+          g.appendChild(svgEl('path', Object.assign({ d: 'M ' + p0.x + ' ' + p0.y + ' A ' + r + ' ' + r + ' 0 0 ' + (haciaAfuera ? 1 : 0) + ' ' + p1.x + ' ' + p1.y, fill: 'none', stroke: '#e7d3a8', 'stroke-width': 1.5 }, NP)));
+        }
+        for (var k = 0; k <= n; k++) {
+          var c = { x: ax + (bx - ax) * k / n, y: ay + (by - ay) * k / n };
+          g.appendChild(svgEl('rect', Object.assign({ x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5, fill: '#e7d3a8' }, NP)));
+        }
+      }
+      arcos(x0, y0, x1, y0, false);
+      arcos(x1, y0, x1, y1, false);
+    },
+    // Construcción de una planta (cocina, baños, apartado): todas a la misma altura
+    rancho_room: function (svgEl, g, e, o) {
+      base(svgEl, g, o, { opacity: e.abierto ? 0.45 : 0.9 });
+      if (e.abierto) {
+        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (p) {
+          g.appendChild(svgEl('rect', Object.assign({ x: o.px + p[0] * o.pw / 2 - 2.5, y: o.py + p[1] * o.ph / 2 - 2.5, width: 5, height: 5, fill: '#e7d3a8' }, NP)));
+        });
+      } else {
+        var puerta = o.mToPx(1.2);
+        g.appendChild(svgEl('line', Object.assign({ x1: o.px - puerta / 2, y1: o.py + o.ph / 2, x2: o.px + puerta / 2, y2: o.py + o.ph / 2, stroke: '#1f1f1f', 'stroke-width': 3 }, NP)));
+      }
+    },
     rancho_cascade: function (svgEl, g, e, o) {
       base(svgEl, g, o, { fill: '#1b6fa8', opacity: 0.85, stroke: '#7dd3fc' });
       for (var i = 1; i <= 3; i++) {
@@ -160,6 +199,75 @@
       caballo(T, est, 0.5 * esc, 0.35 * esc, -0.4, 0x8c6a3a, esc * 0.85);
       g.add(est);
     },
+    rancho_salon: function (T, g, e) {
+      var w = e.w, d = e.h, ALTO_ARRANQUE = 2.8, POSTE = 0.6;
+      var techo = !!(window.App && window.App.getState && window.App.getState().layers.techos);
+      caja(T, g, w, 0.15, d, 0, 0, 0, 0x5a4a3c, { sinSombra: true });
+      var n = e.arcos || 4;
+      var claro = Math.min(w, d) / n;
+      var altoMuro = ALTO_ARRANQUE + claro / 2 + 0.6;
+      // Arcos a lo largo de un lado: pilares, medio arco y muro arriba
+      function lado(largo, alongX, fijo) {
+        var paso = largo / n;
+        for (var k = 0; k <= n; k++) {
+          var t = -largo / 2 + k * paso;
+          caja(T, g, POSTE, altoMuro, POSTE, alongX ? t : fijo, 0, alongX ? fijo : t, 0xe8dcc4);
+        }
+        for (var i = 0; i < n; i++) {
+          var c = -largo / 2 + (i + 0.5) * paso, r = (paso - POSTE) / 2;
+          var arco = new T.Mesh(new T.TorusGeometry(r, 0.18, 8, 24, Math.PI), new T.MeshStandardMaterial({ color: 0xe8dcc4, roughness: 0.8 }));
+          arco.position.set(alongX ? c : fijo, ALTO_ARRANQUE, alongX ? fijo : c);
+          if (!alongX) arco.rotation.y = Math.PI / 2;
+          arco.castShadow = true;
+          g.add(arco);
+          var sobre = altoMuro - ALTO_ARRANQUE - r;
+          if (sobre > 0.05) caja(T, g, alongX ? paso - POSTE : 0.35, sobre, alongX ? 0.35 : paso - POSTE, alongX ? c : fijo, ALTO_ARRANQUE + r, alongX ? fijo : c, 0xe8dcc4);
+        }
+      }
+      lado(w, true, -d / 2);   // norte
+      lado(d, false, w / 2);   // oriente
+      // Barandal de herrería: sur (con el acceso del puente) y poniente
+      function barandal(x0, z0, x1, z1) {
+        var largo = Math.hypot(x1 - x0, z1 - z0);
+        if (largo < 0.3) return;
+        var postes = Math.max(2, Math.round(largo / 1.5));
+        for (var k = 0; k <= postes; k++) {
+          var t = k / postes;
+          caja(T, g, 0.06, 1, 0.06, x0 + (x1 - x0) * t, 0, z0 + (z1 - z0) * t, 0x1f2937, { metal: 0.7, rough: 0.35 });
+        }
+        var riel = caja(T, g, Math.abs(x1 - x0) || 0.06, 0.06, Math.abs(z1 - z0) || 0.06, (x0 + x1) / 2, 1, (z0 + z1) / 2, 0x1f2937, { metal: 0.7, rough: 0.35 });
+        return riel;
+      }
+      var cx = e.accesoSur || 0, hueco = (e.accesoAncho || 3) / 2;
+      barandal(-w / 2, d / 2, cx - hueco, d / 2);
+      barandal(cx + hueco, d / 2, w / 2, d / 2);
+      barandal(-w / 2, -d / 2, -w / 2, d / 2);
+      // Columnas en la orilla de barandal para sostener el techo
+      [[-w / 2, d / 2], [w / 2, d / 2], [-w / 2, -d / 2], [-w / 2, 0], [cx - hueco, d / 2], [cx + hueco, d / 2]].forEach(function (p) {
+        caja(T, g, POSTE, altoMuro, POSTE, p[0], 0, p[1], 0xe8dcc4);
+      });
+      if (techo) caja(T, g, w + 1.2, 0.35, d + 1.2, 0, altoMuro, 0, 0x9a4a2a);
+    },
+    rancho_room: function (T, g, e) {
+      var w = e.w, d = e.h, ALTO = 3;
+      var techo = !!(window.App && window.App.getState && window.App.getState().layers.techos);
+      var color = new T.Color(e.color || '#888888').getHex();
+      caja(T, g, w, 0.12, d, 0, 0, 0, 0x5a4a3c, { sinSombra: true });
+      if (e.abierto) {
+        [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (p) { caja(T, g, 0.35, ALTO, 0.35, p[0] * (w / 2 - 0.2), 0, p[1] * (d / 2 - 0.2), 0xe8dcc4); });
+        caja(T, g, w * 0.6, 0.75, 0.9, 0, 0, 0, 0x8b5a2b);
+      } else {
+        var t = 0.2, puerta = 1.2;
+        caja(T, g, w, ALTO, t, 0, 0, -d / 2 + t / 2, color);
+        caja(T, g, t, ALTO, d, -w / 2 + t / 2, 0, 0, color);
+        caja(T, g, t, ALTO, d, w / 2 - t / 2, 0, 0, color);
+        var lado = (w - puerta) / 2;
+        caja(T, g, lado, ALTO, t, -w / 2 + lado / 2, 0, d / 2 - t / 2, color);
+        caja(T, g, lado, ALTO, t, w / 2 - lado / 2, 0, d / 2 - t / 2, color);
+        caja(T, g, puerta, ALTO - 2.1, t, 0, 2.1, d / 2 - t / 2, color);
+      }
+      if (techo || e.abierto) caja(T, g, w + 0.6, 0.25, d + 0.6, 0, ALTO, 0, 0x9a4a2a);
+    },
     rancho_cascade: function (T, g, e) {
       caja(T, g, e.w, 0.3, e.h, 0, -0.3, 0, 0x1b6fa8, { sinSombra: true });
       caja(T, g, e.w * 0.9, 0.9, 0.5, 0, 0, -e.h / 2, 0x6b6257);
@@ -186,6 +294,8 @@
       construir3D: function (g, e) { D3[type](window.THREE, g, e); }
     }, extra || {}));
   }
+  tipo('rancho_salon', 'Salón abierto con arcos', 'fa-archway', 28, 34, '#2a2420', 'rect', { techoDinamico: true });
+  tipo('rancho_room', 'Construcción de una planta', 'fa-house', 10, 10, '#475569', 'rect', { techoDinamico: true });
   tipo('rancho_path', 'Camino de terracería', 'fa-road', 5, 30, '#a8916b', 'rect', { sinEtiqueta: true });
   tipo('rancho_arena', 'Picadero', 'fa-horse', 25, 25, '#c2a878', 'circle');
   tipo('rancho_stables', 'Caballerizas', 'fa-horse-head', 24, 7, '#8b6b4a');
@@ -222,10 +332,10 @@
     el('rancho_roundabout', 'Rotonda de los potrillos', 600, 178, 7, 7),
     el('rancho_roundabout', 'Rotonda de caballos (entrada)', 645, 472, 9, 9),
     // Construcciones
-    el('salon', 'Salón', 545, 237, 28, 34),
-    el('kitchen', 'Cocina', 590, 143, 11, 10),
-    el('bathroom', 'Baños', 645, 141, 15, 10),
-    el('terrace', 'Apartado techado', 540, 145, 10, 8),
+    el('rancho_salon', 'Salón', 545, 237, 28, 34, { accesoSur: 6.3, accesoAncho: 3, arcos: 4 }),
+    el('rancho_room', 'Apartado techado', 540, 143, 10, 10, { color: '#1e3a5f', abierto: true }),
+    el('rancho_room', 'Cocina', 590, 143, 11, 10, { color: '#7c2d12' }),
+    el('rancho_room', 'Baños', 645, 143, 15, 10, { color: '#0e7490' }),
     el('pool', 'Alberca', 521, 344, 13, 14),
     el('terrace', 'Palapa', 568, 350, 8, 13),
     el('rancho_cascade', null, 566, 312, 8, 3),
