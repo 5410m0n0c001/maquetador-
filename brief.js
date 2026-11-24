@@ -62,7 +62,9 @@
     'Banda': 'vendor_banda', 'Grupo norteño': 'vendor_banda', 'Mariachi': 'vendor_mariachi', 'Saxofonista': 'vendor_saxo',
     'Grupo versátil / en vivo': 'vendor_banda', 'DJ': 'dj_booth', 'Fotografía y video': '', 'Cabina de fotos': 'photobooth_mirror',
     'Pastel / repostería': 'table_cake', 'Mesa de dulces / postres': 'table_candy', 'Banquete / taquiza': 'vendor_taquiza',
-    'Bebidas / barra': '', 'Decoración / flores': '', 'Show / animación': 'showmen_inflatables', 'Pirotecnia / efectos': '', 'Otro': ''
+    'Bebidas / barra': '', 'Decoración / flores': '', 'Decoración (backs / globoflexia)': '', 'Flores': '', 'Banquete (chef)': '',
+    'Limusina / transporte': '', 'Merchandising Store': '', 'Cabina inflable': '', 'Cabina 360': '', 'Magazine Cover Booth': '',
+    'Chinelos': '', 'Show / animación': 'showmen_inflatables', 'Pirotecnia / efectos': '', 'Otro': ''
   };
 
   // Al llenar el campo (clave) se marca sola la opción relacionada [campo, valor]
@@ -150,7 +152,7 @@
       { k: 'coreografo_tel', label: 'Tel. coreógrafo', type: 'tel' },
       { k: 'coreografo_peg', label: 'Coreógrafo', type: 'checks', options: ['PEG lo proporciona'] },
       { k: 'xv_momentos', label: 'Momentos de la fiesta (hora y con quién)', type: 'detail', timed: true,
-        options: ['Entrada de la quinceañera', 'Presentación / bendición', 'Vals con papá', 'Vals con chambelanes', 'Baile con el padrino / compadre', 'Baile con padrinos', 'Baile sorpresa', 'Show de chambelanes', 'Ceremonia de las 15 velas', 'Entrega de la última muñeca', 'Cambio de zapatilla', 'Coronación / entrega de tiara', 'Brindis', 'Partida de pastel', 'Semblanza / video'],
+        options: ['Entrada de la quinceañera', 'Presentación / bendición', 'Vals con papá', 'Vals con chambelanes', 'Baile con el padrino / compadre', 'Baile con padrinos', 'Baile sorpresa', 'Show de chambelanes', 'Ceremonia de las 15 velas', 'Entrega de la última muñeca', 'Cambio de zapatilla', 'Coronación / entrega de tiara', 'Brindis', 'Partida de pastel', 'Semblanza / video', 'Entrega de copas a chambelanes (brindis)', 'Palabras / anuncio con micrófono', 'Show de cabezones (DJ)', 'Apertura de cabina (inflable / 360 / Magazine)', 'Reparto de tornafiesta'],
         sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'quien', label: 'Con quién / responsable' }] },
       { k: 'xv_padrinos', label: 'Padrinos', type: 'detail',
         options: ['Padrinos de velación / misa', 'Padrinos de anillo', 'Padrinos de tiara / corona', 'Padrinos de zapatilla', 'Padrinos de última muñeca', 'Padrinos de cojín', 'Padrinos de biblia y rosario', 'Padrinos de ramo', 'Padrinos de pastel', 'Padrinos de brindis / copas'],
@@ -165,7 +167,7 @@
         options: ['Padrinos de velación', 'Padrinos de anillos', 'Padrinos de arras', 'Padrinos de lazo', 'Padrinos de biblia y rosario', 'Padrinos de cojines', 'Padrinos de ramo', 'Padrinos de pastel', 'Padrinos de brindis / copas'],
         sub: [{ k: 'nombre', label: 'Nombre(s)' }] },
       { k: 'boda_momentos', label: 'Momentos de la fiesta (hora y con quién)', type: 'detail', timed: true,
-        options: ['Entrada de los novios', 'Primer baile', 'Baile con papás', 'Baile con padrinos', 'Brindis', 'Partida de pastel', 'Lanzamiento de ramo', 'Lanzamiento de liga', 'Víbora de la mar', 'Show / sorpresa'],
+        options: ['Entrada de los novios', 'Primer baile', 'Baile con papás', 'Baile con padrinos', 'Brindis', 'Partida de pastel', 'Lanzamiento de ramo', 'Lanzamiento de liga', 'Víbora de la mar', 'Show / sorpresa', 'Palabras / anuncio con micrófono', 'Show de cabezones (DJ)', 'Apertura de cabina (inflable / 360 / Magazine)', 'Reparto de tornafiesta'],
         sub: [{ k: 'hora', label: 'Hora', type: 'time' }, { k: 'quien', label: 'Con quién / responsable' }] },
 
       { type: 'heading', label: 'Si es Graduación' },
@@ -277,7 +279,7 @@
   var EXTRA_SECTIONS = [
     { id: 'minuto', title: 'Minuto a minuto' },
     { id: 'montaje_elegido', title: 'Montaje elegido y álbum de fotos' },
-    { id: 'proveedores', title: 'Proveedores externos contratados por el cliente' }
+    { id: 'proveedores', title: 'Proveedores externos (del cliente o contratados por PEG)' }
   ];
 
   // Pasos del brief (un paso por pantalla); 'generar' es el cierre del planner
@@ -870,7 +872,8 @@
     });
     html += '</div>';
     if (!ro) {
-      html += '<p class="panel-hint">Las ceremonias, momentos, protocolo, tiempos del banquete y proveedores con hora se agregan solos (marcados "brief") y se editan en su sección. Aquí puedes agregar otras actividades.</p>' +
+      html += '<p class="panel-hint">Las ceremonias, momentos, protocolo, tiempos del banquete, proveedores y entregas de objetos en resguardo con hora se agregan solos (marcados "brief") y se editan en su sección. Aquí puedes agregar otras actividades.</p>' +
+        '<p class="panel-hint minuto-criterio"><b>Criterio:</b> siempre hay música del DJ, salvo en ceremonias dentro del venue o cuando toca otro grupo. Marca sobre todo los momentos en que <b>se detiene la música</b> (pastel, vals, coreografías, palabras con micrófono, entrada de un grupo). Lo que pasa con música de fondo (tornafiesta, chinelos, apertura de cabinas) corre en simultáneo: anota su hora, pero no corta la cronología.</p>' +
         '<div class="minuto-actions">' +
         '<button type="button" class="btn-ghost" id="minuto-add"><i class="fa-solid fa-plus"></i> Agregar actividad</button>' +
         '</div>';
@@ -880,6 +883,7 @@
 
   var PROV_CAMPOS = [
     { k: 'nombre', label: 'Nombre del proveedor' },
+    { k: 'contrata', label: 'Lo contrata (cliente o PEG)' },
     { k: 'telefono', label: 'Teléfono / WhatsApp', type: 'tel' },
     { k: 'recibe', label: 'Quién lo recibe en locación (coordinador, capitán…)' },
     { k: 'llegada', label: 'Llegada / montaje', type: 'time' },
@@ -891,7 +895,7 @@
 
   function proveedoresHtml(list, ro) {
     var html = '';
-    if (!ro) html += '<p class="panel-hint">Servicios que el cliente contrató por su cuenta (aunque sean de la red Primavera). Sirve para coordinar llegadas y montaje el día del evento.</p>';
+    if (!ro) html += '<p class="panel-hint">Todo lo que no da PEG directamente: lo que contrató el cliente y lo que PEG contrata por fuera (chef del banquete, decoración y globoflexia, flores, cabinas, limusinas…). Anota quién lo contrata, quién lo recibe y sus horarios para coordinar el día del evento.</p>';
     if (!list.length) html += '<p class="brief-empty">' + (ro ? 'Sin proveedores externos registrados.' : 'Aún no hay proveedores externos.') + '</p>';
     html += '<div class="prov-list">';
     list.forEach(function (p, i) {
@@ -900,6 +904,7 @@
         html += '<div class="prov-card"><strong>' + esc(p.servicio || 'Proveedor') + (p.red ? ' <span class="prov-red">Red Primavera</span>' : '') + '</strong>' +
           (p.nombre ? '<div>' + esc(p.nombre) + (p.telefono ? ' · <a href="tel:' + esc(p.telefono) + '">' + esc(p.telefono) + '</a>' : '') + '</div>' : '') +
           (horario ? '<div class="prov-horario"><i class="fa-regular fa-clock"></i> ' + esc(horario) + '</div>' : '') +
+          (p.contrata ? '<div><b>Lo contrata:</b> ' + esc(p.contrata) + '</div>' : '') +
           (p.recibe ? '<div><b>Lo recibe:</b> ' + esc(p.recibe) + '</div>' : '') +
           (p.condiciones ? '<p><b>Condiciones:</b> ' + esc(p.condiciones) + '</p>' : '') +
           (p.requerimientos ? '<p><b>Requerimientos:</b> ' + esc(p.requerimientos) + '</p>' : '') + '</div>';
@@ -961,6 +966,11 @@
       [['llegada', 'Llegada y montaje: '], ['inicio', 'Inicia: '], ['fin', 'Termina: ']].forEach(function (h) {
         if (p[h[0]]) rows.push({ hora: p[h[0]], actividad: h[1] + quien, responsable: 'Externo: ' + quien + (p.telefono ? ' · ' + p.telefono : '') + (p.recibe ? ' · recibe ' + p.recibe : ''), origen: 'prov|' + p._id + '|' + h[0] });
       });
+    });
+    ((d.coordinacion && d.coordinacion.resguardo) || []).forEach(function (r) {
+      if (!r.hora || !r.objeto) return;
+      if (!r._id) r._id = 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      rows.push({ hora: r.hora, actividad: 'Entregar ' + r.objeto + (r.aQuien ? ' a ' + r.aQuien : '') + (r.momento ? ' — ' + r.momento : ''), responsable: 'PEG — Coordinación', origen: 'resg|' + r._id });
     });
     return rows;
   }

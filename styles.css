@@ -2316,3 +2316,12 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
 .eventos-buscar { width: 100%; margin: 4px 0 6px; }
 .eventos-cuenta { font-size: 12px; color: var(--text-secondary, #94a3b8); margin: 0 0 10px; }
 .evento-card .evento-salon { font-size: 12px; }
+
+/* Objetos en resguardo y criterio del minuto a minuto */
+.coord-resg { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 96px 96px 32px; gap: 6px; align-items: center; margin-bottom: 6px; }
+.coord-entregado { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #cbd5e1; }
+.minuto-criterio { border-left: 3px solid #C9A96E; padding-left: 8px; }
+@media (max-width: 768px) {
+  .coord-resg { grid-template-columns: 1fr 1fr 32px; }
+  .coord-resg [data-rk="objeto"] { grid-column: 1 / 3; }
+}

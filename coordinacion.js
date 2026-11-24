@@ -37,6 +37,7 @@
     c.fondo = c.fondo || {};
     c.gastos = c.gastos || [];
     c.bitacora = c.bitacora || [];
+    c.resguardo = c.resguardo || [];
     return c;
   }
   function staff() { var ev = evento(); return ev && Array.isArray(ev.data.staff) ? ev.data.staff : []; }
@@ -88,6 +89,18 @@
         '</div>';
     }).join('');
 
+    var resguardo = c.resguardo.map(function (r, i) {
+      return '<div class="coord-resg" data-r="' + i + '">' +
+        '<input class="form-input" data-rk="objeto" placeholder="Objeto (copas del brindis, anillos, caja de sobres…)" value="' + esc(r.objeto) + '"' + dis + '>' +
+        '<input class="form-input" data-rk="entrega" placeholder="Lo entrega (anfitrión)" value="' + esc(r.entrega) + '"' + dis + '>' +
+        '<input class="form-input" data-rk="momento" placeholder="Cuándo se usa (vals, ceremonia…)" value="' + esc(r.momento) + '"' + dis + '>' +
+        '<input class="form-input" data-rk="aQuien" placeholder="Se entrega a" value="' + esc(r.aQuien) + '"' + dis + '>' +
+        '<input class="form-input" type="time" data-rk="hora" title="Hora de entrega (pasa al minuto a minuto)" value="' + esc(r.hora) + '"' + dis + '>' +
+        '<label class="coord-entregado" title="Ya se entregó"><input type="checkbox" data-rk="entregado"' + (r.entregado ? ' checked' : '') + dis + '> Entregado</label>' +
+        (editar ? '<button type="button" class="btn-icon-sm coord-quitar-resg" title="Quitar"><i class="fa-solid fa-xmark"></i></button>' : '') +
+        '</div>';
+    }).join('');
+
     var bitacora = c.bitacora.map(function (b, i) {
       return '<div class="coord-nota" data-b="' + i + '">' +
         '<input class="form-input" type="time" data-bk="hora" value="' + esc(b.hora) + '"' + dis + '>' +
@@ -110,6 +123,11 @@
       '<section class="coord-sec"><h3><i class="fa-solid fa-people-group"></i> Brief con el equipo</h3>' +
         '<label class="coord-check"><input type="checkbox" id="coord-brief"' + (c.briefEquipo.hecho ? ' checked' : '') + dis + '> Se hizo el brief con el equipo antes del evento</label>' +
         '<label class="coord-hora">Hora <input class="form-input" type="time" id="coord-brief-hora" value="' + esc(c.briefEquipo.hora) + '"' + dis + '></label></section>' +
+
+      '<section class="coord-sec"><h3><i class="fa-solid fa-box-archive"></i> Objetos en resguardo</h3>' +
+        '<p class="vale-sub">Lo que los anfitriones dejan al coordinador: copas del brindis, juguetes, recuerdos, caja y llaves de la lluvia de sobres, botellas, anillos, regalos… Con hora de entrega pasa al minuto a minuto.</p>' +
+        '<div class="coord-resguardo">' + (resguardo || '<p class="vale-vacio">Sin objetos en resguardo.</p>') + '</div>' +
+        (editar ? '<button type="button" class="event-btn" id="coord-resg"><i class="fa-solid fa-plus"></i> Agregar objeto</button>' : '') + '</section>' +
 
       '<section class="coord-sec"><h3><i class="fa-solid fa-clipboard-user"></i> Revisión del equipo y presentación</h3>' +
         '<p class="vale-sub">Marca lo que cada persona trae y cumple al llegar.</p>' + revision + '</section>' +
@@ -184,6 +202,19 @@
         pintar();
       };
     });
+    Array.prototype.forEach.call(m.querySelectorAll('.coord-resg'), function (div) {
+      var r = c.resguardo[parseInt(div.getAttribute('data-r'), 10)];
+      Array.prototype.forEach.call(div.querySelectorAll('[data-rk]'), function (el) {
+        el.onchange = function () { r[el.getAttribute('data-rk')] = el.type === 'checkbox' ? el.checked : el.value; guardar(); };
+      });
+      div.querySelector('.coord-quitar-resg').onclick = function () {
+        if (!confirm('¿Quitar este objeto?')) return;
+        c.resguardo.splice(c.resguardo.indexOf(r), 1);
+        guardar();
+        pintar();
+      };
+    });
+    m.querySelector('#coord-resg').onclick = function () { c.resguardo.push({ objeto: '', entrega: '', momento: '', aQuien: '', hora: '' }); guardar(); pintar(); };
     m.querySelector('#coord-nota').onclick = function () { c.bitacora.push({ hora: horaActual(), tipo: 'Nota', texto: '' }); guardar(); pintar(); };
   }
 
@@ -225,6 +256,10 @@
       return '<tr><td>' + esc(g.concepto) + '</td><td class="der">' + (g.monto ? dinero(g.monto) : '') + '</td><td>' + (g.foto ? 'Sí' : '') + '</td></tr>';
     }).join('');
     for (var i = c.gastos.length; i < 4; i++) gastos += '<tr><td>&nbsp;</td><td></td><td></td></tr>';
+    var resg = c.resguardo.map(function (r) {
+      return '<tr><td>' + esc(r.objeto) + '</td><td>' + esc(r.entrega) + '</td><td>' + esc(r.momento) + '</td><td>' + esc(h12(r.hora)) + '</td><td>' + esc(r.aQuien) + '</td><td class="centro">' + (r.entregado ? '✓' : '') + '</td></tr>';
+    }).join('');
+    for (var k = c.resguardo.length; k < 3; k++) resg += '<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>';
     var notas = c.bitacora.map(function (n) {
       return '<tr><td>' + esc(h12(n.hora)) + '</td><td>' + esc(n.tipo) + '</td><td>' + esc(n.texto) + '</td></tr>';
     }).join('');
@@ -242,7 +277,7 @@
       '.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 14px}.kv div{border-bottom:1px solid var(--line);padding:3px 0;min-height:28px}.kv b{display:block;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}' +
       'table{width:100%;border-collapse:collapse}th{background:var(--ink);color:#fff;font-weight:500;padding:4px;font-size:8.5px;text-align:center}th.izq,td.izq{text-align:left}' +
       'td{border-bottom:1px solid var(--line);padding:4px;vertical-align:top}tr{break-inside:avoid}.matriz td{text-align:center;border-left:1px solid var(--line);height:18px}.matriz td.izq{border-left:0;width:28%}.rol{color:var(--gray);font-size:8.5px}' +
-      '.matriz td.izq{text-align:left}td.der{text-align:right}.tot{display:flex;gap:18px;justify-content:flex-end;margin-top:6px;font-size:11px}.tot b{color:var(--pink)}' +
+      '.matriz td.izq{text-align:left}td.der{text-align:right}td.centro{text-align:center}.tot{display:flex;gap:18px;justify-content:flex-end;margin-top:6px;font-size:11px}.tot b{color:var(--pink)}' +
       '.firma{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px;break-inside:avoid}.firma div{border-top:1px solid var(--ink);padding-top:3px;color:var(--gray)}' +
       '.footer{margin-top:12px;padding-top:6px;border-top:1px solid var(--gold);font-size:8px;color:var(--gray);text-align:center}' +
       '@media print{.toolbar{display:none}body{margin:0;max-width:none}@page{size:letter;margin:1.1cm}}</style></head><body>' +
@@ -251,6 +286,7 @@
         '<div class="titulo"><h1>Hoja del coordinador</h1><div>' + esc(ev.nombre) + (fecha ? ' · ' + esc(fecha) : '') + '</div></div></header>' +
       '<h2>Uniforme del día</h2><div class="kv">' + UNIFORME.map(function (u) { return '<div><b>' + u[1] + '</b>' + esc(c.uniforme[u[0]] || '') + '</div>'; }).join('') + '</div>' +
       '<h2>Brief con el equipo</h2><div class="kv"><div><b>¿Se hizo?</b>' + (c.briefEquipo.hecho ? 'Sí' : '☐ Sí  ☐ No') + '</div><div><b>Hora</b>' + esc(h12(c.briefEquipo.hora)) + '</div><div><b>Personas presentes</b></div></div>' +
+      '<h2>Objetos en resguardo</h2><table><thead><tr><th class="izq">Objeto</th><th class="izq">Lo entrega</th><th class="izq">Cuándo se usa</th><th>Hora</th><th class="izq">Se entrega a</th><th>Entregado</th></tr></thead><tbody>' + resg + '</tbody></table>' +
       matriz('Equipo que trae cada persona', EQUIPO) +
       matriz('Presentación', PRESENTACION) +
       '<h2>Dinero y gastos</h2><div class="kv"><div><b>Dinero entregado</b>' + (c.fondo.monto ? dinero(c.fondo.monto) : '') + '</div><div><b>Lo entrega</b>' + esc(c.fondo.entrega || '') + '</div><div><b>Lo recibe</b>' + esc(c.fondo.recibe || '') + '</div></div>' +

@@ -2604,7 +2604,7 @@
       html += '<section class="section"><h2>Proveedores externos</h2><table><thead><tr><th style="width:18%">Servicio</th><th style="width:24%">Proveedor / contacto</th><th style="width:20%">Horario</th><th>Condiciones y requerimientos</th></tr></thead><tbody>';
       provs.forEach(function (p) {
         var horario = [p.llegada && 'Llega ' + p.llegada, p.inicio && 'Inicia ' + p.inicio, p.fin && 'Termina ' + p.fin].filter(Boolean).join('<br>');
-        html += '<tr><td><strong>' + esc(p.servicio || '-') + '</strong>' + (p.red ? '<br><span class="muted">Red Primavera</span>' : '') + '</td>' +
+        html += '<tr><td><strong>' + esc(p.servicio || '-') + '</strong>' + (p.red ? '<br><span class="muted">Red Primavera</span>' : '') + (p.contrata ? '<br><span class="muted">Contrata: ' + esc(p.contrata) + '</span>' : '') + '</td>' +
           '<td>' + esc(p.nombre || '-') + (p.telefono ? '<br>' + esc(p.telefono) : '') + (p.recibe ? '<br><span class="muted">Recibe: ' + esc(p.recibe) + '</span>' : '') + '</td>' +
           '<td>' + (horario || '-') + '</td>' +
           '<td>' + [p.condiciones && '<b>Condiciones:</b> ' + esc(p.condiciones), p.requerimientos && '<b>Requerimientos:</b> ' + esc(p.requerimientos)].filter(Boolean).join('<br>') + '</td></tr>';
