@@ -2344,3 +2344,11 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
   .vale-lista tr.vale-grupo td, .vale-lista tr.vale-prov-fila td { display: block; }
 }
 .wifi-aviso { color: #C9A96E; font-size: 13px; margin-top: -4px; }
+
+/* Vistas del plano (salón, cóctel, áreas verdes) */
+.vista-selector { bottom: 104px; flex-wrap: wrap; justify-content: center; max-width: calc(100% - 24px); border-radius: 18px; }
+.vista-selector.hidden { display: none; }
+@media (max-width: 768px) {
+  .vista-selector { flex-wrap: nowrap; width: calc(100% - 24px); justify-content: space-between; }
+  .vista-selector button { padding: 7px 9px; font-size: 11px; }
+}

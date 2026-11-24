@@ -93,8 +93,9 @@
           g.appendChild(svgEl('rect', Object.assign({ x: o.px + p[0] * o.pw / 2 - 2.5, y: o.py + p[1] * o.ph / 2 - 2.5, width: 5, height: 5, fill: '#e7d3a8' }, NP)));
         });
       } else {
-        var puerta = o.mToPx(1.2);
-        g.appendChild(svgEl('line', Object.assign({ x1: o.px - puerta / 2, y1: o.py + o.ph / 2, x2: o.px + puerta / 2, y2: o.py + o.ph / 2, stroke: '#1f1f1f', 'stroke-width': 3 }, NP)));
+        // Puerta al sur (por omisión) o al norte
+        var puerta = o.mToPx(1.2), yP = e.puerta === 'norte' ? o.py - o.ph / 2 : o.py + o.ph / 2;
+        g.appendChild(svgEl('line', Object.assign({ x1: o.px - puerta / 2, y1: yP, x2: o.px + puerta / 2, y2: yP, stroke: '#1f1f1f', 'stroke-width': 3 }, NP)));
       }
     },
     rancho_cascade: function (svgEl, g, e, o) {
@@ -257,14 +258,15 @@
         [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (p) { caja(T, g, 0.35, ALTO, 0.35, p[0] * (w / 2 - 0.2), 0, p[1] * (d / 2 - 0.2), 0xe8dcc4); });
         caja(T, g, w * 0.6, 0.75, 0.9, 0, 0, 0, 0x8b5a2b);
       } else {
-        var t = 0.2, puerta = 1.2;
-        caja(T, g, w, ALTO, t, 0, 0, -d / 2 + t / 2, color);
+        var t = 0.2, puerta = 1.2, norte = e.puerta === 'norte';
+        var zPuerta = norte ? -d / 2 + t / 2 : d / 2 - t / 2, zMuro = norte ? d / 2 - t / 2 : -d / 2 + t / 2;
+        caja(T, g, w, ALTO, t, 0, 0, zMuro, color);
         caja(T, g, t, ALTO, d, -w / 2 + t / 2, 0, 0, color);
         caja(T, g, t, ALTO, d, w / 2 - t / 2, 0, 0, color);
         var lado = (w - puerta) / 2;
-        caja(T, g, lado, ALTO, t, -w / 2 + lado / 2, 0, d / 2 - t / 2, color);
-        caja(T, g, lado, ALTO, t, w / 2 - lado / 2, 0, d / 2 - t / 2, color);
-        caja(T, g, puerta, ALTO - 2.1, t, 0, 2.1, d / 2 - t / 2, color);
+        caja(T, g, lado, ALTO, t, -w / 2 + lado / 2, 0, zPuerta, color);
+        caja(T, g, lado, ALTO, t, w / 2 - lado / 2, 0, zPuerta, color);
+        caja(T, g, puerta, ALTO - 2.1, t, 0, 2.1, zPuerta, color);
       }
       if (techo || e.abierto) caja(T, g, w + 0.6, 0.25, d + 0.6, 0, ALTO, 0, 0x9a4a2a);
     },
@@ -340,7 +342,7 @@
     el('terrace', 'Palapa', 568, 350, 8, 13),
     el('rancho_cascade', null, 566, 312, 8, 3),
     el('rancho_bridge', 'Puente sobre la cascada', 566, 312, 3, 9),
-    el('salon', 'Habitaciones (novios / quinceañera)', 495, 480, 18, 18),
+    el('rancho_room', 'Habitaciones (novios / quinceañera)', 495, 480, 18, 18, { color: '#334155', puerta: 'norte' }),
     el('parking', 'Estacionamiento', 734, 497, 40, 21),
     el('rancho_stables', 'Caballerizas', 745, 540, 36, 7),
     el('rancho_arena', 'Picadero', 900, 143, 25, 25),
@@ -360,6 +362,14 @@
     id: 'rancho_los_potrillos',
     name: 'Rancho Los Potrillos',
     description: 'Rancho con salón, palapa, alberca, picadero y caballerizas · Francisco I. Madero 23, Tepetzingo (medidas aproximadas de la vista satelital)',
-    layout: { terrain: { w: 153, h: 147 }, elements: elementos, flows: [], layers: {}, venueId: 'rancho_los_potrillos' }
+    layout: {
+      terrain: { w: 153, h: 147 }, elements: elementos, flows: [], layers: {}, venueId: 'rancho_los_potrillos',
+      // Vistas para encuadrar cada zona del rancho (en metros)
+      vistas: [
+        { nombre: 'Salón', x: 27, y: 46, w: 36, h: 44 },
+        { nombre: 'Cóctel', x: 23, y: 76, w: 40, h: 40 },
+        { nombre: 'Áreas verdes', x: 84, y: 61, w: 86, h: 86 }
+      ]
+    }
   });
 })();

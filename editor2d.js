@@ -1056,6 +1056,23 @@ window.Editor2D = (function () {
     _drawRulers();
   }
 
+  // Encuadra una zona del plano (en metros): vistas como "Salón" o "Cóctel"
+  function enfocar(x, y, w, h) {
+    var rect = _svg.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    var pad = Math.min(60, rect.width * 0.05);
+    var fw = (rect.width - RULER_SIZE * 2 - pad * 2) / mToPx(w);
+    var fh = (rect.height - RULER_SIZE * 2 - pad * 2) / mToPx(h);
+    _zoom = Math.min(fw, fh, 4);
+    _panX = RULER_SIZE + (rect.width - RULER_SIZE) / 2 - mToPx(x) * _zoom;
+    _panY = RULER_SIZE + (rect.height - RULER_SIZE) / 2 - mToPx(y) * _zoom;
+    _applyZoomTransform();
+    _drawBorder();
+    _drawRulers();
+    var state = _getState ? _getState() : {};
+    update(state.elements || []);
+  }
+
   // ─── Canvas click (placement) ─────────────────────────────
   function _onCanvasClick(e) {
     _hideContextMenu();
@@ -1310,6 +1327,7 @@ window.Editor2D = (function () {
     zoomIn: zoomIn,
     zoomOut: zoomOut,
     resetZoom: resetZoom,
+    enfocar: enfocar,
     setLayerVisibility: setLayerVisibility,
     setTerrain: setTerrain,
     addFlowPath: addFlowPath,

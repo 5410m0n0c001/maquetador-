@@ -817,6 +817,27 @@ window.Visualizer3D = (function () {
     lerp();
   }
 
+  // Lleva la cámara a una zona (en metros) del plano: vistas como "Salón" o "Cóctel"
+  function enfocar(x, y, w, h) {
+    if (!_camera || !_controls) return;
+    _camaraMovida = true; // que un cambio de tamaño no la regrese al terreno completo
+    var radius = 0.5 * Math.max(w, h) * 1.2;
+    var vFov = _camera.fov * Math.PI / 180;
+    var hFov = 2 * Math.atan(Math.tan(vFov / 2) * _camera.aspect);
+    var dist = radius / Math.sin(Math.min(vFov, hFov) / 2);
+    var endTarget = new THREE.Vector3(x, 0, y);
+    var endPos = endTarget.clone().add(new THREE.Vector3(0, 0.75, 0.66).normalize().multiplyScalar(dist));
+    var startPos = _camera.position.clone(), startTarget = _controls.target.clone(), t = 0;
+    (function paso() {
+      t += 0.06;
+      var k = Math.min(1, t);
+      _camera.position.lerpVectors(startPos, endPos, k);
+      _controls.target.lerpVectors(startTarget, endTarget, k);
+      _controls.update();
+      if (k < 1) requestAnimationFrame(paso);
+    })();
+  }
+
   var _ambientLight = null;
   var _sunLight = null;
   var _partyLight1 = null;
@@ -3963,6 +3984,7 @@ window.Visualizer3D = (function () {
     select: selectElement,
     deselect: function () { selectElement(null); },
     resetCamera: resetCamera,
+    enfocar: enfocar,
     setTerrain: setTerrain,
     setLighting: setLighting,
     setExposure: setExposure,

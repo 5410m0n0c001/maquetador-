@@ -15,6 +15,8 @@
     flows: [],          // polilíneas de circulación: { id, layer, color, points: [[x,y], ...] } en metros
     venueId: null,      // id de la plantilla de salón de origen (templates.js)
     mode: 'evento',     // 'evento' o 'bodega'
+    vistas: [],         // zonas para encuadrar: [{ nombre, x, y, w, h }] (p. ej. Salón, Cóctel, Áreas verdes)
+    vistaActiva: null,
     nivel: 0,           // piso activo en modo bodega: -1 sótano, 0 planta baja, 1 segundo piso
     terrain: { w: 50, h: 60 },
     selectedId: null,
@@ -388,11 +390,40 @@
     if (window.Editor2D) window.Editor2D.update(AppState.elements);
   }
 
+  // ── Vistas del plano: botones para encuadrar una zona (Salón, Cóctel, Áreas verdes) ──
+  function _enfocarVista(nombre) {
+    var v = (AppState.vistas || []).find(function (x) { return x.nombre === nombre; });
+    AppState.vistaActiva = v ? v.nombre : null;
+    if (v) {
+      if (AppState.activeView === '2d' && window.Editor2D && window.Editor2D.enfocar) window.Editor2D.enfocar(v.x, v.y, v.w, v.h);
+      if (AppState.activeView !== '2d' && window.Visualizer3D && window.Visualizer3D.enfocar) window.Visualizer3D.enfocar(v.x, v.y, v.w, v.h);
+    } else {
+      if (window.Editor2D) window.Editor2D.resetZoom();
+      if (window.Visualizer3D) window.Visualizer3D.resetCamera();
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#vista-selector button'), function (b) {
+      b.classList.toggle('active', (b.getAttribute('data-vista') || null) === AppState.vistaActiva);
+    });
+  }
+
+  function _pintarVistas() {
+    var cont = document.getElementById('vista-selector');
+    if (!cont) return;
+    var vistas = AppState.vistas || [];
+    cont.classList.toggle('hidden', !vistas.length || AppState.mode === 'bodega');
+    cont.innerHTML = vistas.length ? '<button type="button" class="active"><i class="fa-solid fa-expand"></i> Todo</button>' +
+      vistas.map(function (v) { return '<button type="button" data-vista="' + v.nombre.replace(/"/g, '&quot;') + '">' + v.nombre + '</button>'; }).join('') : '';
+    Array.prototype.forEach.call(cont.querySelectorAll('button'), function (b) {
+      b.onclick = function () { _enfocarVista(b.getAttribute('data-vista')); };
+    });
+  }
+
   function _aplicarModo() {
     var bodega = AppState.mode === 'bodega';
     document.body.classList.toggle('modo-bodega', bodega);
     var selector = document.getElementById('nivel-selector');
     if (selector) selector.classList.toggle('hidden', !bodega);
+    _pintarVistas();
     _setNivel(AppState.nivel || 0);
     _buildToolbox();
   }
@@ -1407,12 +1438,14 @@
           _fit2dOnShow = false;
           window.Editor2D.resetZoom();
         }
+        if (AppState.vistaActiva && window.Editor2D) setTimeout(function () { _enfocarVista(AppState.vistaActiva); }, 30);
         if (btn2d) { btn2d.classList.add('active'); }
         if (btn3d) { btn3d.classList.remove('active'); }
         if (brightnessGroup) brightnessGroup.style.display = 'none';
       } else {
         if (container2d) container2d.style.display = 'none';
         if (container3d) container3d.style.display = 'block';
+        if (AppState.vistaActiva) setTimeout(function () { _enfocarVista(AppState.vistaActiva); }, 60);
         if (btn3d) { btn3d.classList.add('active'); }
         if (btn2d) { btn2d.classList.remove('active'); }
         if (brightnessGroup) brightnessGroup.style.display = 'flex';
@@ -2083,6 +2116,8 @@
     if (data.layers) Object.assign(AppState.layers, data.layers);
     AppState.mode = data.mode || (AppState.elements.some(function (e) { return e.type.indexOf('wh_') === 0; }) ? 'bodega' : 'evento');
     AppState.nivel = 0;
+    AppState.vistas = Array.isArray(data.vistas) ? data.vistas : [];
+    AppState.vistaActiva = null;
     AppState.flows = data.flows || [];
     AppState.venueId = data.venueId || null;
     AppState.labelScale = data.labelScale || 1;
@@ -2886,7 +2921,8 @@
       layers: AppState.layers,
       venueId: AppState.venueId,
       labelScale: AppState.labelScale || 1,
-      mode: AppState.mode
+      mode: AppState.mode,
+      vistas: AppState.vistas || []
     };
   }
 
