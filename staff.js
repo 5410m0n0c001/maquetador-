@@ -7,10 +7,11 @@
 (function () {
   'use strict';
 
-  var ROLES = ['Coordinador', 'Capitán', 'Mesero', 'Barra', 'Lavado de loza', 'Servicios generales', 'Cocina', 'Chofer', 'Bodega', 'Otro'];
+  var ROLES = ['Coordinador', 'Capitán', 'Mesero', 'Barra', 'Hostess / Host', 'Lavado de loza', 'Servicios generales', 'Cocina', 'Chofer', 'Bodega', 'Otro'];
   // Qué hace cada perfil (se muestra al elegirlo)
   var AYUDA_ROL = {
     'Barra': 'Personal de barra: prepara y sirve bebidas.',
+    'Hostess / Host': 'Recibe a los invitados y los acompaña a su mesa.',
     'Lavado de loza': 'Lava durante el evento la loza que sale sucia y la entrega limpia para el regreso a bodega.',
     'Servicios generales': 'Baños, barrer y limpieza durante el evento.'
   };
@@ -113,7 +114,7 @@
     _modal.innerHTML = '<div class="venue-picker staff-modal">' +
       '<div class="venue-picker-head"><h2>Staff del evento · ' + esc(evento().nombre) + '</h2>' +
         '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
-      '<p class="vale-sub">' + (lista.length ? lista.length + ' personas · ' + resumen(lista) : 'Todavía no hay staff registrado.') + '</p>' +
+      '<p class="vale-sub">' + (lista.length ? lista.length + (lista.length === 1 ? ' persona · ' : ' personas · ') + resumen(lista) : 'Todavía no hay staff registrado.') + '</p>' +
       (sinCoord ? '<p class="minuto-aviso"><i class="fa-solid fa-triangle-exclamation"></i> No hay coordinador ni capitán asignado.</p>' : '') +
       (lista.length && libres.length ? '<p class="minuto-aviso"><i class="fa-solid fa-triangle-exclamation"></i> Mesas sin mesero: ' + esc(rangos(libres)) + '</p>' : '') +
       (!mesas.length ? '<p class="vale-sub">El croquis no tiene mesas numeradas: cuando las tenga, aquí podrás asignarlas.</p>' : '') +
