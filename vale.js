@@ -8,8 +8,8 @@
 (function () {
   'use strict';
 
-  var ORDEN_CATEGORIAS = ['Mesas y periqueras', 'Sillas y bancos', 'Salas y sombrillas', 'Mantelería', 'Loza', 'Cubiertos',
-    'Cristalería', 'Barra y cocina', 'Bebidas y hielo', 'Cocina e insumos', 'Snacks y estaciones', 'Kits de fiesta', 'Decoración y estructuras',
+  var ORDEN_CATEGORIAS = ['Mesas y periqueras', 'Identificadores de mesa', 'Sillas y bancos', 'Salas y sombrillas', 'Mantelería', 'Loza', 'Cubiertos',
+    'Cristalería', 'Barra y cocina', 'Bebidas y hielo', 'Cocina e insumos', 'Snacks y estaciones', 'Kits de fiesta', 'Decoración y estructuras', 'Arreglos florales', 'Letras gigantes',
     'Iluminación y eléctrico', 'Utilería', 'Limpieza', 'Equipo del staff', 'Otros'];
   var KIT_BARRA = ['Exprimidor de limon', 'Cuchillo de barra', 'Tarja para hielo', 'Pinzas para hielo', 'Pica hielo', 'Licuadora'];
   var PASOS = [
