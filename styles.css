@@ -2251,3 +2251,4 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
   .staff-datos [data-k="rol"] { grid-area: rol; } .staff-datos [data-k="nombre"] { grid-area: nom; }
   .staff-datos [data-k="telefono"] { grid-area: tel; } .staff-datos [data-k="radio"] { grid-area: rad; } .staff-datos .staff-quitar { grid-area: x; }
 }
+.staff-ayuda { font-size: 11px; color: #C9A96E; margin-top: 4px; }

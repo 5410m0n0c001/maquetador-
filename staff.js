@@ -7,7 +7,14 @@
 (function () {
   'use strict';
 
-  var ROLES = ['Coordinador', 'Capitán', 'Mesero', 'Bartender', 'Cocina', 'Chofer', 'Bodega', 'Otro'];
+  var ROLES = ['Coordinador', 'Capitán', 'Mesero', 'Barra', 'Lavado de loza', 'Servicios generales', 'Cocina', 'Chofer', 'Bodega', 'Otro'];
+  // Qué hace cada perfil (se muestra al elegirlo)
+  var AYUDA_ROL = {
+    'Barra': 'Personal de barra: prepara y sirve bebidas.',
+    'Lavado de loza': 'Lava durante el evento la loza que sale sucia y la entrega limpia para el regreso a bodega.',
+    'Servicios generales': 'Baños, barrer y limpieza durante el evento.'
+  };
+  var PLURAL = { 'Coordinador': 'Coordinadores', 'Capitán': 'Capitanes', 'Mesero': 'Meseros', 'Chofer': 'Choferes', 'Otro': 'Otros' };
   var _modal = null;
 
   function PE() { return window.PEGEventos; }
@@ -56,8 +63,7 @@
     var cuenta = {};
     lista.forEach(function (p) { cuenta[p.rol || 'Otro'] = (cuenta[p.rol || 'Otro'] || 0) + 1; });
     return ROLES.filter(function (r) { return cuenta[r]; }).map(function (r) {
-      var plural = cuenta[r] === 1 ? r : (r === 'Capitán' ? 'Capitanes' : r === 'Coordinador' ? 'Coordinadores' : r === 'Cocina' || r === 'Bodega' ? r : r + 's');
-      return cuenta[r] + ' ' + plural;
+      return cuenta[r] + ' ' + (cuenta[r] > 1 && PLURAL[r] ? PLURAL[r] : r);
     }).join(' · ');
   }
 
@@ -89,13 +95,14 @@
       }
       return '<div class="staff-persona" data-i="' + i + '">' +
         '<div class="staff-datos">' +
-          '<select class="form-input" data-k="rol">' + ROLES.map(function (r) { return '<option' + (p.rol === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
+          '<select class="form-input" data-k="rol" title="' + esc(AYUDA_ROL[p.rol] || '') + '">' + ROLES.concat(ROLES.indexOf(p.rol) < 0 && p.rol ? [p.rol] : []).map(function (r) { return '<option' + (p.rol === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
           '<input class="form-input" data-k="nombre" placeholder="Nombre" value="' + esc(p.nombre) + '">' +
           '<input class="form-input" data-k="telefono" type="tel" placeholder="Teléfono" value="' + esc(p.telefono) + '">' +
           '<input class="form-input" data-k="radio" placeholder="Radio (núm.)" value="' + esc(p.radio) + '">' +
           '<button type="button" class="btn-icon-sm staff-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button>' +
         '</div>' +
-        (mesas.length ? '<div class="staff-mesas"><span>Mesas:</span>' + mesas.map(function (n) {
+        (AYUDA_ROL[p.rol] ? '<div class="staff-ayuda">' + esc(AYUDA_ROL[p.rol]) + '</div>' : '') +
+        (mesas.length && (p.rol === 'Mesero' || p.rol === 'Capitán' || (p.mesas || []).length) ? '<div class="staff-mesas"><span>Mesas:</span>' + mesas.map(function (n) {
           var mia = (p.mesas || []).indexOf(n) > -1;
           var otro = !mia && asignadas[n];
           return '<button type="button" class="staff-mesa' + (mia ? ' mia' : '') + (otro ? ' otra' : '') + '" data-n="' + n + '" title="' + (otro ? 'Ya la tiene otra persona' : 'Mesa ' + n) + '">' + n + '</button>';

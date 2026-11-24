@@ -803,7 +803,7 @@
   }
 
   // Quién hace cada actividad: PEG (coordinación, cocina, meseros, bodega) o un proveedor externo del brief
-  var RESPONSABLES_PEG = ['PEG — Coordinación', 'PEG — Capitán de meseros', 'PEG — Meseros', 'PEG — Cocina', 'PEG — Barra', 'PEG — Bodega / chofer'];
+  var RESPONSABLES_PEG = ['PEG — Coordinación', 'PEG — Capitán de meseros', 'PEG — Meseros', 'PEG — Cocina', 'PEG — Barra', 'PEG — Lavado de loza', 'PEG — Servicios generales', 'PEG — Bodega / chofer'];
   function minutoHtml(rows, ro, provs) {
     var dis = ro ? ' disabled' : '';
     var sinProv = rows.filter(function (r) { return !String(r.responsable || '').trim(); }).length;
