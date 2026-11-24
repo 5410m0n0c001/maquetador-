@@ -638,6 +638,7 @@
     Array.prototype.forEach.call(modal.querySelectorAll('[data-go]'), function (btn) {
       btn.onclick = function () {
         var go = btn.getAttribute('data-go');
+        if (go === 'abrir') { close(); openEventsModal(); return; }
         ensurePlanner(function () {
           close();
           if (go === 'brief') createEvent();
@@ -667,15 +668,22 @@
     return Math.round(b / 1024) + ' KB';
   }
 
+  // Texto sin acentos ni mayúsculas para buscar
+  function normBusqueda(t) {
+    return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
   function openEventsModal() {
     if (!client()) { toast('No hay conexión con Supabase.', 'error'); return; }
     var modal = document.createElement('div');
     modal.className = 'venue-picker-overlay';
     modal.innerHTML =
       '<div class="venue-picker">' +
-        '<div class="venue-picker-head"><h2>Mis eventos</h2>' +
+        '<div class="venue-picker-head"><h2>Eventos guardados</h2>' +
         '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
-        '<p>Cada evento guarda el plano, el brief, el minuto a minuto y las fotos del montaje.</p>' +
+        '<p>Elige el evento. Si no recuerdas el nombre, búscalo por festejados, tipo de evento, fecha o salón.' + (_isPlanner ? '' : ' Para crear o editar se pide la contraseña de planner.') + '</p>' +
+        '<input class="form-input eventos-buscar" id="events-buscar" type="search" placeholder="Buscar: nombre, festejados, tipo, fecha o salón…">' +
+        '<p class="eventos-cuenta" id="events-cuenta">Cargando eventos…</p>' +
         '<div class="venue-grid" id="events-grid">' +
           '<button class="venue-card venue-card-empty" id="btn-new-event"><i class="fa-solid fa-plus"></i>' +
           '<strong>Nuevo evento</strong><span>Empieza en blanco: primero el brief, luego el plano</span></button>' +
@@ -688,26 +696,50 @@
     var close = function () { modal.remove(); };
     modal.querySelector('.venue-picker-close').onclick = close;
     modal.onclick = function (e) { if (e.target === modal) close(); };
-    $('btn-new-event').onclick = createEvent;
-    $('btn-new-bodega').onclick = function () { close(); createBodega(); };
+    $('btn-new-event').onclick = function () { ensurePlanner(createEvent); };
+    $('btn-new-bodega').onclick = function () { ensurePlanner(function () { close(); createBodega(); }); };
 
-    client().from(TABLE).select('id,nombre,fecha_evento,venue_id,updated_at,modo:data->layout->>mode')
-      .order('updated_at', { ascending: false }).limit(60)
+    client().from(TABLE).select('id,nombre,fecha_evento,venue_id,updated_at,modo:data->layout->>mode,' +
+      'tipo:data->brief->>tipo_evento,tipoOtro:data->brief->>tipo_evento_otro,festejados:data->brief->>festejados,' +
+      'cliente:data->brief->>cliente_nombre,invitados:data->brief->>invitados,venueRed:data->brief->>venue_red,venueExt:data->brief->>venue_externo')
+      .order('updated_at', { ascending: false }).limit(200)
       .then(function (res) {
         var grid = $('events-grid');
         if (!grid) return;
         if (res.error) { toast('No se pudieron cargar los eventos.', 'error'); return; }
         res.data.forEach(function (ev) {
           var card = document.createElement('button');
-          card.className = 'venue-card';
+          card.className = 'venue-card evento-card';
           var fecha = ev.fecha_evento ? new Date(ev.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Sin fecha';
           var evBodega = ev.modo === 'bodega';
+          var tipo = ev.tipo === 'Otro' ? (ev.tipoOtro || 'Otro') : ev.tipo;
+          var salon = ev.venueRed || ev.venueExt || '';
+          if (salon.length > 60) salon = salon.slice(0, 58) + '…';
+          var detalle = [tipo, ev.invitados && ev.invitados + ' invitados'].filter(Boolean).join(' · ');
+          var quien = [ev.festejados, ev.cliente].filter(function (x) { return x && x !== ev.nombre; }).join(' · ');
+          card.setAttribute('data-buscar', normBusqueda([ev.nombre, quien, tipo, fecha, salon, evBodega ? 'bodega' : ''].join(' ')));
           card.innerHTML = '<i class="fa-solid ' + (evBodega ? 'fa-warehouse' : 'fa-champagne-glasses') + '"></i><strong>' + esc(ev.nombre) + '</strong>' +
-            '<span>' + (evBodega ? 'Bodega' : esc(fecha)) + '</span>' +
+            (quien ? '<span>' + esc(quien) + '</span>' : '') +
+            '<span>' + (evBodega ? 'Bodega' : esc(fecha) + (detalle ? ' · ' + esc(detalle) : '')) + '</span>' +
+            (salon ? '<span class="evento-salon"><i class="fa-solid fa-location-dot"></i> ' + esc(salon) + '</span>' : '') +
             '<small>Editado ' + esc(new Date(ev.updated_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })) + '</small>';
-          card.onclick = function () { closeModals(); goToEvent(ev.id, function () { if (!evBodega) openPanel(); }); };
+          // El planner va directo al brief; los demás ven la bienvenida (brief, plano o editar)
+          card.onclick = function () { closeModals(); goToEvent(ev.id, function () { if (evBodega) return; if (_isPlanner) openPanel(); else openEventWelcome(); }); };
           grid.appendChild(card);
         });
+        var cuenta = $('events-cuenta'), buscar = $('events-buscar');
+        var filtrar = function () {
+          var q = normBusqueda(buscar ? buscar.value : '');
+          var visibles = 0;
+          Array.prototype.forEach.call(grid.querySelectorAll('.evento-card'), function (c) {
+            var si = !q || c.getAttribute('data-buscar').indexOf(q) > -1;
+            c.style.display = si ? '' : 'none';
+            if (si) visibles++;
+          });
+          if (cuenta) cuenta.textContent = q ? visibles + ' de ' + res.data.length + ' eventos' : res.data.length + ' eventos guardados';
+        };
+        if (buscar) { buscar.oninput = filtrar; buscar.focus(); }
+        filtrar();
       });
 
     client().rpc('maquetador_uso').then(function (res) {
