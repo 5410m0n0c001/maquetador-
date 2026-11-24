@@ -298,6 +298,7 @@ window.Editor2D = (function () {
     var cat = window.getCatalogEntry ? window.getCatalogEntry(elem.type) : null;
     var shape = (cat && cat.shape) ? cat.shape : 'rect';
     var esBodega = !!(cat && cat.bodega);
+    var dibujo = cat && cat.dibujar2D; // elementos con dibujo propio (rancho)
 
     // Modo bodega: se dibuja el piso activo; el de abajo queda tenue como guía
     var esGuia = false;
@@ -329,8 +330,8 @@ window.Editor2D = (function () {
     g.setAttribute('transform', 'rotate(' + rot + ',' + px + ',' + py + ')');
 
     // ── Shape rendering ───────────────────────────────────
-    if (esBodega) {
-      window.BODEGA.dibujar2D(svgEl, g, elem, {
+    if (esBodega || dibujo) {
+      (dibujo || window.BODEGA.dibujar2D)(svgEl, g, elem, {
         px: px, py: py, pw: pw, ph: ph, color: color, light: colorLight, selected: isSelected, mToPx: mToPx,
         font: Math.min(Math.max(mToPx(0.5) * _zoom, _etiquetaMinPx()), _etiquetaMaxPx()) / _zoom * (state.labelScale || 1)
       });
@@ -699,7 +700,7 @@ window.Editor2D = (function () {
     }
 
     // ── Selection ring ────────────────────────────────────
-    if (isSelected && esBodega) {
+    if (isSelected && (esBodega || dibujo)) {
       _appendResizeHandles(g, elem, px, py, pw, ph);
     } else if (isSelected) {
       var selR = Math.max(pw, ph) / 2 + 4;

@@ -1126,7 +1126,8 @@ window.Visualizer3D = (function () {
         _buildProceduralMesh(group, elem);
 
         // Add 3D Label
-        if (!cat || !cat.bodega || window.BODEGA.llevaEtiqueta3D(elem, cat)) {
+        if (cat && cat.sinEtiqueta && elem.name === cat.name && !cat.bodega) { /* sin rótulo (árboles) */ }
+        else if (!cat || !cat.bodega || window.BODEGA.llevaEtiqueta3D(elem, cat)) {
           var labelInfo = cat && cat.bodega ? window.BODEGA.etiqueta3D(elem, cat) : _getElementLabelInfo(elem);
           var label = create3DLabel(labelInfo.title, labelInfo.subtitle, labelInfo.colorHex, "rgba(15, 23, 42, 0.85)", labelInfo.heightOffset);
           label.name = "label-3d";
@@ -1213,8 +1214,8 @@ window.Visualizer3D = (function () {
     var cat = window.getCatalogEntry ? window.getCatalogEntry(type) : null;
     var category = (cat && cat.category) ? cat.category : 'mobiliario';
 
-    if (cat && cat.bodega) {
-      window.BODEGA.construir3D(group, elem);
+    if (cat && (cat.bodega || cat.construir3D)) {
+      (cat.construir3D || window.BODEGA.construir3D)(group, elem);
       return;
     }
 
