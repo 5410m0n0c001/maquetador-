@@ -777,7 +777,9 @@
       { value: 'loto', label: 'Loto' },
       { value: 'vela', label: 'Vela' },
       { value: 'abanico', label: 'Abanico' },
-      { value: 'piramide', label: 'Pirámide' }
+      { value: 'piramide', label: 'Pirámide' },
+      { value: 'cartera', label: 'Cartera' },
+      { value: 'conito', label: 'Conito' }
     ];
     
     var colorOptions = [
@@ -793,7 +795,10 @@
       { value: 'rojo', label: 'Rojo' },
       { value: 'verde_olivo', label: 'Verde Olivo' },
       { value: 'azul_rey', label: 'Azul Rey' },
-      { value: 'rosa_mexicano', label: 'Rosa Mexicano' }
+      { value: 'rosa_mexicano', label: 'Rosa Mexicano' },
+      { value: 'azul_cielo', label: 'Azul Cielo' },
+      { value: 'plata', label: 'Plata' },
+      { value: 'azul_plumbago', label: 'Azul Plumbago (corrugada)' }
     ];
     
     var html = '';
@@ -991,6 +996,7 @@
       setVal('mesa-cristal2', elem.mesaConfig.cristal2 || 'ninguno');
       setVal('mesa-copas-color2', elem.mesaConfig.copasColor2 || 'transparente');
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
+      setVal('mesa-silla-funda', elem.mesaConfig.sillaFunda || 'ninguna');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
       setVal('mesa-floral-tipo', elem.mesaConfig.arregloFloralTipo || 'ninguno');
       setVal('mesa-floral-acomodo', elem.mesaConfig.arregloFloralAcomodo || 'ninguno');
@@ -1218,6 +1224,7 @@
     mesaInp('mesa-cristal2', 'cristal2');
     mesaInp('mesa-copas-color2', 'copasColor2');
     mesaInp('mesa-silla-tipo', 'tipoSilla');
+    mesaInp('mesa-silla-funda', 'sillaFunda');
     mesaInp('mesa-menu', 'menu');
     mesaInp('mesa-floral-tipo', 'arregloFloralTipo');
     mesaInp('mesa-floral-acomodo', 'arregloFloralAcomodo');
@@ -2507,7 +2514,8 @@
     var plateBaseLabels = {
       gold_ring: 'Plato Base Oro', silver_ring: 'Plato Base Plata', glass_gold: 'Plato Base Vidrio Oro', wood: 'Plato Base Madera'
     };
-    var foldLabels = { corazon: 'Corazón', corbata: 'Corbata', loto: 'Loto', vela: 'Vela', abanico: 'Abanico', piramide: 'Pirámide' };
+    var foldLabels = { corazon: 'Corazón', corbata: 'Corbata', loto: 'Loto', vela: 'Vela', abanico: 'Abanico', piramide: 'Pirámide', cartera: 'Cartera', conito: 'Conito' };
+    var sillaLabels = { princesa: 'Sillón de Princesa' };
 
     // ── HTML ──
     var html = '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">';
@@ -2718,7 +2726,7 @@
         if (c.platoBase && c.platoBase !== 'ninguno') items.push('<b>Plato base:</b> ' + esc(plateBaseLabels[c.platoBase] || cap(c.platoBase)));
         if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push('<b>Plato trinche:</b> ' + esc(cap(c.platoTrinche)));
         if (c.cubiertos) items.push('<b>Cubiertos:</b> ' + esc(cap(c.cubiertos)));
-        if (c.tipoSilla) items.push('<b>Silla:</b> ' + esc(cap(c.tipoSilla)));
+        if (c.tipoSilla) items.push('<b>Silla:</b> ' + esc(sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? esc(' con funda completa ' + c.sillaFunda) : ''));
         if (c.arregloFloralTipo && c.arregloFloralTipo !== 'ninguno') items.push('<b>Floral:</b> ' + esc(cap(c.arregloFloralTipo)) + (c.arregloFloralAcomodo ? ' (' + esc(c.arregloFloralAcomodo) + ')' : ''));
         var glass = [];
         if (c.cristal && c.cristal !== 'ninguno') glass.push(esc((glassLabels[c.cristal] || cap(c.cristal)) + ' (' + (c.copasColor || 'transparente') + ')'));

@@ -111,7 +111,11 @@ window.Visualizer3D = (function () {
     uva: 0x5d3fd3,
     azul: 0x2563eb,
     plateado: 0xc0c0c0,
-    gold_rose: 0xb76e79
+    gold_rose: 0xb76e79,
+    humo: 0x6b6b6b,
+    plata: 0xc0c0c0,
+    azul_plumbago: 0x8fa9c9,
+    corrugado_azul_plumbago: 0x8fa9c9
   };
 
   function getHexColor(name, defaultHex) {
@@ -155,6 +159,13 @@ window.Visualizer3D = (function () {
       mat = new THREE.MeshStandardMaterial({
         color: 0x3b2314,
         roughness: 0.6
+      });
+    } else if (style === 'hacienda') {
+      // Plato base tejido tipo ratán, tono dorado natural
+      mat = new THREE.MeshStandardMaterial({
+        color: 0xc8a165,
+        roughness: 0.8,
+        metalness: 0.3
       });
     } else if (style === 'gotico') {
       mat = new THREE.MeshStandardMaterial({
