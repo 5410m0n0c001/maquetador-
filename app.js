@@ -2434,9 +2434,10 @@
     if (zoomGroup) zoomGroup.removeAttribute('transform');
     // Encuadre: la zona donde están las mesas y elementos (con margen), no todo el terreno
     var vb = [0, 0, tw, th];
-    // Mesas y elementos del evento + el salón completo (aunque sea parte del croquis), para no cortarlo
+    // Todo lo que está en el plano del evento (mesas, jardines, área de niños, barras…) + el salón completo
+    // aunque sea parte del croquis, para no cortar nada
     var piezas = AppState.elements.filter(function (e) {
-      return (!e.bg2d && e.category !== 'estructuras') || /^(salon|salon_carpa|stage|bathroom|lobby_reception|kitchen)$/.test(e.type);
+      return !e.bg2d || /^(salon|salon_carpa|stage|bathroom|lobby_reception|kitchen)$/.test(e.type);
     });
     if (piezas.length) {
       var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -2459,7 +2460,7 @@
     // El croquis ocupa una hoja carta completa: si el plano es más ancho que alto se imprime girado
     // (la hoja se lee en horizontal); si no, derecho. Etiquetas a ~9 px en la hoja sin importar el zoom.
     var horizontal = vb[2] >= vb[3];
-    var escala = Math.min((horizontal ? 877 : 725) / vb[2], (horizontal ? 688 : 870) / vb[3]);
+    var escala = Math.min((horizontal ? 877 : 695) / vb[2], (horizontal ? 688 : 877) / vb[3]);
     Array.prototype.forEach.call(clonedSvg.querySelectorAll('.elem-label'), function (l) {
       var fs = 9 * (AppState.labelScale || 1) / escala;
       l.setAttribute('font-size', fs);
@@ -2528,12 +2529,13 @@
     html += '<title>Ficha Técnica · ' + esc(eventName) + '</title>';
     html += '<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">';
     html += '<style>' +
-      '@page { size: letter; margin: 14mm 12mm 16mm; }' +
+      '@page { size: letter; margin: 16mm 16mm 18mm; }' +
       ':root { --pink:#F65C7A; --gold:#C9A96E; --ink:#1F1F1F; --gray:#6D6D6D; --line:#EFE7E1; --soft:#F8F6F4; }' +
       '* { box-sizing: border-box; }' +
-      'body { font-family: Poppins, sans-serif; color: var(--ink); background: #fff; margin: 0; padding: 28px; font-size: 11px; line-height: 1.5; }' +
+      'html { background: #E9E4DF; }' +
+      'body { font-family: Poppins, sans-serif; color: var(--ink); background: #fff; margin: 0 auto 30px; padding: 0 16mm 16mm; max-width: 216mm; box-shadow: 0 6px 30px rgba(0,0,0,.18); font-size: 11px; line-height: 1.5; }' +
       'h1, h2, h3 { font-family: "Playfair Display", Georgia, serif; font-weight: 600; margin: 0; }' +
-      '.toolbar { position: sticky; top: 0; z-index: 9; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: -28px -28px 24px; padding: 12px 28px; background: var(--ink); color: #fff; }' +
+      '.toolbar { position: sticky; top: 0; z-index: 9; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 -16mm 16mm; padding: 12px 16mm; background: var(--ink); color: #fff; }' +
       '.toolbar button { font-family: Poppins, sans-serif; border: none; border-radius: 999px; padding: 9px 18px; font-weight: 600; cursor: pointer; color: #fff; background: linear-gradient(135deg, #F65C7A, #FF8FA3); }' +
       '.letterhead { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 14px; border-bottom: 2px solid var(--gold); }' +
       '.brand { display: flex; align-items: center; gap: 14px; }' +
@@ -2585,10 +2587,21 @@
       '.kv b { display: block; font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); font-weight: 600; }' +
       '.block { break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px; }' +
       '.block h3 { font-size: 12.5px; margin-bottom: 4px; }' +
-      '.photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }' +
-      '.photos figure { margin: 0; break-inside: avoid; }' +
-      '.photos img { width: 100%; height: 210px; object-fit: cover; border-radius: 8px; border: 1px solid var(--gold); }' +
-      '.photos figcaption { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-top: 3px; }' +
+      '.photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }' +
+      '.photos figure { margin: 0; break-inside: avoid; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }' +
+      '.photos img { width: 100%; height: 170px; object-fit: cover; display: block; border-bottom: 3px solid var(--gold); }' +
+      '.photos figcaption { padding: 5px 8px 7px; }' +
+      '.photos figcaption b { display: block; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--pink); }' +
+      '.photos .desc { font-size: 9.5px; color: var(--ink); line-height: 1.35; margin-top: 2px; }' +
+      // Información del evento por módulos
+      '.mods { column-count: 2; column-gap: 12px; }' +
+      '.mod { break-inside: avoid; page-break-inside: avoid; display: block; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 0 0 10px; background: #fff; }' +
+      '.mod h3 { font-size: 12px; margin: 0; padding: 5px 10px; background: var(--soft); border-left: 4px solid var(--pink); border-bottom: 1px solid var(--line); }' +
+      '.mod:nth-child(even) h3 { border-left-color: var(--gold); }' +
+      '.mod.largo { break-inside: auto; page-break-inside: auto; } .mod .fila { break-inside: avoid; display: grid; grid-template-columns: 36% 1fr; border-bottom: 1px solid var(--line); }' +
+      '.mod .fila:last-child { border-bottom: 0; }' +
+      '.mod .k { padding: 4px 8px; background: #FBF8F5; border-right: 1px solid var(--line); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: #A88A55; font-weight: 600; }' +
+      '.mod .v { padding: 4px 8px; white-space: pre-line; }' +
       '.guests { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }' +
       '.guest-card { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; break-inside: avoid; }' +
       '.guest-card h3 { font-size: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--pink); padding-bottom: 4px; margin-bottom: 4px; }' +
@@ -2598,19 +2611,18 @@
       '.footer { margin-top: 26px; padding-top: 8px; border-top: 1px solid var(--gold); text-align: center; font-size: 8.5px; color: var(--gray); }' +
       '.page-break { break-before: page; page-break-before: always; }' +
       // Impresión compacta: que la ficha quepa en ~3 hojas carta
-      '@media print { body { padding: 0; font-size: 9.5px; line-height: 1.35; } .toolbar { display: none; }' +
+      '@media print { html { background: #fff; } body { padding: 0; margin: 0; max-width: none; box-shadow: none; font-size: 9.5px; line-height: 1.35; } .toolbar { display: none; }' +
         ' .letterhead { padding-bottom: 8px; } .brand img { width: 46px; height: 46px; } .qr svg { width: 72px; height: 72px; }' +
         ' .hero { margin: 8px 0 8px; } .hero h1 { font-size: 20px; } .cards { gap: 6px; margin-bottom: 10px; } .card { padding: 5px 8px; }' +
         ' .section { margin-top: 10px; } .section h2 { font-size: 13px; margin-bottom: 6px; }' +
         ' .plano-pagina { break-before: page; break-after: page; margin: 0; }' +
-        ' .plano-h .plan-giro { height: 232mm; } .plano-h .plan { width: 232mm; height: 182mm; aspect-ratio: auto; transform-origin: 0 0; transform: translate(187mm, 0) rotate(90deg); }' +
+        ' .plano-h .plan-giro { height: 232mm; } .plano-h .plan { width: 232mm; height: 182mm; aspect-ratio: auto; transform-origin: 0 0; transform: translate(182mm, 0) rotate(90deg); }' +
         ' .plano-v .plan { height: 232mm; aspect-ratio: auto; }' +
         ' table.grid tr.vacia td { height: 20px; }' +
         ' th, td { padding: 3px 6px; } table { font-size: 9px; } .kv { grid-template-columns: repeat(3, 1fr); gap: 0 14px; } .kv div { padding: 3px 0; }' +
         ' .block { margin-bottom: 6px; } .block h3 { font-size: 11px; margin-bottom: 2px; }' +
-        ' .info-cols { column-count: 2; column-gap: 18px; } .info-cols .kv { display: block; } .info-cols .kv div { padding: 1px 0; }' +
-        ' .info-cols .kv b { display: inline; font-size: 8px; } .info-cols .kv b::after { content: ": "; }' +
-        ' .photos { grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; } .photos img { height: 110px; }' +
+        ' .mods { column-gap: 8px; } .mod { margin-bottom: 7px; } .mod h3 { font-size: 10.5px; padding: 3px 8px; } .mod .k, .mod .v { padding: 2px 6px; } .mod .k { font-size: 7.5px; }' +
+        ' .photos { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; } .photos img { height: 120px; } .photos .desc { font-size: 8.5px; }' +
         ' .signs { margin-top: 26px; } .footer { margin-top: 12px; } }' +
       '</style></head><body>';
 
@@ -2639,7 +2651,9 @@
       ['Tipo de evento', tipo],
       ['Invitados', b.invitados ? b.invitados + (b.adultos || b.ninos ? ' (' + (b.adultos || 0) + ' adultos · ' + (b.ninos || 0) + ' niños)' : '') : ''],
       ['Venue', venueName],
-      ['Mesas · lugares del banquete', L.banquete.length || L.principal.length ? L.banquete.length + ' mesas' + (L.principal.length ? ' + principal' : '') + ' · ' + L.total + ' lugares' : ''],
+      // Los lugares deben ser exactamente los invitados: si el plano no cuadra se avisa, no se presenta como correcto
+      ['Mesas · lugares del banquete', L.banquete.length || L.principal.length ? L.banquete.length + ' mesas' + (L.principal.length ? ' + principal' : '') + ' · ' + L.total + ' lugares' +
+        (invitadosN && L.total !== invitadosN ? ' ⚠ no cuadra con ' + invitadosN + ' invitados (' + (L.total > invitadosN ? 'sobran ' + (L.total - invitadosN) : 'faltan ' + (invitadosN - L.total)) + ')' : '') : ''],
       ['Formalidad', b.formalidad],
       ['Temática', b.tematica],
       ['Paleta de colores', [].concat(b.paletas || [], b.paleta ? [b.paleta] : []).join(' · ')],
@@ -2670,12 +2684,11 @@
         return fmt(f) !== '';
       });
       if (!rows.length) return;
-      briefHtml += '<div class="block"><h3>' + esc(s.title) + '</h3><div class="kv">' + rows.map(function (f) {
-        var wide = ['textarea', 'checks', 'detail', 'palette', 'swatches'].indexOf(f.type) > -1;
-        return '<div' + (wide ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(fmt(f)) + '</div>';
-      }).join('') + '</div></div>';
+      briefHtml += '<div class="mod' + (rows.length > 7 ? ' largo' : '') + '"><h3>' + esc(s.title) + '</h3>' + rows.map(function (f) {
+        return '<div class="fila"><div class="k">' + esc(f.label) + '</div><div class="v">' + esc(fmt(f)) + '</div></div>';
+      }).join('') + '</div>';
     });
-    if (briefHtml) html += '<section class="section"><h2>Información del evento</h2><div class="info-cols">' + briefHtml + '</div></section>';
+    if (briefHtml) html += '<section class="section"><h2>Información del evento</h2><div class="mods">' + briefHtml + '</div></section>';
 
 
     // Mesas y lugares: desglose por tipo y cuadre contra los invitados
@@ -2773,12 +2786,13 @@
     var montajeRows = (schema.montajeFields || []).filter(function (f) { return m[f.k]; });
     var fotos = m.fotos || [];
     if (montajeRows.length || fotos.length) {
-      html += '<section class="section block"><h2>Montaje elegido</h2><div class="kv">' + montajeRows.map(function (f) {
+      html += '<section class="section"><h2>Montaje elegido</h2><div class="kv">' + montajeRows.map(function (f) {
         return '<div' + (f.type === 'textarea' ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(m[f.k]) + '</div>';
       }).join('') + '</div>';
       if (fotos.length) {
         html += '<div class="photos">' + fotos.map(function (f, i) {
-          return '<figure><img src="' + esc(f.url) + '" alt="Montaje ' + (i + 1) + '">' + (f.etiqueta ? '<figcaption>' + esc(f.etiqueta) + '</figcaption>' : '') + '</figure>';
+          return '<figure><img src="' + esc(f.url) + '" alt="' + esc(f.etiqueta || 'Montaje ' + (i + 1)) + '">' +
+            (f.etiqueta || f.descripcion ? '<figcaption>' + (f.etiqueta ? '<b>' + esc(f.etiqueta) + '</b>' : '') + (f.descripcion ? '<div class="desc">' + esc(f.descripcion) + '</div>' : '') + '</figcaption>' : '') + '</figure>';
         }).join('') + '</div>';
       }
       html += '</section>';

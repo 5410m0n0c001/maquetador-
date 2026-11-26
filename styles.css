@@ -1901,6 +1901,9 @@ body.peg-view-only .minuto-row { grid-template-columns: 110px 110px 1fr 200px; }
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
 }
 .foto-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto-item { display: flex; flex-direction: column; gap: 6px; }
+.foto-desc { font-size: 12px; min-height: 64px; resize: vertical; }
+.foto-desc-ro { margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-secondary, #cbd5e1); }
 .foto-del {
   position: absolute;
   top: 8px;

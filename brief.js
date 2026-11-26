@@ -1129,14 +1129,18 @@
     }
     html += '<div class="foto-grid">';
     fotos.forEach(function (f, i) {
-      html += '<figure class="foto-card"><img src="' + esc(f.url) + '" alt="' + esc(f.etiqueta || 'Foto del montaje') + '" loading="lazy" data-zoom="' + i + '" />' +
+      html += '<div class="foto-item"><figure class="foto-card"><img src="' + esc(f.url) + '" alt="' + esc(f.etiqueta || 'Foto del montaje') + '" loading="lazy" data-zoom="' + i + '" />' +
         (ro
           ? (f.etiqueta ? '<figcaption>' + esc(f.etiqueta) + '</figcaption>' : '')
           : '<select class="foto-tag" data-i="' + i + '">' + ['<option value="">Etiqueta…</option>'].concat(FOTO_ETIQUETAS.map(function (t) {
               return '<option' + (f.etiqueta === t ? ' selected' : '') + '>' + t + '</option>';
             })).join('') + '</select>' +
             '<button type="button" class="foto-del" data-i="' + i + '" title="Quitar foto"><i class="fa-solid fa-xmark"></i></button>') +
-        '</figure>';
+        '</figure>' +
+        // Qué se ve en la foto y qué lleva ese montaje (sale en la ficha técnica)
+        (ro ? (f.descripcion ? '<p class="foto-desc-ro">' + esc(f.descripcion) + '</p>' : '')
+          : '<textarea class="form-input foto-desc" data-i="' + i + '" placeholder="Describe lo que se ve y lo que lleva este montaje (mantel, camino, loza, copas, silla, centro…)">' + esc(f.descripcion) + '</textarea>') +
+        '</div>';
     });
     if (ro && !fotos.length) html += '<p class="brief-empty">Sin fotos del montaje.</p>';
     html += '</div>';
@@ -1159,7 +1163,8 @@
     var show = function () {
       box.innerHTML = '<button class="lightbox-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button>' +
         (fotos.length > 1 ? '<button class="lightbox-nav prev"><i class="fa-solid fa-chevron-left"></i></button><button class="lightbox-nav next"><i class="fa-solid fa-chevron-right"></i></button>' : '') +
-        '<figure><img src="' + esc(fotos[i].url) + '" alt="" /><figcaption>' + esc(fotos[i].etiqueta || '') + ' · ' + (i + 1) + ' / ' + fotos.length + '</figcaption></figure>';
+        '<figure><img src="' + esc(fotos[i].url) + '" alt="" /><figcaption>' + esc(fotos[i].etiqueta || '') + ' · ' + (i + 1) + ' / ' + fotos.length +
+          (fotos[i].descripcion ? '<br>' + esc(fotos[i].descripcion) : '') + '</figcaption></figure>';
       box.querySelector('.lightbox-close').onclick = function () { box.remove(); };
       var p = box.querySelector('.prev'), n = box.querySelector('.next');
       if (p) p.onclick = function (e) { e.stopPropagation(); i = (i - 1 + fotos.length) % fotos.length; show(); };
@@ -1653,6 +1658,12 @@
         // Una por una para no saturar la conexión del teléfono
         files.reduce(function (p, f) { return p.then(function () { return uploadPhoto(f); }); }, Promise.resolve());
       };
+    });
+    _panel.querySelectorAll('.foto-desc').forEach(function (ta) {
+      ta.addEventListener('input', function () {
+        d.montaje.fotos[parseInt(ta.getAttribute('data-i'), 10)].descripcion = ta.value;
+        scheduleSave();
+      });
     });
     _panel.querySelectorAll('.foto-tag').forEach(function (sel) {
       sel.onchange = function () {
