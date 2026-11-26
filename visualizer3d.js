@@ -679,11 +679,17 @@ window.Visualizer3D = (function () {
     _camera.position.copy(_fitCameraPosition());
 
     // 3. Renderer
-    _renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    // Celular: menos resolución, sin suavizado de bordes y sombras más ligeras para que gire fluido
+    var movil = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || window.innerWidth < 768;
+    _renderer = new THREE.WebGLRenderer({ antialias: !movil, alpha: false, powerPreference: 'high-performance' });
     _renderer.setSize(cw, ch);
-    _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Resolución máxima 1.5×: en celulares (2× y 3×) y en pantalla completa dibujar más pixeles lo vuelve lento sin verse mejor
+    _renderer.setPixelRatio(Math.min(window.devicePixelRatio, movil ? 1 : 1.5));
     _renderer.shadowMap.enabled = true;
-    _renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Las sombras solo se recalculan cuando cambia el plano o la luz, no al mover la cámara
+    _renderer.shadowMap.autoUpdate = false;
+    _renderer.shadowMap.needsUpdate = true;
+    _renderer.shadowMap.type = movil ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
     _renderer.toneMapping = THREE.ACESFilmicToneMapping;
     _renderer.toneMappingExposure = 1.0;
     _container.appendChild(_renderer.domElement);
@@ -700,6 +706,7 @@ window.Visualizer3D = (function () {
     _controls.update();
     // Si el usuario mueve la cámara, ya no se reencuadra sola al cambiar el tamaño del lienzo
     _controls.addEventListener('start', function () { _camaraMovida = true; });
+    _controls.addEventListener('change', function () { _redibujar(false); });
 
     // 5. Lighting
     _setupLighting();
@@ -774,7 +781,15 @@ window.Visualizer3D = (function () {
     return primero;
   }
 
+  // Dibujar solo cuando algo cambia (cámara, plano, luz o selección); quieto no gasta procesador
+  var _sucio = true;
+  function _redibujar(sombras) {
+    _sucio = true;
+    if (sombras && _renderer) _renderer.shadowMap.needsUpdate = true;
+  }
+
   function _onResize() {
+    _redibujar(false);
     if (!_container || !_camera || !_renderer) return;
     var width = _container.clientWidth || _container.parentElement.clientWidth || window.innerWidth;
     var height = _container.clientHeight || _container.parentElement.clientHeight || window.innerHeight;
@@ -923,8 +938,9 @@ window.Visualizer3D = (function () {
     _sunLight = new THREE.DirectionalLight(0xfff4e0, 0.75);
     _sunLight.position.set(_terrain.w * 0.5, 45, -_terrain.h * 0.3);
     _sunLight.castShadow = true;
-    _sunLight.shadow.mapSize.width = 2048;
-    _sunLight.shadow.mapSize.height = 2048;
+    var sombraTam = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || window.innerWidth < 768 ? 1024 : 2048;
+    _sunLight.shadow.mapSize.width = sombraTam;
+    _sunLight.shadow.mapSize.height = sombraTam;
     _sunLight.shadow.camera.near = 0.5;
     _sunLight.shadow.camera.far = 250;
     
@@ -951,6 +967,7 @@ window.Visualizer3D = (function () {
   }
 
   function setLighting(mode) {
+    _redibujar(true);
     _currentLightingMode = mode;
     _updateLightIntensities();
   }
@@ -1023,6 +1040,7 @@ window.Visualizer3D = (function () {
   }
 
   function setTerrain(w, h) {
+    _redibujar(true);
     _terrain = { w: w, h: h };
     _buildTerrainFloor();
     if (_controls) {
@@ -1048,6 +1066,7 @@ window.Visualizer3D = (function () {
   }
 
   function selectElement(id) {
+    _redibujar(false);
     _selectedId = id;
     _updateSelectionRing();
   }
@@ -1183,6 +1202,7 @@ window.Visualizer3D = (function () {
     });
 
     _updatePisoBodega(st);
+    _redibujar(true);
     _updateSelectionRing();
   }
 
@@ -1204,6 +1224,7 @@ window.Visualizer3D = (function () {
     if (_controls) _controls.update();
 
     if (_selectionRing && _selectedId) {
+      _sucio = true; // el anillo de selección está animado
       var time = Date.now() * 0.003;
       _selectionRing.rotation.y = time * 0.35;
       var pulse = 1.0 + Math.sin(time * 2.5) * 0.03;
@@ -1213,6 +1234,9 @@ window.Visualizer3D = (function () {
         _selectionRing.scale.z * pulse
       );
     }
+
+    if (!_sucio) return;
+    _sucio = false;
 
     if (_renderer && _scene && _camera) {
       // Tamaño de los rótulos: crecen un poco al alejarse para seguir legibles, pero nunca más
@@ -3978,6 +4002,7 @@ window.Visualizer3D = (function () {
   }
 
   function setExposure(val) {
+    _redibujar(true);
     _brightnessFactor = val;
     _updateLightIntensities();
     if (_renderer) {
