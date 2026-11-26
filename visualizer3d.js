@@ -490,6 +490,18 @@ window.Visualizer3D = (function () {
       });
       return g;
     }
+    if (tipo === 'princesa') {
+      // Sillón de princesa: capitoné rosa, respaldo alto redondeado y brazos
+      var tapiz = new THREE.MeshStandardMaterial({ color: 0xf4a7c0, roughness: 0.85 });
+      var marco = new THREE.MeshStandardMaterial({ color: 0xf8f4ee, roughness: 0.4 });
+      box(0.62, 0.42, 0.56, marco, 0, 0.21, 0);           // base
+      box(0.56, 0.1, 0.5, tapiz, 0, 0.47, -0.02);         // asiento
+      box(0.62, 0.8, 0.1, tapiz, 0, 0.82, 0.24);          // respaldo
+      var copete = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.1, 24, 1, false, -Math.PI / 2, Math.PI), tapiz);
+      copete.rotation.x = Math.PI / 2; copete.position.set(0, 1.22, 0.24); copete.castShadow = true; g.add(copete);
+      [-0.29, 0.29].forEach(function (x) { box(0.08, 0.22, 0.5, tapiz, x, 0.6, 0); }); // brazos
+      return g;
+    }
     if (tipo === 'tiffany') {
       var blanco = new THREE.MeshStandardMaterial({ color: 0xf8f8f4, roughness: 0.4 });
       [-0.16, 0.16].forEach(function (x) {
@@ -3809,6 +3821,11 @@ window.Visualizer3D = (function () {
     if (numChairs <= 0) return;
 
     var step = totalWidth / (numChairs);
+    // Mesa principal con N sillones de princesa al centro y sillas normales a los lados
+    var cfg = group.userData.mesaConfig || {};
+    var nSillones = cfg.tipoSilla === 'princesa' ? Math.min(numChairs, parseInt(cfg.sillonesPrincesa, 10) || numChairs) : 0;
+    var desde = Math.floor((numChairs - nSillones) / 2);
+    var cfgLados = Object.assign({}, cfg, { tipoSilla: cfg.sillaAcompanantes || 'tiffany' });
     for (var i = 0; i < numChairs; i++) {
       var cx = -totalWidth/2 + step * (i + 0.5);
 
@@ -3816,7 +3833,8 @@ window.Visualizer3D = (function () {
       cg.position.set(cx, 0, offsetZ);
       cg.rotation.y = chairRotY;
 
-      cg.add(_silla3D(group.userData.mesaConfig, group.userData.inventario));
+      var esSillon = !nSillones || (i >= desde && i < desde + nSillones);
+      cg.add(_silla3D(esSillon ? cfg : cfgLados, group.userData.inventario));
 
       group.add(cg);
     }

@@ -203,7 +203,7 @@
     rancho_salon: function (T, g, e) {
       var w = e.w, d = e.h, ALTO_ARRANQUE = 2.8, POSTE = 0.6;
       var techo = !!(window.App && window.App.getState && window.App.getState().layers.techos);
-      caja(T, g, w, 0.15, d, 0, 0, 0, 0x5a4a3c, { sinSombra: true });
+      caja(T, g, w, 0.02, d, 0, 0, 0, 0x5a4a3c, { sinSombra: true }); // delgado: la pista (0.09 m) debe quedar por encima
       var n = e.arcos || 4;
       var claro = Math.min(w, d) / n;
       var altoMuro = ALTO_ARRANQUE + claro / 2 + 0.6;

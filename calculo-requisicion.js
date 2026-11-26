@@ -112,7 +112,12 @@
       var mesa = inv.mesa ? inv.mesa : principal ? (principalMarmol ? 'Mesa rectangular tipo marmol' : 'Mesa principal — tipo por confirmar') : (e.type === 'table_imperial' ? 'Mesa tablón' : MESA[e.type] || ('Mesa — ' + (e.name || e.type)));
       sumar(mesa, e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mesas y periqueras', principal ? '1 es la mesa principal' : '');
       if (!n) return;
-      if (principal && sillonPrincesa) {
+      if (principal && c.tipoSilla === 'princesa' && parseInt(c.sillonesPrincesa, 10) > 0) {
+        // Sillones de princesa al centro y sillas normales a los lados (p. ej. para las mamás)
+        var nSillones = Math.min(n, parseInt(c.sillonesPrincesa, 10));
+        sumar(c.sillonPrincesaNombre || 'Sillón de princesa', nSillones, 'Sillas y bancos', 'mesa principal');
+        if (n > nSillones) sumar(SILLA[c.sillaAcompanantes || 'tiffany'], n - nSillones, 'Sillas y bancos', 'mesa principal, a los lados de los sillones');
+      } else if (principal && sillonPrincesa) {
         // Mesa principal de XV: sillón de princesa para la festejada; los demás lugares (chambelanes) con otra silla
         sumar('Sillón de princesa', 1, 'Sillas y bancos', 'mesa principal');
         if (n > 1) sumar('Silla para la mesa principal — elegir modelo', n - 1, 'Sillas y bancos', 'chambelanes / acompañantes');
