@@ -2229,32 +2229,37 @@ window.Visualizer3D = (function () {
       _addChairsRadial(group, w/2 + 0.18, numChairs, 0.75);
 
     } else if (elem.type === 'lounge_set') {
-      // Lounge sofa sets (U-shaped arrangement around table)
-      var sofaColor = parseColor(elem.color, elem.type);
-      var sofaMat = new THREE.MeshStandardMaterial({ color: sofaColor, roughness: 0.7 });
-
-      // Left sofa
-      var sofaL = _buildSofa(w * 0.25, 0.85, h - 0.6, sofaMat);
-      sofaL.position.set(-w/2 + w*0.15, 0.35, 0);
-      sofaL.rotation.y = Math.PI / 2;
-      group.add(sofaL);
-
-      // Right sofa
-      var sofaR = _buildSofa(w * 0.25, 0.85, h - 0.6, sofaMat);
-      sofaR.position.set(w/2 - w*0.15, 0.35, 0);
-      sofaR.rotation.y = -Math.PI / 2;
-      group.add(sofaR);
+      // Sala lounge: 4 bancas de madera con cojín alrededor de una mesa de centro
+      var cojinMat = new THREE.MeshStandardMaterial({ color: parseColor(elem.color, elem.type), roughness: 0.8 });
+      var bancaMat = new THREE.MeshStandardMaterial({ color: COLORS.woodDark, roughness: 0.6 });
+      function _banca(largo, x, z, rotY) {
+        var b = new THREE.Group();
+        var cuerpo = new THREE.Mesh(new THREE.BoxGeometry(largo, 0.38, 0.42), bancaMat);
+        cuerpo.position.y = 0.19;
+        cuerpo.castShadow = true;
+        b.add(cuerpo);
+        var cojin = new THREE.Mesh(new THREE.BoxGeometry(largo - 0.04, 0.06, 0.4), cojinMat);
+        cojin.position.y = 0.41;
+        b.add(cojin);
+        b.position.set(x, 0, z);
+        b.rotation.y = rotY;
+        group.add(b);
+      }
+      _banca(w * 0.6, 0, -h / 2 + 0.25, 0);
+      _banca(w * 0.6, 0, h / 2 - 0.25, 0);
+      _banca(h * 0.54, -w / 2 + 0.25, 0, Math.PI / 2);
+      _banca(h * 0.54, w / 2 - 0.25, 0, Math.PI / 2);
 
       // Center coffee table
       var coffeeTable = new THREE.Mesh(
-        new THREE.BoxGeometry(w * 0.4, 0.4, h * 0.4),
+        new THREE.BoxGeometry(w * 0.34, 0.4, h * 0.3),
         new THREE.MeshStandardMaterial({ color: COLORS.woodDark, roughness: 0.5 })
       );
       coffeeTable.position.set(0, 0.2, 0);
       coffeeTable.castShadow = true;
       group.add(coffeeTable);
 
-    } else if (elem.type === 'table_periquera') {
+    } else if (elem.type === 'table_periquera' || elem.type === 'table_periquera_umbrella') {
       // High bar table with cylindrical pedestal
       var perMat = new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.8, roughness: 0.2 });
 
@@ -2277,6 +2282,18 @@ window.Visualizer3D = (function () {
       perTop.position.y = 1.12;
       perTop.castShadow = true;
       group.add(perTop);
+
+      // Sombrilla: poste al centro y lona de ≈ 2.2 m
+      if (elem.type === 'table_periquera_umbrella') {
+        var perPole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.5, 8), perMat);
+        perPole.position.y = 1.85;
+        group.add(perPole);
+        var perLona = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 1.1, 0.45, 12, 1, true),
+          new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8, side: THREE.DoubleSide }));
+        perLona.position.y = 2.45;
+        perLona.castShadow = true;
+        group.add(perLona);
+      }
 
     } else if (elem.type === 'table_buffet') {
       // Buffet table with chafing dishes
@@ -2773,24 +2790,6 @@ window.Visualizer3D = (function () {
     } else {
       _buildGenericBox(group, elem, colorNum, 0.85);
     }
-  }
-
-  // Sofa building utility
-  function _buildSofa(sw, sh, sd, mat) {
-    var g = new THREE.Group();
-    // Seat base
-    var seat = new THREE.Mesh(new THREE.BoxGeometry(sw, 0.3, sd), mat);
-    seat.position.y = 0.15;
-    seat.castShadow = true;
-    g.add(seat);
-
-    // Backrest
-    var back = new THREE.Mesh(new THREE.BoxGeometry(0.12, sh, sd), mat);
-    back.position.set(-sw/2 + 0.06, sh/2, 0);
-    back.castShadow = true;
-    g.add(back);
-
-    return g;
   }
 
   // ─── 4. Entertainment ─────────────────────────────────────

@@ -536,6 +536,20 @@ window.ELEMENTS_CATALOG = [
     planoOnly: false
   },
   {
+    type: 'table_periquera_umbrella',
+    name: 'Periquera con Sombrilla',
+    category: 'mobiliario',
+    icon: 'fa-umbrella',
+    defaultW: 0.7,
+    defaultH: 0.7,
+    shape: 'circle',
+    color: '#b45309',
+    defaultChairs: 4,
+    description: 'Mesa periquera alta con sombrilla (cóctel en jardín).',
+    layer: 'mobiliario',
+    planoOnly: false
+  },
+  {
     type: 'table_umbrella',
     name: 'Mesa con Sombrilla',
     category: 'mobiliario',
@@ -573,7 +587,7 @@ window.ELEMENTS_CATALOG = [
     shape: 'rect',
     color: '#be185d',
     defaultChairs: 5,
-    description: 'Juego de muebles lounge.',
+    description: 'Sala lounge: 4 bancas alrededor de una mesa de centro.',
     layer: 'mobiliario',
     planoOnly: false
   },

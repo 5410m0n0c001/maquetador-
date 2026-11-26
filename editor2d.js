@@ -349,6 +349,35 @@ window.Editor2D = (function () {
       // Chairs
       _appendChairs(g, elem, px, py, r, shape, isSelected);
 
+      // Periquera con sombrilla: la lona se ve como un círculo punteado (≈ 2.2 m)
+      if (elem.type === 'table_periquera_umbrella') {
+        g.appendChild(svgEl('circle', {
+          cx: px, cy: py, r: mToPx(1.1),
+          fill: 'rgba(248,250,252,0.10)', stroke: 'rgba(248,250,252,0.75)',
+          'stroke-width': 1, 'stroke-dasharray': '4 3', 'pointer-events': 'none'
+        }));
+        g.appendChild(svgEl('circle', { cx: px, cy: py, r: mToPx(0.06), fill: '#f8fafc', 'pointer-events': 'none' }));
+      }
+
+    } else if (elem.type === 'lounge_set') {
+      // Sala lounge: 4 bancas alrededor de una mesa de centro
+      g.appendChild(svgEl('rect', {
+        x: px - pw / 2, y: py - ph / 2, width: pw, height: ph,
+        fill: 'rgba(255,255,255,0.02)', stroke: isSelected ? '#F65C7A' : 'transparent', 'stroke-width': isSelected ? 2 : 1
+      }));
+      var banca = { fill: color, stroke: colorLight, 'stroke-width': 1, opacity: 0.95, rx: mToPx(0.06) };
+      var gH = ph * 0.2, gW = pw * 0.17; // fondo de las bancas
+      [[0, -1], [0, 1]].forEach(function (s) { // arriba y abajo
+        g.appendChild(svgEl('rect', Object.assign({ x: px - pw * 0.3, y: py + s[1] * (ph / 2 - gH / 2) - gH / 2, width: pw * 0.6, height: gH }, banca)));
+      });
+      [[-1, 0], [1, 0]].forEach(function (s) { // izquierda y derecha
+        g.appendChild(svgEl('rect', Object.assign({ x: px + s[0] * (pw / 2 - gW / 2) - gW / 2, y: py - ph * 0.27, width: gW, height: ph * 0.54 }, banca)));
+      });
+      g.appendChild(svgEl('rect', {
+        x: px - pw * 0.17, y: py - ph * 0.15, width: pw * 0.34, height: ph * 0.3,
+        fill: '#78350f', stroke: 'rgba(255,255,255,0.35)', 'stroke-width': 1, rx: mToPx(0.04)
+      }));
+
     } else if (shape === 'square') {
       var srect = svgEl('rect', {
         x: px - pw / 2, y: py - ph / 2,
@@ -673,7 +702,7 @@ window.Editor2D = (function () {
     });
     // Shorten long names
     var displayName = elem.name || (cat ? cat.name : elem.type);
-    var isRealTable = elem.type.startsWith('table_') && elem.type !== 'table_periquera';
+    var isRealTable = elem.type.startsWith('table_') && elem.type !== 'table_periquera' && elem.type !== 'table_periquera_umbrella';
     if (isRealTable && elem.mesaConfig && elem.mesaConfig.mesaNum) {
       displayName = 'Mesa ' + elem.mesaConfig.mesaNum;
     }

@@ -200,7 +200,7 @@
 
     var isMesa = cat.defaultChairs > 0 || type.startsWith('table_') || type === 'lounge_set';
     // Periqueras y salas lounge no llevan número de mesa
-    var numerada = isMesa && type !== 'table_periquera' && type !== 'lounge_set';
+    var numerada = isMesa && type !== 'table_periquera' && type !== 'table_periquera_umbrella' && type !== 'lounge_set';
     if (numerada) {
       _tableCounter++;
     }
@@ -2502,7 +2502,7 @@
     var typeLabels = {
       table_round: 'Mesa Redonda', table_square: 'Mesa Cuadrada', table_rectangular: 'Mesa Rectangular',
       table_imperial: 'Mesa Imperial', table_honor_bride: 'Mesa de Honor Novios', table_honor_xv: 'Mesa de Honor XV Años',
-      table_honor_king: 'Mesa de Honor Imperial', table_periquera: 'Periquera Alta', table_kids: 'Mesa Infantil',
+      table_honor_king: 'Mesa de Honor Imperial', table_periquera: 'Periquera Alta', table_periquera_umbrella: 'Periquera con Sombrilla', table_kids: 'Mesa Infantil',
       table_campirana: 'Mesa Campirana', table_marble_round: 'Mesa Mármol Redonda', table_marble_square: 'Mesa Mármol Rectangular',
       table_umbrella: 'Mesa con Sombrilla', table_cake: 'Mesa de Pastel', table_gifts: 'Mesa de Regalos',
       table_candy: 'Mesa de Dulces', table_shots: 'Carrito de Shots', table_buffet: 'Mesa de Buffet', lounge_set: 'Sala Lounge'
