@@ -612,21 +612,33 @@
       tableCounts[t] = (tableCounts[t] || 0) + 1;
     });
 
+    // Invitados del evento contra lugares del banquete (mesas + mesa principal).
+    // Las periqueras y salas lounge del cóctel no cuentan: los lugares deben ser exactamente los invitados.
+    var ev = window.PEGEventos && window.PEGEventos.getEvent ? window.PEGEventos.getEvent() : null;
+    var invitadosEvento = ev && ev.data && ev.data.brief ? parseInt(ev.data.brief.invitados, 10) || 0 : 0;
+    var L = window.PEGCalculo ? window.PEGCalculo.lugares(AppState.elements, invitadosEvento) : null;
+    var lugares = L ? L.total : totalCapacity;
+    var invitadosMostrar = invitadosEvento || totalGuests;
     var guestEl = document.getElementById('counter-guests');
     if (guestEl) {
-      guestEl.textContent = totalGuests + ' / ' + totalCapacity;
+      guestEl.textContent = invitadosMostrar + ' / ' + lugares;
+      var badge = guestEl.closest('.counter-badge');
+      var noCuadra = invitadosEvento && lugares !== invitadosEvento;
+      if (badge) {
+        badge.classList.toggle('counter-alerta', !!noCuadra);
+        badge.title = noCuadra
+          ? 'No cuadra: ' + lugares + ' lugares en mesas + principal para ' + invitadosEvento + ' invitados (' + (lugares > invitadosEvento ? 'sobran ' + (lugares - invitadosEvento) : 'faltan ' + (invitadosEvento - lugares)) + ').'
+          : 'Invitados del evento / lugares del banquete (mesas + mesa principal). El cóctel no cuenta.';
+      }
     }
 
     var tableEl = document.getElementById('counter-tables');
     if (tableEl) {
-      var tableTotal = 0;
-      var excludedTables = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet'];
-      Object.keys(tableCounts).forEach(function (k) {
-        if ((k.startsWith('table_') || k === 'lounge_set') && excludedTables.indexOf(k) === -1) {
-          tableTotal += tableCounts[k];
-        }
-      });
+      // Mesas del banquete + mesa principal (sin periqueras, salas lounge ni mesas de apoyo)
+      var tableTotal = L ? L.banquete.length + L.principal.length : 0;
       tableEl.textContent = tableTotal;
+      var tb = tableEl.closest('.counter-badge');
+      if (tb && L) tb.title = L.banquete.length + ' mesas' + (L.principal.length ? ' + mesa principal' : '') + (L.coctel.length ? ' · cóctel aparte: ' + L.coctel.length + ' (periqueras y salas lounge)' : '');
     }
 
     var imperialEl = document.getElementById('counter-imperial');
