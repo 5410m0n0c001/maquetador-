@@ -2567,6 +2567,7 @@
       'table.grid tr.vacia td { height: 24px; background: #fff !important; }' +
       '.renglon { border-bottom: 1px solid #D9CFC5; min-height: 17px; font-size: 8.5px; color: var(--gray); margin-top: 2px; }' +
       '.pendientes { border: 1px solid var(--gold); background: #FBF7F0; border-radius: 8px; padding: 6px 10px; margin: 6px 0 8px; }' +
+      '.pendientes.revision { border-color: var(--pink); background: #FFF3F5; } .pendientes.revision b { color: var(--pink); }' +
       '.pendientes b { color: var(--gold); text-transform: uppercase; letter-spacing: .1em; font-size: 9px; }' +
       '.pendientes ul { margin: 3px 0 0 16px; padding: 0; }' +
       '.lugares-resumen { margin: 8px 0 4px; } .lugares-resumen b { color: var(--pink); }' +
@@ -2756,6 +2757,13 @@
     }
 
 
+    // Lo que no cuadra entre plano, requisición y minuto
+    var difs = window.PEGVale && window.PEGVale.diferencias ? window.PEGVale.diferencias() : [];
+    if (difs.length) {
+      html += '<section class="section"><div class="pendientes revision"><b>No cuadra entre plano, requisición y minuto</b><ul>' +
+        difs.map(function (x) { return '<li>' + esc(x.texto) + '</li>'; }).join('') + '</ul></div></section>';
+    }
+
     // Minuto a minuto: inicia, termina, actividad y responsable, con renglones para apuntes
     var minDelEvento = function (h) {
       if (!h) return 9999;
@@ -2840,8 +2848,10 @@
           (f.etiqueta || f.descripcion ? '<figcaption>' + (f.etiqueta ? '<b>' + esc(f.etiqueta) + '</b>' : '') + (f.descripcion ? '<div class="desc">' + esc(f.descripcion) + '</div>' : '') + '</figcaption>' : '') + '</figure>';
       }).join('') + '</div>';
     };
-    var lleva = function (c) {
+    var lleva = function (c, inv) {
       var items = [];
+      inv = inv || {};
+      if (inv.mesa) items.push(['Mesa', inv.mesa]);
       if (c.mantelColor) items.push(['Mantel', c.mantelColor === 'sin_mantel' ? 'Sin mantel' : cap(c.mantelColor)]);
       if (c.caminoColor && c.caminoColor !== 'ninguno') items.push(['Camino', cap(c.caminoColor) + (c.caminoAcomodo ? ' (' + c.caminoAcomodo + ')' : '')]);
       var folds = Array.isArray(c.servilletaDoblez) ? c.servilletaDoblez : (c.servilletaDoblez ? [c.servilletaDoblez] : []);
@@ -2852,7 +2862,8 @@
       if (c.platoBase && c.platoBase !== 'ninguno') items.push(['Plato base', plateBaseLabels[c.platoBase] || cap(c.platoBase)]);
       if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push(['Plato trinche', cap(c.platoTrinche)]);
       if (c.cubiertos) items.push(['Cubiertos', cap(c.cubiertos)]);
-      if (c.tipoSilla) items.push(['Silla', (sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? ' con funda completa ' + c.sillaFunda : '')]);
+      if (inv.silla || c.tipoSilla) items.push(['Silla', (inv.silla || sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? ' con funda completa ' + c.sillaFunda : '')]);
+      if (inv.numero) items.push(['Número de mesa', inv.numero]);
       var glass = [];
       if (c.cristal && c.cristal !== 'ninguno') glass.push((glassLabels[c.cristal] || cap(c.cristal)) + ' (' + (c.copasColor || 'transparente') + ')');
       if (c.cristal2 && c.cristal2 !== 'ninguno') glass.push((glassLabels[c.cristal2] || cap(c.cristal2)) + ' (' + (c.copasColor2 || 'transparente') + ')');
@@ -2872,7 +2883,7 @@
         a.n++; a.lugares += parseInt(t.chairs, 10) || 0;
         return;
       }
-      var items = lleva(c);
+      var items = lleva(c, t.inventario);
       var firma = t.type + '|' + JSON.stringify(items) + '|' + (c.menu || '');
       var g = gruposMesa.find(function (x) { return x.firma === firma; });
       if (!g) gruposMesa.push(g = { firma: firma, t: t, items: items, menu: c.menu || '', nums: [], sillas: [], principal: t.type.indexOf('table_honor') === 0 });

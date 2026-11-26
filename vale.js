@@ -148,6 +148,51 @@
   function guardar() {
     if (PE() && PE().scheduleSave) PE().scheduleSave();
   }
+  // Guarda en el plano el modelo elegido (p. ej. madera miel) para que salga en el croquis y la ficha
+  function guardarEleccionEnPlano(nombreElegir, articulo) {
+    var C = window.PEGCalculo, app = window.App;
+    var regla = C && C.ELEGIR_EN_PLANO && C.ELEGIR_EN_PLANO[nombreElegir];
+    if (!regla || !app || !app.getState) return 0;
+    var els = app.getState().elements.filter(regla.filtro);
+    els.forEach(function (e) {
+      var inv = Object.assign({}, e.inventario || {});
+      inv[regla.clave] = articulo;
+      var cambios = { inventario: inv };
+      var color = regla.clave === 'mesa' && C.colorMadera(articulo);
+      if (color) cambios.color = color;
+      app.updateElement(e.id, cambios);
+    });
+    return els.length;
+  }
+  // Lo que no cuadra entre plano, requisición y minuto (para la ventana y la ficha)
+  function diferencias() {
+    var ev = evento(), app = window.App;
+    if (!ev || !window.PEGCalculo || !app || !app.getState) return [];
+    var els = app.getState().elements;
+    var out = window.PEGCalculo.diferencias(ev, els);
+    // Cantidades que alguien cambió en la requisición y ya no son las del plano
+    var v = ev.data.vale;
+    if (v && v.items && v.items.length && _inventario) {
+      var calc = calculoItems(ev).items;
+      v.items.forEach(function (i) {
+        if (!i.id || i.origen === 'calculo' || i.cant === '' || i.cant == null) return;
+        var c = calc.find(function (x) { return x.id === i.id; });
+        if (c && c.cant !== '' && parseInt(c.cant, 10) !== parseInt(i.cant, 10)) {
+          out.push({ texto: i.nombre + ': la requisición dice ' + i.cant + ' y el plano da ' + c.cant + '. Corrige el plano (mesas, sillas o montaje) o confirma la cantidad.' });
+        }
+      });
+    }
+    return out;
+  }
+  function agregarAlPlano(tipo) {
+    var app = window.App;
+    if (!app || !app.addElement) return;
+    var els = app.getState().elements;
+    var salon = els.find(function (e) { return e.type === 'salon' || e.type === 'salon_carpa'; });
+    var t = app.getState().terrain || { w: 40, h: 40 };
+    var el = app.addElement(tipo, salon ? salon.x : t.w / 2, salon ? salon.y : t.h / 2);
+    if (el) toast('Agregado al centro del salón: muévelo a su lugar en el plano.', 'success');
+  }
   function cuadre() {
     var inv = invitados(), app = window.App;
     if (!inv || !app || !app.getState || !window.PEGCalculo) return '';
@@ -325,6 +370,13 @@
           (pendientes ? ' <b class="vale-alerta">' + pendientes + (pendientes === 1 ? ' servicio no tiene' : ' servicios no tienen') + ' quién lo surte.</b>' : '') + '</p>' +
         (servs.length ? '<div class="vale-servicios-lista">' + serviciosHtml + '</div>' : '<p class="vale-vacio">Sin servicios registrados.</p>') +
       '</section>' +
+      (function () {
+        var dif = diferencias();
+        return dif.length ? '<div class="vale-pendientes vale-diferencias"><b><i class="fa-solid fa-scale-unbalanced"></i> No cuadra entre plano, requisición y minuto</b><ul>' +
+          dif.map(function (x, k) {
+            return '<li>' + esc(x.texto) + (editar && x.agregar ? ' <button type="button" class="event-btn vale-agregar-plano" data-tipo="' + esc(x.agregar) + '">Agregar al plano</button>' : '') + '</li>';
+          }).join('') + '</ul></div>' : '';
+      })() +
       ((v.pendientes || []).length ? '<div class="vale-pendientes"><b><i class="fa-solid fa-circle-exclamation"></i> Falta definir</b><ul>' +
         v.pendientes.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '') +
       '<div class="vale-acciones">' +
@@ -359,6 +411,9 @@
     m.querySelector('#vale-imprimir').onclick = imprimir;
     if (!editar) return;
     m.querySelector('#vale-inventario').onclick = imprimirInventario;
+    Array.prototype.forEach.call(m.querySelectorAll('.vale-agregar-plano'), function (btn) {
+      btn.onclick = function () { agregarAlPlano(btn.getAttribute('data-tipo')); calcularDesdeEvento(); pintar(); };
+    });
     var btnCuadrar = m.querySelector('#vale-cuadrar');
     if (btnCuadrar) btnCuadrar.onclick = function () {
       var app = window.App, inv = invitados();
@@ -412,12 +467,14 @@
       if (elegir) elegir.onchange = function () {
         var o = item.opciones[parseInt(elegir.value, 10)];
         if (!o) return;
+        var enPlano = guardarEleccionEnPlano(item.nombre, o.nombre);
         var art = (_inventario || []).find(function (a) { return a.id === o.id; }) || o;
         item.id = o.id; item.nombre = o.nombre; item.categoria = art.categoria || item.categoria; item.origen = 'ajustado';
         delete item.opciones;
         var v = vale();
         if (v.pendientes) v.pendientes = v.pendientes.filter(function (p) { return p.indexOf('Elegir uno: ') !== 0 || v.items.some(function (x) { return x.opciones && p.indexOf(x.nombre) > -1; }); });
         guardar(); pintar();
+        if (enPlano) toast(o.nombre + ': se guardó en ' + enPlano + (enPlano === 1 ? ' elemento' : ' elementos') + ' del plano.', 'success');
       };
       tr.querySelector('.vale-nota').onchange = function (e) { if (item.origen === 'calculo') item.origen = 'ajustado'; item.nota = e.target.value; guardar(); };
       tr.querySelector('.vale-quitar').onclick = function () { v.items.splice(v.items.indexOf(item), 1); guardar(); pintar(); };
@@ -715,5 +772,5 @@
   });
 
   window.PEGVale = { abrir: abrir, imprimir: imprimir, imprimirInventario: imprimirInventario, filasFicha: filasFicha, datosFicha: datosFicha, cargarInventario: cargarInventario,
-    inventarioListo: function () { return !!_inventario; }, serviciosFicha: serviciosFicha };
+    inventarioListo: function () { return !!_inventario; }, serviciosFicha: serviciosFicha, diferencias: diferencias };
 })();

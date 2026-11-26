@@ -107,14 +107,16 @@
     L.banquete.concat(L.principal).forEach(function (e) {
       var c = e.mesaConfig || {}, n = parseInt(e.chairs, 10) || 0;
       var principal = MESAS_PRINCIPALES.test(e.type);
-      var mesa = principal ? (principalMarmol ? 'Mesa rectangular tipo marmol' : 'Mesa principal — tipo por confirmar') : (e.type === 'table_imperial' ? 'Mesa tablón' : MESA[e.type] || ('Mesa — ' + (e.name || e.type)));
+      var inv = e.inventario || {};
+      var mesa = inv.mesa ? inv.mesa : principal ? (principalMarmol ? 'Mesa rectangular tipo marmol' : 'Mesa principal — tipo por confirmar') : (e.type === 'table_imperial' ? 'Mesa tablón' : MESA[e.type] || ('Mesa — ' + (e.name || e.type)));
       sumar(mesa, e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mesas y periqueras', principal ? '1 es la mesa principal' : '');
       if (!n) return;
       if (principal && sillonPrincesa) {
         // Mesa principal de XV: sillón de princesa para la festejada; los demás lugares (chambelanes) con otra silla
         sumar('Sillón de princesa', 1, 'Sillas y bancos', 'mesa principal');
         if (n > 1) sumar('Silla para la mesa principal — elegir modelo', n - 1, 'Sillas y bancos', 'chambelanes / acompañantes');
-      } else if (c.tipoSilla) sumar(SILLA[c.tipoSilla] || ('Silla ' + cap(c.tipoSilla)), n, 'Sillas y bancos');
+      } else if (inv.silla) sumar(inv.silla, n, 'Sillas y bancos');
+      else if (c.tipoSilla) sumar(SILLA[c.tipoSilla] || ('Silla ' + cap(c.tipoSilla)), n, 'Sillas y bancos');
       if (c.sillaFunda && c.sillaFunda !== 'ninguna') sumar('Funda completa para silla Tiffany color ' + norm(c.sillaFunda), n, 'Sillas y bancos');
       if (c.platoBase && c.platoBase !== 'ninguno') sumar(PLATO_BASE[c.platoBase] || ('Plato base ' + cap(c.platoBase)), n, 'Loza');
       if (hayFuerte && c.platoTrinche && c.platoTrinche !== 'ninguno') sumar(TRINCHE[c.platoTrinche] || ('Plato trinche ' + cap(c.platoTrinche)), n, 'Loza');
@@ -147,7 +149,8 @@
     if (altos && altos.cant > 4) pendientes.push('Hay ' + altos.cant + ' arreglos altos y solo existen 4 bases metálicas altas.');
     var numeradas = L.banquete.filter(function (e) { return e.mesaConfig && parseInt(e.mesaConfig.mesaNum, 10) > 0; }).length;
     if (numeradas) {
-      sumar('Números de mesa (acrílico o madera)', numeradas, 'Identificadores de mesa');
+      var numInv = L.banquete.map(function (e) { return e.inventario && e.inventario.numero; }).find(Boolean);
+      sumar(numInv || 'Números de mesa (acrílico o madera)', numeradas, 'Identificadores de mesa');
       sumar('Base metálica para numeración de mesas', numeradas, 'Identificadores de mesa');
     }
     if (/cojin/.test(norm(b.vajilla_color || '')) && L.banquete.some(function (e) { return e.mesaConfig && e.mesaConfig.tipoSilla === 'crossback'; })) {
@@ -158,9 +161,9 @@
     // Cóctel: periqueras, sombrillas, bancos y salas lounge
     L.coctel.forEach(function (e) {
       if (e.type === 'lounge_set') { sumar('Sala lounge madera', 1, 'Salas y sombrillas'); return; }
-      sumar('Periquera (madera o metal)', 1, 'Mesas y periqueras');
+      sumar((e.inventario && e.inventario.mesa) || 'Periquera (madera o metal)', 1, 'Mesas y periqueras');
       if (/umbrella/.test(e.type)) sumar('Sombrilla', 1, 'Salas y sombrillas');
-      if (parseInt(e.chairs, 10)) sumar('Banco alto (elegir modelo)', parseInt(e.chairs, 10), 'Sillas y bancos');
+      if (parseInt(e.chairs, 10)) sumar((e.inventario && e.inventario.silla) || 'Banco alto (elegir modelo)', parseInt(e.chairs, 10), 'Sillas y bancos');
     });
     L.otras.forEach(function (e) {
       if (/carrito/.test(norm(e.name))) sumar('Carrito de snacks', 1, 'Snacks y estaciones');
@@ -190,7 +193,8 @@
     var amen = (b.amenidades || []).map(norm);
     var ilumina = false;
     if (amen.some(function (a) { return /letra gigante xv/.test(a); })) {
-      sumar('Letra gigante XV (1.10 o 1.80 m)', 1, 'Letras gigantes');
+      var letraPlano = elements.find(function (e) { return e.type === 'giant_letters_xv' && e.inventario && e.inventario.articulo; });
+      sumar(letraPlano ? letraPlano.inventario.articulo : 'Letra gigante XV (1.10 o 1.80 m)', 1, 'Letras gigantes');
       ilumina = true;
     }
     if (amen.some(function (a) { return /l-o-v-e|love/.test(a); })) {
@@ -258,5 +262,53 @@
     return { cambios: Object.keys(cambios).map(function (k) { return cambios[k]; }), falta: dif };
   }
 
-  window.PEGCalculo = { calcular: calcular, lugares: lugares, cuadrar: cuadrar };
+  // Al elegir una opción en la requisición se guarda en estos elementos del plano (element.inventario[clave])
+  var ELEGIR_EN_PLANO = {
+    'Mesa rectangular de madera (miel o nogal)': { clave: 'mesa', filtro: function (e) { return e.type === 'table_rectangular' || e.type === 'table_campirana'; } },
+    'Silla cross back (miel o nogal)': { clave: 'silla', filtro: function (e) { return e.mesaConfig && e.mesaConfig.tipoSilla === 'crossback'; } },
+    'Silla metálica (Boss o Lotus)': { clave: 'silla', filtro: function (e) { return e.mesaConfig && e.mesaConfig.tipoSilla === 'metalica'; } },
+    'Sillón principal (elegir color)': { clave: 'silla', filtro: function (e) { return e.mesaConfig && e.mesaConfig.tipoSilla === 'princesa'; } },
+    'Periquera (madera o metal)': { clave: 'mesa', filtro: function (e) { return /^table_periquera/.test(e.type); } },
+    'Banco alto (elegir modelo)': { clave: 'silla', filtro: function (e) { return /^table_periquera/.test(e.type); } },
+    'Números de mesa (acrílico o madera)': { clave: 'numero', filtro: function (e) { return e.mesaConfig && parseInt(e.mesaConfig.mesaNum, 10) > 0; } },
+    'Letra gigante XV (1.10 o 1.80 m)': { clave: 'articulo', filtro: function (e) { return e.type === 'giant_letters_xv'; } }
+  };
+  // Color de la madera en el croquis según el tono elegido
+  function colorMadera(nombre) {
+    var n = norm(nombre);
+    return /miel/.test(n) ? '#B07A3B' : /nogal/.test(n) ? '#5C3A21' : null;
+  }
+
+  // Servicios que deben tener su lugar en el plano: [nombre, cómo se escribe, tipo de elemento]
+  var SERVICIOS_PLANO = [
+    ['DJ', /(^|[^a-z])dj([^a-z]|$)/, /^dj_booth$/, 'dj_booth'], ['Pista de baile', /pista/, /^dancefloor/, 'dancefloor'],
+    ['Cabina inflable', /inflable/, /^photobooth_inflatable$/, 'photobooth_inflatable'], ['Cabina 360°', /cabina 360|(^|[^/] )360( |°|$)/, /^photobooth_360$/, 'photobooth_360'],
+    ['Espejo selfie', /espejo/, /^photobooth_mirror$/, 'photobooth_mirror'], ['Robot LED', /robot/, /^robot_led$/, 'robot_led'],
+    ['Chisperos', /chispero/, /^sparklers$/, 'sparklers'], ['Grupo norteño', /norteno/, /^vendor_norteno$/, 'vendor_norteno'],
+    ['Grupo versátil', /versatil/, /^vendor_versatil$/, 'vendor_versatil'], ['Banda', /(^|[^a-z])banda([^a-z]|$)/, /^vendor_banda$/, 'vendor_banda'],
+    ['Mariachi', /mariachi/, /^vendor_mariachi$/, 'vendor_mariachi'], ['Chinelos', /chinelo/, /^vendor_chinelos$/, 'vendor_chinelos'],
+    ['Saxofonista', /saxo/, /^vendor_saxo$/, 'vendor_saxo'], ['Show men (cabezones)', /cabezones|show ?men/, /^showmen/, 'showmen_inflatables'],
+    ['Letras XV', /letras? (gigantes? )?xv/, /^giant_letters_xv$/, 'giant_letters_xv']
+  ];
+  // Lo que no cuadra entre el plano, el minuto a minuto y el brief.
+  // Devuelve [{ texto, agregar: tipo de elemento que falta en el plano (opcional) }]
+  function diferencias(ev, elements) {
+    var d = ev.data || {}, b = d.brief || {}, out = [];
+    var invitados = parseInt(b.invitados, 10) || 0;
+    var L = lugares(elements, invitados);
+    if (invitados && L.total !== invitados) out.push({ texto: 'Lugares: el plano tiene ' + L.total + ' (mesas + principal) y son ' + invitados + ' invitados.', cuadrar: true });
+    var fuentes = [
+      ['el minuto a minuto', (d.minuto || []).map(function (r) { return r.actividad; })],
+      ['los proveedores', (d.proveedores || []).map(function (p) { return [p.servicio, p.nombre].join(' '); })],
+      ['las amenidades del brief', b.amenidades || []]
+    ];
+    SERVICIOS_PLANO.forEach(function (sv) {
+      if (elements.some(function (e) { return sv[2].test(e.type || ''); })) return;
+      var donde = fuentes.filter(function (f) { return f[1].some(function (t) { return sv[1].test(norm(t)); }); }).map(function (f) { return f[0]; });
+      if (donde.length) out.push({ texto: sv[0] + ': está en ' + donde.join(' y ') + ', pero no tiene lugar en el plano.', agregar: sv[3], nombre: sv[0] });
+    });
+    return out;
+  }
+
+  window.PEGCalculo = { calcular: calcular, lugares: lugares, cuadrar: cuadrar, diferencias: diferencias, ELEGIR_EN_PLANO: ELEGIR_EN_PLANO, colorMadera: colorMadera };
 })();
