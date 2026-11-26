@@ -97,7 +97,7 @@
       return '<div class="staff-persona" data-i="' + i + '">' +
         '<div class="staff-datos">' +
           '<select class="form-input" data-k="rol" title="' + esc(AYUDA_ROL[p.rol] || '') + '">' + ROLES.concat(ROLES.indexOf(p.rol) < 0 && p.rol ? [p.rol] : []).map(function (r) { return '<option' + (p.rol === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>' +
-          '<input class="form-input" data-k="nombre" placeholder="Nombre" value="' + esc(p.nombre) + '">' +
+          '<input class="form-input" data-k="nombre" list="capitanes-peg" placeholder="Nombre" value="' + esc(p.nombre) + '">' +
           '<input class="form-input" data-k="telefono" type="tel" placeholder="Teléfono" value="' + esc(p.telefono) + '">' +
           '<input class="form-input" data-k="radio" placeholder="Radio (núm.)" value="' + esc(p.radio) + '">' +
           '<button type="button" class="btn-icon-sm staff-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button>' +
@@ -111,7 +111,9 @@
       '</div>';
     }).join('');
 
+    var capitanes = PE() && PE().capitanes ? PE().capitanes() : [];
     _modal.innerHTML = '<div class="venue-picker staff-modal">' +
+      '<datalist id="capitanes-peg">' + capitanes.map(function (n) { return '<option value="' + esc(n) + '"></option>'; }).join('') + '</datalist>' +
       '<div class="venue-picker-head"><h2>Staff del evento · ' + esc(evento().nombre) + '</h2>' +
         '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
       '<p class="vale-sub">' + (lista.length ? lista.length + (lista.length === 1 ? ' persona · ' : ' personas · ') + resumen(lista) : 'Todavía no hay staff registrado.') + '</p>' +

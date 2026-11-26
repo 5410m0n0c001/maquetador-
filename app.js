@@ -2400,7 +2400,7 @@
     // ── Datos del evento (brief.js) ──
     var PE = window.PEGEventos;
     var ev = PE && PE.getEvent ? PE.getEvent() : null;
-    var isPlanner = PE && PE.isPlanner ? PE.isPlanner() : true;
+    var isPlanner = PE && PE.verSensible ? PE.verSensible() : (PE && PE.isPlanner ? PE.isPlanner() : true);
     var schema = PE && PE.getSchema ? PE.getSchema() : { sections: [], montajeFields: [] };
     if (ev && PE.syncMinuto) PE.syncMinuto();
     var data = ev ? ev.data : { brief: {}, minuto: [], montaje: { fotos: [] } };
@@ -2650,7 +2650,7 @@
         html += '<tr><td><strong>' + esc(p.servicio || '-') + '</strong>' + (p.red ? '<br><span class="muted">Red Primavera</span>' : '') + (p.contrata ? '<br><span class="muted">Contrata: ' + esc(p.contrata) + '</span>' : '') + '</td>' +
           '<td>' + esc(p.nombre || '-') + (p.telefono ? '<br>' + esc(p.telefono) : '') + (p.recibe ? '<br><span class="muted">Recibe: ' + esc(p.recibe) + '</span>' : '') + '</td>' +
           '<td>' + (horario || '-') + '</td>' +
-          '<td>' + [p.condiciones && '<b>Condiciones:</b> ' + esc(p.condiciones), p.requerimientos && '<b>Requerimientos:</b> ' + esc(p.requerimientos)].filter(Boolean).join('<br>') + '</td></tr>';
+          '<td>' + [isPlanner && p.condiciones && '<b>Condiciones:</b> ' + esc(p.condiciones), p.requerimientos && '<b>Requerimientos:</b> ' + esc(p.requerimientos)].filter(Boolean).join('<br>') + '</td></tr>';
       });
       html += '</tbody></table></section>';
     }

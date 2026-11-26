@@ -15,6 +15,9 @@
   var BUCKET = 'maquetador-fotos';
   // La contraseña solo evita cambios accidentales: la información del evento es pública por diseño.
   var PLANNER_PASSWORD = 'PrimaveraVIP';
+  // Capitanes: editan solo los eventos donde el Staff los registra como Capitán o Coordinador,
+  // y no ven presupuesto, pagos, contrato, seguimiento ni datos del cliente.
+  var CAPITANES = [{ nombre: 'Isis Uribe', clave: 'Primavera2.0' }];
   var PLANNER_FLAG = 'peg_modo_planner'; // ya no se usa: al recargar siempre se entra en solo lectura (se borra si quedó de antes)
   var LOCAL_PREFIX = 'peg_evento_';
   var MAX_FOTOS = 8;
@@ -308,6 +311,7 @@
   var _sb = null;
   var _event = null;          // { id, nombre, fecha_evento, venue_id, data: { brief, minuto, montaje, layout } }
   var _isPlanner = false;
+  var _capitan = null;         // nombre del capitán con sesión abierta (null = planner o solo lectura)
   var _saveTimer = null;
   var _lastLayoutJson = '';
   var _panel = null;
@@ -344,11 +348,12 @@
   // ── Modo planner / solo lectura ───────────────────────────
   function applyMode() {
     document.body.classList.toggle('peg-view-only', !_isPlanner);
+    document.body.classList.toggle('modo-capitan', !!_capitan);
     var btn = $('btn-planner-mode');
     if (btn) {
       btn.innerHTML = _isPlanner
-        ? '<i class="fa-solid fa-unlock"></i> <b>Modo planner</b>'
-        : '<i class="fa-solid fa-lock"></i> <b>Solo lectura</b>';
+        ? '<i class="fa-solid fa-unlock"></i> <b>' + (_capitan ? 'Capitán: ' + esc(_capitan) : 'Modo planner') + '</b>'
+        : '<i class="fa-solid fa-lock"></i> <b>' + (_capitan ? 'Capitán: ' + esc(_capitan) + ' · solo ver' : 'Solo lectura') + '</b>';
       btn.title = _isPlanner ? 'Modo planner activo (clic para salir)' : 'Solo lectura: clic para entrar como planner';
       btn.classList.toggle('active', _isPlanner);
     }
@@ -357,19 +362,52 @@
   }
 
   function togglePlanner() {
-    if (_isPlanner) {
-      if (!confirm('¿Salir del modo planner? Quedará en modo de solo lectura.')) return;
+    if (_isPlanner || _capitan) {
+      if (!confirm(_capitan ? '¿Cerrar la sesión de capitán? Quedará en modo de solo lectura.' : '¿Salir del modo planner? Quedará en modo de solo lectura.')) return;
       _isPlanner = false;
+      _capitan = null;
       applyMode();
       toast('Modo solo lectura.', 'info');
       return;
     }
-    var pwd = prompt('Contraseña de planner:');
+    entrar(function () {});
+  }
+
+  function normNombre(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); }
+  // El evento está asignado al capitán si el Staff lo registra como Capitán o Coordinador
+  function asignadoA(staff, nombre) {
+    return (Array.isArray(staff) ? staff : []).some(function (p) {
+      return (p.rol === 'Capitán' || p.rol === 'Coordinador') && normNombre(p.nombre) === normNombre(nombre);
+    });
+  }
+  // Con sesión de capitán solo se edita el evento asignado; los demás quedan en solo lectura
+  function ajustarPermisoCapitan() {
+    if (!_capitan) return;
+    var antes = _isPlanner;
+    _isPlanner = !_event || asignadoA(_event.data.staff, _capitan);
+    if (antes && !_isPlanner) toast('Este evento no te está asignado: solo puedes verlo.', 'warning');
+  }
+  // Pide la contraseña; abre sesión de planner o de capitán
+  function entrar(next, soloPlanner) {
+    var pwd = prompt(soloPlanner ? 'Contraseña de planner:' : 'Contraseña de planner o de capitán:');
     if (pwd === null) return;
-    if (pwd !== PLANNER_PASSWORD) { toast('Contraseña incorrecta.', 'error'); return; }
+    if (pwd === PLANNER_PASSWORD) {
+      _capitan = null;
+      _isPlanner = true;
+      applyMode();
+      toast('Modo planner activado.', 'success');
+      next();
+      return;
+    }
+    var cap = CAPITANES.find(function (c) { return c.clave === pwd; });
+    if (!cap) { toast('Contraseña incorrecta.', 'error'); return; }
+    if (soloPlanner) { toast('Esta acción es solo para el planner.', 'warning'); return; }
+    _capitan = cap.nombre;
     _isPlanner = true;
+    ajustarPermisoCapitan();
     applyMode();
-    toast('Modo planner activado.', 'success');
+    if (_isPlanner) toast('Sesión de capitán: ' + cap.nombre + '.', 'success');
+    if (_isPlanner || !_event) next();
   }
 
   // ── Guardado ──────────────────────────────────────────────
@@ -487,6 +525,7 @@
       row.data.montaje = Object.assign({ fotos: [] }, row.data.montaje || {});
       if (!Array.isArray(row.data.proveedores)) row.data.proveedores = [];
       _event = row;
+      if (_capitan) { ajustarPermisoCapitan(); applyMode(); }
       if (row.data.layout && window.App && window.App.loadLayout) {
         window.App.loadLayout(row.data.layout);
       }
@@ -588,14 +627,11 @@
   }
 
   // Pide la contraseña si hace falta y luego continúa
-  function ensurePlanner(next) {
-    if (_isPlanner) { next(); return; }
-    var pwd = prompt('Contraseña de planner:');
-    if (pwd === null) return;
-    if (pwd !== PLANNER_PASSWORD) { toast('Contraseña incorrecta.', 'error'); return; }
-    _isPlanner = true;
-    applyMode();
-    next();
+  function ensurePlanner(next, soloPlanner) {
+    if (_isPlanner && !(soloPlanner && _capitan)) { next(); return; }
+    if (_capitan && soloPlanner) { toast('Esta acción es solo para el planner.', 'warning'); return; }
+    if (_capitan && !_isPlanner) { toast('Este evento no te está asignado: solo puedes verlo.', 'warning'); return; }
+    entrar(next, soloPlanner);
   }
 
   // Abre otro evento sin recargar la página (así no se pierde el modo planner)
@@ -623,7 +659,7 @@
         '<div class="venue-grid">' +
           '<button class="venue-card" data-w="brief"><i class="fa-solid fa-clipboard-list"></i><strong>Ver el brief</strong><span>Datos del evento, minuto a minuto y fotos del montaje.</span></button>' +
           '<button class="venue-card" data-w="plano"><i class="fa-solid fa-map-location-dot"></i><strong>Ver el plano</strong><span>Distribución del salón en 2D y 3D.</span></button>' +
-          '<button class="venue-card" data-w="editar"><i class="fa-solid fa-unlock"></i><strong>Editar como planner</strong><span>Pide la contraseña de planner.</span></button>' +
+          '<button class="venue-card" data-w="editar"><i class="fa-solid fa-unlock"></i><strong>Editar (planner o capitán)</strong><span>Pide la contraseña de planner o de capitán.</span></button>' +
           '<button class="venue-card venue-card-empty" data-w="inicio"><i class="fa-solid fa-house"></i><strong>Ir al inicio</strong><span>Crear otro evento o abrir uno guardado.</span></button>' +
         '</div>' +
       '</div>';
@@ -676,7 +712,7 @@
           else if (go === 'bodega') createBodega();
           else if (go === 'maquetar') { if (window.App && window.App.openVenuePicker) window.App.openVenuePicker(); }
           else openEventsModal();
-        });
+        }, true);
       };
     });
   }
@@ -727,17 +763,22 @@
     var close = function () { modal.remove(); };
     modal.querySelector('.venue-picker-close').onclick = close;
     modal.onclick = function (e) { if (e.target === modal) close(); };
-    $('btn-new-event').onclick = function () { ensurePlanner(createEvent); };
-    $('btn-new-bodega').onclick = function () { ensurePlanner(function () { close(); createBodega(); }); };
+    $('btn-new-event').onclick = function () { ensurePlanner(createEvent, true); };
+    $('btn-new-bodega').onclick = function () { ensurePlanner(function () { close(); createBodega(); }, true); };
 
     client().from(TABLE).select('id,nombre,fecha_evento,venue_id,updated_at,modo:data->layout->>mode,' +
       'tipo:data->brief->>tipo_evento,tipoOtro:data->brief->>tipo_evento_otro,festejados:data->brief->>festejados,' +
-      'cliente:data->brief->>cliente_nombre,invitados:data->brief->>invitados,venueRed:data->brief->>venue_red,venueExt:data->brief->>venue_externo')
+      'cliente:data->brief->>cliente_nombre,invitados:data->brief->>invitados,venueRed:data->brief->>venue_red,venueExt:data->brief->>venue_externo,staff:data->staff')
       .order('updated_at', { ascending: false }).limit(200)
       .then(function (res) {
         var grid = $('events-grid');
         if (!grid) return;
         if (res.error) { toast('No se pudieron cargar los eventos.', 'error'); return; }
+        if (_capitan) {
+          res.data = res.data.filter(function (ev) { return asignadoA(ev.staff, _capitan); });
+          Array.prototype.forEach.call(grid.querySelectorAll('#btn-new-event, #btn-new-bodega'), function (b) { b.remove(); });
+          if (!res.data.length) grid.insertAdjacentHTML('beforeend', '<p class="vale-vacio">No tienes eventos asignados. El planner debe registrarte como Capitán en el Staff del evento.</p>');
+        }
         res.data.forEach(function (ev) {
           var card = document.createElement('button');
           card.className = 'venue-card evento-card';
@@ -792,7 +833,7 @@
   function openPanel() {
     if (!_event) {
       // Planner sin evento abierto: se crea el evento con el plano actual y se abre su brief
-      if (_isPlanner) createEvent();
+      if (_isPlanner && !_capitan) createEvent();
       return;
     }
     if (!_panel) {
@@ -935,7 +976,7 @@
           (horario ? '<div class="prov-horario"><i class="fa-regular fa-clock"></i> ' + esc(horario) + '</div>' : '') +
           (p.contrata ? '<div><b>Lo contrata:</b> ' + esc(p.contrata) + '</div>' : '') +
           (p.recibe ? '<div><b>Lo recibe:</b> ' + esc(p.recibe) + '</div>' : '') +
-          (p.condiciones ? '<p><b>Condiciones:</b> ' + esc(p.condiciones) + '</p>' : '') +
+          (p.condiciones && !_capitan ? '<p><b>Condiciones:</b> ' + esc(p.condiciones) + '</p>' : '') +
           (p.requerimientos ? '<p><b>Requerimientos:</b> ' + esc(p.requerimientos) + '</p>' : '') + '</div>';
         return;
       }
@@ -947,7 +988,7 @@
         '<label class="prov-check"><input type="checkbox" data-pk="red"' + (p.red ? ' checked' : '') + ' /> Es de la red Primavera</label>' +
         '<button type="button" class="minuto-del prov-del" title="Quitar proveedor"><i class="fa-solid fa-xmark"></i></button></div>' +
         (p.servicio === 'Pirotecnia / efectos' ? '<div class="brief-notice"><strong><i class="fa-solid fa-triangle-exclamation"></i> Requiere autorización por escrito</strong><p>Ver la restricción de servicios externos en las notas del contrato.</p></div>' : '') +
-        '<div class="brief-grid">' + PROV_CAMPOS.map(function (f) {
+        '<div class="brief-grid">' + PROV_CAMPOS.filter(function (f) { return !(_capitan && f.k === 'condiciones'); }).map(function (f) {
           var v = p[f.k];
           return '<div class="brief-field' + (f.type === 'textarea' ? ' wide' : '') + '"><label class="form-label">' + esc(f.label) + '</label>' +
             (f.type === 'textarea'
@@ -1344,8 +1385,9 @@
   function renderPanel() {
     if (!_panel || !_event) return;
     var ro = !_isPlanner;
+    var oculto = ro || !!_capitan; // sin información sensible
     var d = _event.data;
-    var steps = visibleSteps(ro);
+    var steps = visibleSteps(oculto);
     if (_step >= steps.length) _step = steps.length - 1;
     var step = steps[_step];
     var byId = {};
@@ -1375,14 +1417,14 @@
     if (ro) {
       html += '<div class="ro-banner"><div><strong><i class="fa-solid fa-eye"></i> Estás en solo lectura.</strong> ' +
         'Aquí se muestra solo lo que ya se capturó. Para llenar o editar el brief, entra como planner.</div>' +
-        '<button type="button" class="btn-gold" id="ro-editar"><i class="fa-solid fa-unlock"></i> Editar como planner</button></div>';
+        '<button type="button" class="btn-gold" id="ro-editar"><i class="fa-solid fa-unlock"></i> Editar (planner o capitán)</button></div>';
     }
     if (step.generar) {
       html += '<section class="brief-section"><h3><span>' + (_step + 1) + '</span>' + esc(step.title) + '</h3>' + generarHtml() + '</section>';
     }
     step.sections.forEach(function (id) {
       var sec = byId[id];
-      if (!sec || (ro && sec.internal)) return;
+      if (!sec || (oculto && sec.internal)) return;
       html += '<section class="brief-section" id="brief-' + sec.id + '"><h3>' + esc(sec.title) + '</h3>';
       if (sec.id === 'minuto') {
         if (!ro && syncMinuto(d)) scheduleSave();
@@ -1392,7 +1434,7 @@
       else if (sec.id === 'proveedores') html += proveedoresHtml(d.proveedores || [], ro);
       else {
         var parts = sec.fields
-          .filter(function (f) { return !(ro && f.internal); })
+          .filter(function (f) { return !(oculto && f.internal); })
           .map(function (f) { return { f: f, html: fieldHtml(f, d.brief, ro) }; });
         if (ro) {
           // Un subtítulo solo se muestra si debajo hay algo respondido
@@ -1677,6 +1719,10 @@
     hora12: hora12,
     syncMinuto: function () { if (_event) syncMinuto(_event.data); },
     isPlanner: function () { return _isPlanner; },
+    // Presupuesto, pagos y datos internos: solo el planner
+    verSensible: function () { return _isPlanner && !_capitan; },
+    capitan: function () { return _capitan; },
+    capitanes: function () { return CAPITANES.map(function (c) { return c.nombre; }); },
     client: client,
     scheduleSave: scheduleSave,
     guardarAhora: guardarAhora,
