@@ -2593,8 +2593,16 @@
       '.photos figcaption { padding: 5px 8px 7px; }' +
       '.photos figcaption b { display: block; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--pink); }' +
       '.photos .desc { font-size: 9.5px; color: var(--ink); line-height: 1.35; margin-top: 2px; }' +
-      '.galeria { display: grid; grid-template-columns: 44% 1fr; gap: 12px; align-items: start; margin-top: 8px; }' +
-      '.galeria .mod { margin: 0; } .galeria .photos { grid-template-columns: repeat(2, 1fr); margin-top: 0; }' +
+      '.montajes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 8px; }' +
+      '.mcard { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; break-inside: avoid; page-break-inside: avoid; background: #fff; }' +
+      '.mcard img { width: 100%; height: 210px; object-fit: cover; display: block; border-bottom: 3px solid var(--gold); }' +
+      '.mcard .cuerpo { padding: 8px 10px 10px; }' +
+      '.mcard h3 { font-size: 13px; color: var(--pink); }' +
+      '.mcard .sub { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--gray); margin: 1px 0 4px; }' +
+      '.mcard .desc { margin: 0 0 6px; }' +
+      '.mcard .lleva div { display: grid; grid-template-columns: 30% 1fr; border-top: 1px solid var(--line); padding: 2px 0; }' +
+      '.mcard .lleva b { font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: #A88A55; font-weight: 600; padding-top: 1px; }' +
+      '.notas-fin { margin-top: 10px; } .notas-fin .mod .fila { grid-template-columns: 26% 1fr; }' +
       // Información del evento por módulos
       '.mods { column-count: 2; column-gap: 12px; }' +
       '.mod { break-inside: avoid; page-break-inside: avoid; display: block; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin: 0 0 10px; background: #fff; }' +
@@ -2625,7 +2633,7 @@
         ' .block { margin-bottom: 6px; } .block h3 { font-size: 11px; margin-bottom: 2px; }' +
         ' .mods { column-gap: 8px; } .mod { margin-bottom: 7px; } .mod h3 { font-size: 10.5px; padding: 3px 8px; } .mod .k, .mod .v { padding: 2px 6px; } .mod .k { font-size: 7.5px; }' +
         ' .photos { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; } .photos img { height: 120px; } .photos .desc { font-size: 8.5px; }' +
-        ' .galeria .photos { grid-template-columns: repeat(2, 1fr); gap: 6px; } .galeria .photos img { height: 100px; }' +
+        ' .montajes { gap: 8px; } .mcard img { height: 150px; } .mcard h3 { font-size: 11px; }' +
         ' .signs { margin-top: 26px; } .footer { margin-top: 12px; } }' +
       '</style></head><body>';
 
@@ -2693,11 +2701,22 @@
         return fmt(f) !== '';
       });
       if (!rows.length) return;
-      var modHtml = '<div class="mod' + (rows.length > 7 ? ' largo' : '') + '"><h3>' + esc(s.title) + '</h3>' + rows.map(function (f) {
-        return '<div class="fila"><div class="k">' + esc(f.label) + '</div><div class="v">' + esc(fmt(f)) + '</div></div>';
-      }).join('') + '</div>';
-      if ((s.id === 'menu' && fotosMenu.length) || (s.id === 'mobiliario' && fotosMontaje.length)) modJuntoAFotos[s.id] = modHtml;
-      else briefHtml += modHtml;
+      var modulo = function (titulo, filas) {
+        return '<div class="mod' + (filas.length > 7 ? ' largo' : '') + '"><h3>' + esc(titulo) + '</h3>' + filas.map(function (f) {
+          return '<div class="fila"><div class="k">' + esc(f.label) + '</div><div class="v">' + esc(fmt(f)) + '</div></div>';
+        }).join('') + '</div>';
+      };
+      // Lo que ya dicen las mesas del plano o las fotos con su descripción no se repite en las notas
+      var fotosConDesc = function (re) { var l = todasFotos.filter(function (f) { return re.test(f.etiqueta || ''); }); return l.length && l.every(function (f) { return f.descripcion; }); };
+      if (s.id === 'mobiliario' && (tablesList.length || fotosMontaje.length)) {
+        var yaEnMesas = ['sillas', 'mesas'].concat(fotosConDesc(/^Montaje/) ? ['manteleria', 'vajilla_color'] : []);
+        var notasM = rows.filter(function (f) { return yaEnMesas.indexOf(f.k) < 0; });
+        if (notasM.length) modJuntoAFotos.mobiliario = modulo('Notas del montaje', notasM);
+      } else if (s.id === 'menu' && fotosMenu.length) {
+        var yaEnFotos = fotosConDesc(/^Plato fuerte$/) ? ['proteina', 'guarniciones'] : [];
+        var notasMenu = rows.filter(function (f) { return yaEnFotos.indexOf(f.k) < 0; });
+        if (notasMenu.length) modJuntoAFotos.menu = modulo('Notas del menú', notasMenu);
+      } else briefHtml += modulo(s.title, rows);
     });
     if (briefHtml) html += '<section class="section"><h2>Información del evento</h2><div class="mods">' + briefHtml + '</div></section>';
 
@@ -2801,29 +2820,10 @@
     }
     html += '</tbody></table></section>';
 
-    // Montaje elegido
+    // Montaje: una sola sección. Cada montaje (mesas iguales) con su foto grande y debajo lo que lleva;
+    // después las demás fotos, el cóctel y las notas que no están en ninguna foto
     var m = data.montaje || {};
     var montajeRows = (schema.montajeFields || []).filter(function (f) { return m[f.k]; });
-    var fotosHtml = function (lista) {
-      return '<div class="photos">' + lista.map(function (f, i) {
-        return '<figure><img src="' + esc(f.url) + '" alt="' + esc(f.etiqueta || 'Foto ' + (i + 1)) + '">' +
-          (f.etiqueta || f.descripcion ? '<figcaption>' + (f.etiqueta ? '<b>' + esc(f.etiqueta) + '</b>' : '') + (f.descripcion ? '<div class="desc">' + esc(f.descripcion) + '</div>' : '') + '</figcaption>' : '') + '</figure>';
-      }).join('') + '</div>';
-    };
-    // Lo del brief a la izquierda y sus fotos a la derecha
-    var galeria = function (mod, lista) {
-      return mod ? '<div class="galeria"><div>' + mod + '</div>' + fotosHtml(lista) + '</div>' : fotosHtml(lista);
-    };
-    if (montajeRows.length || fotosMontaje.length) {
-      html += '<section class="section"><h2>Montaje elegido</h2>' + (montajeRows.length ? '<div class="kv">' + montajeRows.map(function (f) {
-        return '<div' + (f.type === 'textarea' ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(m[f.k]) + '</div>';
-      }).join('') + '</div>' : '') + (fotosMontaje.length ? galeria(modJuntoAFotos.mobiliario, fotosMontaje) : '') + '</section>';
-    }
-    if (fotosMenu.length) {
-      html += '<section class="section"><h2>Menú</h2>' + galeria(modJuntoAFotos.menu, fotosMenu) + '</section>';
-    }
-
-    // Mobiliario por mesa (las mesas con el mismo montaje se agrupan en una sola fila)
     // Números consecutivos como rango: 1, 2, 3, 5 → 1–3, 5
     function rangos(lista) {
       var n = lista.map(Number).sort(function (x, y) { return x - y; }), out = [];
@@ -2834,52 +2834,100 @@
       }
       return out.join(', ');
     }
-    if (tablesList.length) {
-      html += '<section class="section"><h2>Mobiliario y montaje por mesa</h2><table><thead><tr>' +
-        '<th style="width:13%">Mesa(s)</th><th style="width:16%">Tipo</th><th style="width:9%">Sillas</th>' +
-        '<th>Montaje</th><th style="width:19%">Cristalería</th><th style="width:15%">Menú / notas</th></tr></thead><tbody>';
-      var rowsBySig = [];
-      tablesList.forEach(function (t) {
-        var c = t.mesaConfig || {};
-        var items = [];
-        if (c.mantelColor) items.push('<b>Mantel:</b> ' + (c.mantelColor === 'sin_mantel' ? 'Sin mantel' : esc(cap(c.mantelColor))));
-        if (c.caminoColor && c.caminoColor !== 'ninguno') items.push('<b>Camino:</b> ' + esc(cap(c.caminoColor)) + (c.caminoAcomodo ? ' (' + esc(c.caminoAcomodo) + ')' : ''));
-        var folds = Array.isArray(c.servilletaDoblez) ? c.servilletaDoblez : (c.servilletaDoblez ? [c.servilletaDoblez] : []);
-        if (folds.length) {
-          items.push('<b>Servilleta:</b> ' + folds.map(function (f) {
-            var color = c['servilletaColor_' + f] || (f === 'corazon' ? c.servilletaColorCorazon : f === 'corbata' ? c.servilletaColorCorbata : c.servilletaColorOtros) || 'blanco';
-            return esc((foldLabels[f] || cap(f)) + ' (' + color + ')');
-          }).join(', '));
-        }
-        if (c.platoBase && c.platoBase !== 'ninguno') items.push('<b>Plato base:</b> ' + esc(plateBaseLabels[c.platoBase] || cap(c.platoBase)));
-        if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push('<b>Plato trinche:</b> ' + esc(cap(c.platoTrinche)));
-        if (c.cubiertos) items.push('<b>Cubiertos:</b> ' + esc(cap(c.cubiertos)));
-        if (c.tipoSilla) items.push('<b>Silla:</b> ' + esc(sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? esc(' con funda completa ' + c.sillaFunda) : ''));
-        if (c.arregloFloralTipo && c.arregloFloralTipo !== 'ninguno') items.push('<b>Floral:</b> ' + esc(cap(c.arregloFloralTipo)) + (c.arregloFloralAcomodo ? ' (' + esc(c.arregloFloralAcomodo) + ')' : ''));
-        var glass = [];
-        if (c.cristal && c.cristal !== 'ninguno') glass.push(esc((glassLabels[c.cristal] || cap(c.cristal)) + ' (' + (c.copasColor || 'transparente') + ')'));
-        if (c.cristal2 && c.cristal2 !== 'ninguno') glass.push(esc((glassLabels[c.cristal2] || cap(c.cristal2)) + ' (' + (c.copasColor2 || 'transparente') + ')'));
-        // Mesas de apoyo (regalos, dulces, pastel…) con el nombre que tienen en el plano (p. ej. "Carrito de snacks")
-        var nombreMesa = /^(table_gifts|table_candy|table_cake|table_shots|table_buffet)$/.test(t.type) && t.name ? t.name : (typeLabels[t.type] || t.name || t.type);
-        var cells = '<td>' + esc(nombreMesa) + '</td>' +
-          '<td>' + esc(t.chairs || '-') + '</td><td>' + items.join('<br>') + '</td><td>' + (glass.join('<br>') || '-') + '</td>' +
-          '<td>' + (c.menu ? esc(c.menu) : '-') + '</td>';
-        var prefix = t.type.indexOf('table_honor') === 0 ? 'Honor ' : '';
-        var row = rowsBySig.find(function (r) { return r.cells === cells && r.prefix === prefix; });
-        if (row) row.nums.push(c.mesaNum || '');
-        else rowsBySig.push({ cells: cells, prefix: prefix, nums: [c.mesaNum || ''] });
-      });
-      rowsBySig.forEach(function (r) {
-        var nums = r.nums.filter(Boolean).map(esc);
-        var tipoNombre = r.cells.split('</td>')[0].replace('<td>', '');
-        var label = !nums.length
-          ? tipoNombre + (r.nums.length > 1 ? '<br><span class="muted">' + r.nums.length + ' piezas</span>' : '')
-          : nums.length === 1
-          ? (r.prefix || 'Mesa ') + nums[0]
-          : (r.prefix || 'Mesas ') + rangos(r.nums.filter(Boolean)) + '<br><span class="muted">' + nums.length + ' mesas</span>';
-        html += '<tr><td><strong>' + label + '</strong></td>' + r.cells + '</tr>';
-      });
-      html += '</tbody></table></section>';
+    var fotosHtml = function (lista) {
+      return '<div class="photos">' + lista.map(function (f, i) {
+        return '<figure><img src="' + esc(f.url) + '" alt="' + esc(f.etiqueta || 'Foto ' + (i + 1)) + '">' +
+          (f.etiqueta || f.descripcion ? '<figcaption>' + (f.etiqueta ? '<b>' + esc(f.etiqueta) + '</b>' : '') + (f.descripcion ? '<div class="desc">' + esc(f.descripcion) + '</div>' : '') + '</figcaption>' : '') + '</figure>';
+      }).join('') + '</div>';
+    };
+    var lleva = function (c) {
+      var items = [];
+      if (c.mantelColor) items.push(['Mantel', c.mantelColor === 'sin_mantel' ? 'Sin mantel' : cap(c.mantelColor)]);
+      if (c.caminoColor && c.caminoColor !== 'ninguno') items.push(['Camino', cap(c.caminoColor) + (c.caminoAcomodo ? ' (' + c.caminoAcomodo + ')' : '')]);
+      var folds = Array.isArray(c.servilletaDoblez) ? c.servilletaDoblez : (c.servilletaDoblez ? [c.servilletaDoblez] : []);
+      if (folds.length) items.push(['Servilleta', folds.map(function (f) {
+        var color = c['servilletaColor_' + f] || (f === 'corazon' ? c.servilletaColorCorazon : f === 'corbata' ? c.servilletaColorCorbata : c.servilletaColorOtros) || 'blanco';
+        return (foldLabels[f] || cap(f)) + ' (' + cap(color) + ')';
+      }).join(', ')]);
+      if (c.platoBase && c.platoBase !== 'ninguno') items.push(['Plato base', plateBaseLabels[c.platoBase] || cap(c.platoBase)]);
+      if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push(['Plato trinche', cap(c.platoTrinche)]);
+      if (c.cubiertos) items.push(['Cubiertos', cap(c.cubiertos)]);
+      if (c.tipoSilla) items.push(['Silla', (sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? ' con funda completa ' + c.sillaFunda : '')]);
+      var glass = [];
+      if (c.cristal && c.cristal !== 'ninguno') glass.push((glassLabels[c.cristal] || cap(c.cristal)) + ' (' + (c.copasColor || 'transparente') + ')');
+      if (c.cristal2 && c.cristal2 !== 'ninguno') glass.push((glassLabels[c.cristal2] || cap(c.cristal2)) + ' (' + (c.copasColor2 || 'transparente') + ')');
+      if (glass.length) items.push(['Cristalería', glass.join(', ')]);
+      if (c.arregloFloralTipo && c.arregloFloralTipo !== 'ninguno') items.push(['Centro / floral', cap(c.arregloFloralTipo) + (c.arregloFloralAcomodo ? ' (' + c.arregloFloralAcomodo + ')' : '')]);
+      return items;
+    };
+    // Mesas con el mismo montaje (sin importar cuántas sillas tengan) forman un grupo
+    var gruposMesa = [], coctelYApoyo = [];
+    tablesList.forEach(function (t) {
+      var c = t.mesaConfig || {};
+      if (/^(table_periquera|lounge_set)/.test(t.type) || /^(table_gifts|table_candy|table_cake|table_shots|table_buffet)$/.test(t.type)) {
+        // Cóctel y mesas de apoyo: solo cuántas piezas y lugares (su montaje de mesa no aplica)
+        var nombre = /^(table_gifts|table_candy|table_cake|table_shots|table_buffet)$/.test(t.type) && t.name ? t.name : (typeLabels[t.type] || t.name || t.type);
+        var a = coctelYApoyo.find(function (x) { return x.nombre === nombre; });
+        if (!a) coctelYApoyo.push(a = { nombre: nombre, n: 0, lugares: 0, coctel: /^(table_periquera|lounge_set)/.test(t.type) });
+        a.n++; a.lugares += parseInt(t.chairs, 10) || 0;
+        return;
+      }
+      var items = lleva(c);
+      var firma = t.type + '|' + JSON.stringify(items) + '|' + (c.menu || '');
+      var g = gruposMesa.find(function (x) { return x.firma === firma; });
+      if (!g) gruposMesa.push(g = { firma: firma, t: t, items: items, menu: c.menu || '', nums: [], sillas: [], principal: t.type.indexOf('table_honor') === 0 });
+      g.nums.push(c.mesaNum || '');
+      g.sillas.push(parseInt(t.chairs, 10) || 0);
+    });
+    // El menú por mesa solo se muestra si no es igual en todas
+    var menusDistintos = gruposMesa.filter(function (g) { return !g.principal; }).map(function (g) { return g.menu; }).filter(function (v, i, arr) { return arr.indexOf(v) === i; }).length > 1;
+    // Foto "Montaje 1", "Montaje 2"… para el 1er, 2do… grupo de mesas del banquete
+    var fotosLibres = fotosMontaje.slice();
+    var nMontaje = 0;
+    gruposMesa.forEach(function (g) {
+      if (g.principal) return;
+      nMontaje++;
+      var foto = fotosLibres.find(function (f) { return f.etiqueta === 'Montaje ' + nMontaje; }) ||
+        (gruposMesa.filter(function (x) { return !x.principal; }).length === 1 ? fotosLibres.find(function (f) { return f.etiqueta === 'Montaje'; }) : null);
+      if (foto) { g.foto = foto; fotosLibres.splice(fotosLibres.indexOf(foto), 1); }
+      g.titulo = 'Montaje ' + nMontaje;
+    });
+    var sillasTexto = function (lista) {
+      var cuenta = {};
+      lista.forEach(function (n) { cuenta[n] = (cuenta[n] || 0) + 1; });
+      var claves = Object.keys(cuenta);
+      return claves.length === 1 ? claves[0] + ' sillas por mesa' : claves.sort(function (a, b) { return b - a; }).map(function (k) { return cuenta[k] + ' mesas de ' + k; }).join(' y ') + ' sillas';
+    };
+    if (gruposMesa.length || fotosMontaje.length || montajeRows.length) {
+      html += '<section class="section"><h2>Montaje</h2>' + (montajeRows.length ? '<div class="kv">' + montajeRows.map(function (f) {
+        return '<div' + (f.type === 'textarea' ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(m[f.k]) + '</div>';
+      }).join('') + '</div>' : '');
+      html += '<div class="montajes">' + gruposMesa.map(function (g) {
+        var nums = g.nums.filter(Boolean);
+        var mesas = g.principal ? 'Mesa principal' : (nums.length ? (nums.length === 1 ? 'Mesa ' : 'Mesas ') + rangos(nums) : '');
+        return '<article class="mcard">' + (g.foto ? '<img src="' + esc(g.foto.url) + '" alt="' + esc(g.titulo || 'Mesa principal') + '">' : '') +
+          '<div class="cuerpo"><h3>' + esc(g.principal ? 'Mesa principal' : g.titulo + ' · ' + mesas) + '</h3>' +
+          '<div class="sub">' + esc((g.principal ? '' : g.nums.length + ' mesas · ') + (typeLabels[g.t.type] || g.t.name || g.t.type) + ' · ' + sillasTexto(g.sillas)) + '</div>' +
+          (g.foto && g.foto.descripcion ? '<p class="desc">' + esc(g.foto.descripcion) + '</p>' : '') +
+          '<div class="lleva">' + g.items.map(function (it) { return '<div><b>' + esc(it[0]) + '</b>' + esc(it[1]) + '</div>'; }).join('') +
+            (menusDistintos && g.menu ? '<div><b>Menú</b>' + esc(g.menu) + '</div>' : '') + '</div>' +
+          '</div></article>';
+      }).join('') +
+        // Las demás fotos del montaje (centro de mesa, loza…) como tarjeta junto a la mesa principal
+        fotosLibres.map(function (f) {
+          return '<article class="mcard"><img src="' + esc(f.url) + '" alt="' + esc(f.etiqueta || 'Foto') + '"><div class="cuerpo"><h3>' + esc(f.etiqueta || 'Montaje') + '</h3>' +
+            (f.descripcion ? '<p class="desc">' + esc(f.descripcion) + '</p>' : '') + '</div></article>';
+        }).join('') + '</div>';
+      if (coctelYApoyo.length) {
+        html += '<table class="grid" style="margin-top:10px"><thead><tr><th>Cóctel y mesas de apoyo</th><th style="width:14%">Piezas</th><th style="width:14%">Lugares</th></tr></thead><tbody>' +
+          coctelYApoyo.map(function (a) { return '<tr><td><strong>' + esc(a.nombre) + '</strong></td><td>' + a.n + '</td><td>' + (a.lugares || '-') + '</td></tr>'; }).join('') + '</tbody></table>';
+      }
+      if (modJuntoAFotos.mobiliario) html += '<div class="notas-fin">' + modJuntoAFotos.mobiliario + '</div>';
+      html += '</section>';
+    }
+    // Menú: fotos grandes con su descripción y al final las notas del menú
+    if (fotosMenu.length) {
+      html += '<section class="section"><h2>Menú</h2>' + fotosHtml(fotosMenu).replace('<div class="photos">', '<div class="photos" style="grid-template-columns: repeat(' + Math.min(fotosMenu.length, 4) + ', 1fr)">') + (modJuntoAFotos.menu ? '<div class="notas-fin">' + modJuntoAFotos.menu + '</div>' : '') + '</section>';
     }
 
     // Croquis en hoja completa (antes de la requisición: así los saltos de hoja no dejan huecos)
