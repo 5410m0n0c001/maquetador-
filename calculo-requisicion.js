@@ -104,6 +104,7 @@
     var sillonPrincesa = /sillon de princesa/.test(textoBrief);
 
     // Mesas del banquete y mesa principal: montaje por lugar
+    var copasSinReparto = false;
     L.banquete.concat(L.principal).forEach(function (e) {
       var c = e.mesaConfig || {}, n = parseInt(e.chairs, 10) || 0;
       var principal = MESAS_PRINCIPALES.test(e.type);
@@ -129,8 +130,15 @@
       if (hayPostre) sumar('Cucharita ' + col[1], n, 'Cubiertos');
       var c1 = c.cristal && c.cristal !== 'ninguno' ? copa(c.cristal, c.copasColor) : null;
       var c2 = c.cristal2 && c.cristal2 !== 'ninguno' ? copa(c.cristal2, c.copasColor2) : null;
-      if (c1) sumar(c1, n, 'Cristalería');
-      if (c2) sumar(c2, n, 'Cristalería');
+      // Una copa por lugar: con dos copas se reparten (copasReparto llevan la 1; si no se indica, mitad y mitad)
+      if (c1 && c2) {
+        var rep1 = parseInt(c.copasReparto, 10);
+        var n1 = isNaN(rep1) ? Math.ceil(n / 2) : Math.max(0, Math.min(n, rep1));
+        if (isNaN(rep1)) copasSinReparto = true;
+        if (n1) sumar(c1, n1, 'Cristalería');
+        if (n - n1) sumar(c2, n - n1, 'Cristalería');
+      } else if (c1) sumar(c1, n, 'Cristalería');
+      else if (c2) sumar(c2, n, 'Cristalería');
       // Servilletas: una por doblez y lugar, separadas por color
       var folds = Array.isArray(c.servilletaDoblez) ? c.servilletaDoblez : (c.servilletaDoblez ? [c.servilletaDoblez] : []);
       folds.forEach(function (f) {
@@ -234,7 +242,7 @@
     }
     var conLista = L.banquete.some(function (e) { return e.mesaConfig && e.mesaConfig.invitados && e.mesaConfig.invitados.length; });
     if (invitados && !conLista) pendientes.push('Falta definir cuántas sillas va en cada mesa: depende de la lista de invitados.');
-    pendientes.push('Copas: confirmar cuántas piezas de cada color van por mesa (el plano pone las dos copas en todos los lugares).');
+    if (copasSinReparto) pendientes.push('Copas: hay mesas con dos copas sin reparto definido; se calculó mitad y mitad (una copa por lugar). Indica en la mesa cuántos lugares llevan la copa 1.');
     return { items: items, pendientes: pendientes, lugares: L };
   }
 

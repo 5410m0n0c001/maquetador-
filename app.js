@@ -1007,6 +1007,7 @@
       setVal('mesa-copas-color', elem.mesaConfig.copasColor || 'transparente');
       setVal('mesa-cristal2', elem.mesaConfig.cristal2 || 'ninguno');
       setVal('mesa-copas-color2', elem.mesaConfig.copasColor2 || 'transparente');
+      setVal('mesa-copas-reparto', elem.mesaConfig.copasReparto != null ? elem.mesaConfig.copasReparto : '');
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-silla-funda', elem.mesaConfig.sillaFunda || 'ninguna');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
@@ -1235,6 +1236,7 @@
     mesaInp('mesa-copas-color', 'copasColor');
     mesaInp('mesa-cristal2', 'cristal2');
     mesaInp('mesa-copas-color2', 'copasColor2');
+    mesaInp('mesa-copas-reparto', 'copasReparto');
     mesaInp('mesa-silla-tipo', 'tipoSilla');
     mesaInp('mesa-silla-funda', 'sillaFunda');
     mesaInp('mesa-menu', 'menu');
