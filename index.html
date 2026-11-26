@@ -22,7 +22,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- App Styles -->
-  <link rel="stylesheet" href="styles.css?v=20261125_03" />
+  <link rel="stylesheet" href="styles.css?v=20261125_02" />
 </head>
 <body>
 
@@ -510,6 +510,13 @@
 
     <!-- Canvas Area -->
     <div class="canvas-area">
+
+      <!-- Pantalla completa del plano; dentro de ella también se cambia entre 3D y 2D -->
+      <div class="pantalla-ctrl" role="group" aria-label="Pantalla completa">
+        <button type="button" class="pc-vista" data-vista="3d" title="Ver en 3D">3D</button>
+        <button type="button" class="pc-vista" data-vista="2d" title="Ver en 2D">2D</button>
+        <button type="button" id="btn-pantalla-completa" title="Ver el plano en pantalla completa"><i class="fa-solid fa-expand"></i></button>
+      </div>
 
       <!-- Vistas del plano (zonas del salón) -->
       <div id="vista-selector" class="nivel-selector vista-selector hidden" role="group" aria-label="Vista"></div>
@@ -1053,7 +1060,7 @@
 <script src="vale.js?v=20261125_02" charset="utf-8"></script>
 <script src="staff.js?v=20261125_01" charset="utf-8"></script>
 <script src="coordinacion.js?v=20261124_10" charset="utf-8"></script>
-<script src="app.js?v=20261125_01" charset="utf-8"></script>
+<script src="app.js?v=20261125_02" charset="utf-8"></script>
 
 </body>
 </html>

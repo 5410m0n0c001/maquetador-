@@ -2798,6 +2798,61 @@
     printWindow.document.close();
   }
 
+  // ── Pantalla completa del plano ──
+  // Usa la pantalla completa del navegador; donde no existe (iPhone) el plano se extiende sobre toda la página.
+  function _wirePantallaCompleta() {
+    var area = document.querySelector('.canvas-area');
+    var btn = document.getElementById('btn-pantalla-completa');
+    if (!area || !btn) return;
+    function activa() {
+      return document.fullscreenElement === area || document.webkitFullscreenElement === area || area.classList.contains('pantalla-completa');
+    }
+    function alCambiar() {
+      var on = activa();
+      document.body.classList.toggle('plano-completo', on);
+      btn.innerHTML = '<i class="fa-solid ' + (on ? 'fa-compress' : 'fa-expand') + '"></i>';
+      btn.title = on ? 'Salir de pantalla completa' : 'Ver el plano en pantalla completa';
+      Array.prototype.forEach.call(document.querySelectorAll('.pc-vista'), function (b) {
+        b.classList.toggle('active', b.getAttribute('data-vista') === AppState.activeView);
+      });
+      // El lienzo cambió de tamaño: reacomodar el 3D y el 2D (respetando la vista elegida)
+      setTimeout(function () {
+        if (window.Visualizer3D && window.Visualizer3D.resize) window.Visualizer3D.resize();
+        if (AppState.vistaActiva) _enfocarVista(AppState.vistaActiva);
+        else if (AppState.activeView === '2d' && window.Editor2D) window.Editor2D.resetZoom();
+      }, 150);
+    }
+    btn.onclick = function () {
+      if (activa()) {
+        if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+        area.classList.remove('pantalla-completa');
+        alCambiar();
+        return;
+      }
+      var pedir = area.requestFullscreen || area.webkitRequestFullscreen;
+      var falla = function () { area.classList.add('pantalla-completa'); alCambiar(); };
+      if (!pedir) { falla(); return; }
+      try {
+        var p = pedir.call(area);
+        if (p && p.catch) p.catch(falla);
+      } catch (e) { falla(); }
+    };
+    document.addEventListener('fullscreenchange', alCambiar);
+    document.addEventListener('webkitfullscreenchange', alCambiar);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && area.classList.contains('pantalla-completa')) { area.classList.remove('pantalla-completa'); alCambiar(); }
+    });
+    // Dentro de pantalla completa la barra de arriba no se ve: estos botones cambian entre 3D y 2D
+    Array.prototype.forEach.call(document.querySelectorAll('.pc-vista'), function (b) {
+      b.onclick = function () {
+        var real = document.getElementById(b.getAttribute('data-vista') === '3d' ? 'btn-view-3d' : 'btn-view-2d');
+        if (real) real.click();
+        alCambiar();
+      };
+    });
+  }
+
   function _wireExportButtons() {
     var btnSave = document.getElementById('btn-save');
     // Con un evento abierto, Guardar actualiza ese evento (no pide nombre ni crea otro plano)
@@ -3452,6 +3507,7 @@
     _wireTerrainSettings();
     _wireInspector();
     _wireExportButtons();
+    _wirePantallaCompleta();
     _wireClear();
     _wireAlign();
     _wireImportSidebar();
