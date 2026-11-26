@@ -365,16 +365,17 @@ window.Editor2D = (function () {
         x: px - pw / 2, y: py - ph / 2, width: pw, height: ph,
         fill: 'rgba(255,255,255,0.02)', stroke: isSelected ? '#F65C7A' : 'transparent', 'stroke-width': isSelected ? 2 : 1
       }));
+      // 4 bancas largas en molinete (cada una ocupa todo su lado) y una mesa de centro pequeña
       var banca = { fill: color, stroke: colorLight, 'stroke-width': 1, opacity: 0.95, rx: mToPx(0.06) };
-      var gH = ph * 0.2, gW = pw * 0.17; // fondo de las bancas
-      [[0, -1], [0, 1]].forEach(function (s) { // arriba y abajo
-        g.appendChild(svgEl('rect', Object.assign({ x: px - pw * 0.3, y: py + s[1] * (ph / 2 - gH / 2) - gH / 2, width: pw * 0.6, height: gH }, banca)));
-      });
-      [[-1, 0], [1, 0]].forEach(function (s) { // izquierda y derecha
-        g.appendChild(svgEl('rect', Object.assign({ x: px + s[0] * (pw / 2 - gW / 2) - gW / 2, y: py - ph * 0.27, width: gW, height: ph * 0.54 }, banca)));
-      });
+      var fd = Math.min(mToPx(0.45), Math.min(pw, ph) * 0.2); // fondo de las bancas
+      var x0 = px - pw / 2, y0 = py - ph / 2;
+      g.appendChild(svgEl('rect', Object.assign({ x: x0, y: y0, width: pw - fd, height: fd }, banca)));                 // arriba
+      g.appendChild(svgEl('rect', Object.assign({ x: x0 + pw - fd, y: y0, width: fd, height: ph - fd }, banca)));       // derecha
+      g.appendChild(svgEl('rect', Object.assign({ x: x0 + fd, y: y0 + ph - fd, width: pw - fd, height: fd }, banca)));  // abajo
+      g.appendChild(svgEl('rect', Object.assign({ x: x0, y: y0 + fd, width: fd, height: ph - fd }, banca)));            // izquierda
+      var mcp = Math.min(mToPx(0.7), (Math.min(pw, ph) - 2 * fd) * 0.5);
       g.appendChild(svgEl('rect', {
-        x: px - pw * 0.17, y: py - ph * 0.15, width: pw * 0.34, height: ph * 0.3,
+        x: px - mcp / 2, y: py - mcp / 2, width: mcp, height: mcp,
         fill: '#78350f', stroke: 'rgba(255,255,255,0.35)', 'stroke-width': 1, rx: mToPx(0.04)
       }));
 

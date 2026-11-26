@@ -2045,7 +2045,8 @@ window.Visualizer3D = (function () {
       clothMat = new THREE.MeshStandardMaterial({ color: mantelHex, roughness: 0.4 });
     }
 
-    if (isCircle) {
+    var modeloPropio = /^(table_periquera|table_periquera_umbrella|table_umbrella|lounge_set)$/.test(elem.type);
+    if (isCircle && !modeloPropio) {
       tableTop = new THREE.Mesh(new THREE.CylinderGeometry(w/2, w/2, 0.05, 24), clothMat);
       tableTop.position.y = 0.75;
       tableTop.castShadow = true;
@@ -2076,7 +2077,7 @@ window.Visualizer3D = (function () {
       // Radial chairs
       _addChairsRadial(group, w/2 + 0.18, numChairs, 0.75);
 
-    } else if (shape === 'square' || shape === 'rect') {
+    } else if ((shape === 'square' || shape === 'rect') && !modeloPropio) {
       tableTop = new THREE.Mesh(new THREE.BoxGeometry(w, 0.05, h), clothMat);
       tableTop.position.y = 0.75;
       tableTop.castShadow = true;
@@ -2254,34 +2255,49 @@ window.Visualizer3D = (function () {
 
     } else if (elem.type === 'lounge_set') {
       // Sala lounge: 4 bancas de madera con cojín alrededor de una mesa de centro
+      // Bancas largas en molinete: cada una ocupa todo su lado sin chocar en las esquinas
       var cojinMat = new THREE.MeshStandardMaterial({ color: parseColor(elem.color, elem.type), roughness: 0.8 });
       var bancaMat = new THREE.MeshStandardMaterial({ color: COLORS.woodDark, roughness: 0.6 });
+      var fondo = Math.min(0.45, Math.min(w, h) * 0.2);
       function _banca(largo, x, z, rotY) {
         var b = new THREE.Group();
-        var cuerpo = new THREE.Mesh(new THREE.BoxGeometry(largo, 0.38, 0.42), bancaMat);
-        cuerpo.position.y = 0.19;
-        cuerpo.castShadow = true;
-        b.add(cuerpo);
-        var cojin = new THREE.Mesh(new THREE.BoxGeometry(largo - 0.04, 0.06, 0.4), cojinMat);
-        cojin.position.y = 0.41;
+        var asiento = new THREE.Mesh(new THREE.BoxGeometry(largo, 0.06, fondo), bancaMat);
+        asiento.position.y = 0.42;
+        asiento.castShadow = true;
+        b.add(asiento);
+        [-1, 1].forEach(function (lx) {
+          [-1, 1].forEach(function (lz) {
+            var pata = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), bancaMat);
+            pata.position.set(lx * (largo / 2 - 0.08), 0.2, lz * (fondo / 2 - 0.06));
+            pata.castShadow = true;
+            b.add(pata);
+          });
+        });
+        var cojin = new THREE.Mesh(new THREE.BoxGeometry(largo - 0.06, 0.07, fondo - 0.04), cojinMat);
+        cojin.position.y = 0.485;
         b.add(cojin);
         b.position.set(x, 0, z);
         b.rotation.y = rotY;
         group.add(b);
       }
-      _banca(w * 0.6, 0, -h / 2 + 0.25, 0);
-      _banca(w * 0.6, 0, h / 2 - 0.25, 0);
-      _banca(h * 0.54, -w / 2 + 0.25, 0, Math.PI / 2);
-      _banca(h * 0.54, w / 2 - 0.25, 0, Math.PI / 2);
+      var lx = w - fondo, lz = h - fondo;
+      _banca(lx, -fondo / 2, -h / 2 + fondo / 2, 0);          // arriba
+      _banca(lz, w / 2 - fondo / 2, -fondo / 2, Math.PI / 2);  // derecha
+      _banca(lx, fondo / 2, h / 2 - fondo / 2, 0);            // abajo
+      _banca(lz, -w / 2 + fondo / 2, fondo / 2, Math.PI / 2); // izquierda
 
-      // Center coffee table
+      // Mesa de centro pequeña
+      var mc = Math.min(0.7, (Math.min(w, h) - 2 * fondo) * 0.5);
       var coffeeTable = new THREE.Mesh(
-        new THREE.BoxGeometry(w * 0.34, 0.4, h * 0.3),
+        new THREE.BoxGeometry(mc, 0.04, mc),
         new THREE.MeshStandardMaterial({ color: COLORS.woodDark, roughness: 0.5 })
       );
-      coffeeTable.position.set(0, 0.2, 0);
+      coffeeTable.position.set(0, 0.42, 0);
       coffeeTable.castShadow = true;
       group.add(coffeeTable);
+      var mcPata = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, 0.4, 10), bancaMat);
+      mcPata.position.set(0, 0.2, 0);
+      group.add(mcPata);
 
     } else if (elem.type === 'table_periquera' || elem.type === 'table_periquera_umbrella') {
       // High bar table with cylindrical pedestal
@@ -2307,16 +2323,48 @@ window.Visualizer3D = (function () {
       perTop.castShadow = true;
       group.add(perTop);
 
+      // Bancos altos alrededor (asiento a 0.78 m, poste, aro para los pies y base)
+      var bancoMat = new THREE.MeshStandardMaterial({ color: 0x3f3f46, metalness: 0.6, roughness: 0.35 });
+      var asientoMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+      var nBancos = Math.max(0, numChairs);
+      var rBanco = w / 2 + 0.32;
+      for (var bi = 0; bi < nBancos; bi++) {
+        var ang = (bi / nBancos) * Math.PI * 2 + Math.PI / 4;
+        var banco = new THREE.Group();
+        var bAsiento = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 16), asientoMat);
+        bAsiento.position.y = 0.78;
+        bAsiento.castShadow = true;
+        banco.add(bAsiento);
+        var bPoste = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.76, 8), bancoMat);
+        bPoste.position.y = 0.38;
+        banco.add(bPoste);
+        var bAro = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.012, 6, 16), bancoMat);
+        bAro.rotation.x = Math.PI / 2;
+        bAro.position.y = 0.3;
+        banco.add(bAro);
+        var bBase = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.17, 0.02, 16), bancoMat);
+        bBase.position.y = 0.01;
+        banco.add(bBase);
+        banco.position.set(Math.cos(ang) * rBanco, 0, Math.sin(ang) * rBanco);
+        group.add(banco);
+      }
+
       // Sombrilla: poste al centro y lona de ≈ 2.2 m
       if (elem.type === 'table_periquera_umbrella') {
-        var perPole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.5, 8), perMat);
-        perPole.position.y = 1.85;
+        var perPole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.6, 8), perMat);
+        perPole.position.y = 1.9;
+        perPole.castShadow = true;
         group.add(perPole);
-        var perLona = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 1.1, 0.45, 12, 1, true),
-          new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8, side: THREE.DoubleSide }));
-        perLona.position.y = 2.45;
+        // Lona abierta en gajos (8 lados) con remate arriba, color de la periquera o marfil
+        var lonaColor = elem.sombrillaColor ? parseColor(elem.sombrillaColor, elem.type) : 0xf5efe3;
+        var perLona = new THREE.Mesh(new THREE.ConeGeometry(1.15, 0.5, 8, 1, true),
+          new THREE.MeshStandardMaterial({ color: lonaColor, roughness: 0.85, side: THREE.DoubleSide }));
+        perLona.position.y = 2.55;
         perLona.castShadow = true;
         group.add(perLona);
+        var perRemate = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), perMat);
+        perRemate.position.y = 2.82;
+        group.add(perRemate);
       }
 
     } else if (elem.type === 'table_buffet') {
