@@ -2765,7 +2765,7 @@
     // Proveedores externos: lo que falta queda en renglones para anotarlo a mano
     var provs = (data.proveedores || []).filter(function (p) { return p.servicio || p.nombre; });
     var renglon = function (t) { return '<div class="renglon">' + esc(t || '') + '</div>'; };
-    html += '<section class="section"><h2>Proveedores externos</h2><table class="grid"><thead><tr><th style="width:18%">Servicio</th><th style="width:24%">Proveedor / contacto</th><th style="width:18%">Horario</th><th>Condiciones y requerimientos</th></tr></thead><tbody>';
+    html += '<section class="section"><h2>Servicios y proveedores externos</h2><table class="grid"><thead><tr><th style="width:18%">Servicio</th><th style="width:24%">Proveedor / contacto</th><th style="width:18%">Horario</th><th>Condiciones y requerimientos</th></tr></thead><tbody>';
     provs.forEach(function (p) {
       var horas = [['llegada', 'Llega'], ['inicio', 'Inicia'], ['fin', 'Termina']].map(function (x) {
         return p[x[0]] ? '<div>' + x[1] + ' ' + esc(h12(p[x[0]])) + '</div>' : renglon(x[1] + ':');
@@ -2775,6 +2775,17 @@
       html += '<tr><td><strong>' + esc(p.servicio || '-') + '</strong>' + (p.red ? '<br><span class="muted">Red Primavera</span>' : '') + (p.contrata ? '<br><span class="muted">Contrata: ' + esc(p.contrata) + '</span>' : '') + '</td>' +
         '<td>' + esc(p.nombre || '') + (p.nombre ? '' : renglon('Nombre:')) + (p.telefono ? '<br>' + esc(p.telefono) : renglon('Tel.:')) + (p.recibe ? '<br><span class="muted">Recibe: ' + esc(p.recibe) + '</span>' : renglon('Recibe:')) + '</td>' +
         '<td>' + horas + '</td><td>' + notas + '</td></tr>';
+    });
+    // Servicios del evento que surte PEG (DJ, pista, cabinas, robot LED, chisperos…) u otros sin proveedor registrado
+    var servsPEG = window.PEGVale && window.PEGVale.serviciosFicha ? window.PEGVale.serviciosFicha() : [];
+    servsPEG.forEach(function (s) {
+      var pv = s.prov;
+      var horas = [['llega', 'Llega'], ['inicia', 'Inicia'], ['termina', 'Termina']].map(function (x) {
+        return pv[x[0]] ? '<div>' + x[1] + ' ' + esc(h12(pv[x[0]])) + '</div>' : renglon(x[1] + ':');
+      }).join('');
+      html += '<tr><td><strong>' + esc(s.nombre) + '</strong><br><span class="muted">Lo surte: ' + esc(s.surte) + '</span></td>' +
+        '<td>' + (pv.nombre ? esc(pv.nombre) : renglon('Nombre:')) + (pv.telefono ? '<br>' + esc(pv.telefono) : renglon('Tel.:')) + (pv.recibe ? '<br><span class="muted">Recibe: ' + esc(pv.recibe) + '</span>' : renglon('Recibe:')) + '</td>' +
+        '<td>' + horas + '</td><td>' + (s.nota ? '<div>' + esc(s.nota) + '</div>' : '') + renglon('Requerimientos:') + renglon('') + '</td></tr>';
     });
     for (var vp = 0; vp < (provs.length ? 2 : 4); vp++) {
       html += '<tr class="vacia"><td>' + renglon('') + '</td><td>' + renglon('Nombre:') + renglon('Tel.:') + '</td><td>' + renglon('Llega:') + renglon('Inicia:') + renglon('Termina:') + '</td><td>' + renglon('') + renglon('') + '</td></tr>';

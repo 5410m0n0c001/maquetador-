@@ -95,11 +95,11 @@
         prov: { nombre: p.servicio && p.servicio !== 'Otro' ? p.nombre : '', telefono: p.telefono, llega: p.llegada, inicia: p.inicio, termina: p.fin, recibe: p.recibe }
       });
     });
-    // 2) Amenidades y servicios marcados en el brief
-    (b.amenidades || []).forEach(function (a) { if (!AMENIDAD_DE_BODEGA.test(norm(a))) sumar(a); });
+    // 2) Amenidades y servicios marcados en el brief: las amenidades del paquete las surte PEG
+    (b.amenidades || []).forEach(function (a) { if (!AMENIDAD_DE_BODEGA.test(norm(a))) sumar(a, { surte: '' }); });
     (b.servicios || []).forEach(function (s) { if (SERVICIOS_CON_PROVEEDOR.indexOf(s) > -1) sumar(s); });
     // 3) Lo que está dibujado en el plano
-    ((d.layout && d.layout.elements) || []).forEach(function (e) { if (TIPOS_SERVICIO.test(e.type || '')) sumar(canon(e.type) || e.name); });
+    ((d.layout && d.layout.elements) || []).forEach(function (e) { if (TIPOS_SERVICIO.test(e.type || '')) sumar(canon(e.type) || e.name, /^vendor_|^limo/.test(e.type) ? null : { surte: '' }); });
     return lista.map(function (s) { delete s._key; return s; });
   }
   function servicios() {
@@ -107,6 +107,18 @@
     if (!v) return [];
     if (!Array.isArray(v.servicios)) v.servicios = sugerirServicios(evento());
     return v.servicios;
+  }
+
+  function serviciosFicha() {
+    var ev = evento();
+    if (!ev) return [];
+    var deProveedores = (ev.data.proveedores || []).map(function (p) {
+      var n = p.servicio && p.servicio !== 'Otro' ? p.servicio : p.nombre;
+      return norm(canon(n) || n);
+    });
+    return servicios().filter(function (s) { return deProveedores.indexOf(norm(s.nombre)) < 0; }).map(function (s) {
+      return { nombre: s.nombre, surte: s.surte == null ? 'Por definir quién lo surte' : s.surte === '' ? 'PEG' : textoSurte(s.surte), prov: s.prov || {}, nota: s.nota || '' };
+    });
   }
 
   var _inventario = null;
@@ -654,5 +666,5 @@
   });
 
   window.PEGVale = { abrir: abrir, imprimir: imprimir, imprimirInventario: imprimirInventario, filasFicha: filasFicha, datosFicha: datosFicha, cargarInventario: cargarInventario,
-    inventarioListo: function () { return !!_inventario; } };
+    inventarioListo: function () { return !!_inventario; }, serviciosFicha: serviciosFicha };
 })();
