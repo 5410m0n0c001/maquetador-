@@ -2962,12 +2962,12 @@ window.Visualizer3D = (function () {
       deck.receiveShadow = true;
       group.add(deck);
 
-      // Gold bevel border
+      // Gold bevel border (más bajo que la pista para que no la tape)
       var border = new THREE.Mesh(
-        new THREE.BoxGeometry(w + 0.08, 0.09, h + 0.08),
+        new THREE.BoxGeometry(w + 0.08, 0.06, h + 0.08),
         new THREE.MeshStandardMaterial({ color: COLORS.gold, metalness: 0.8 })
       );
-      border.position.y = 0.045;
+      border.position.y = 0.03;
       group.add(border);
 
       // Pixel grids
