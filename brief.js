@@ -409,20 +409,43 @@
       data: _event.data
     }).eq('id', _event.id);
     if (_event.updated_at) q = q.eq('updated_at', _event.updated_at);
-    q.select('updated_at').then(function (res) {
+    return q.select('updated_at').then(function (res) {
       if (res.error) {
         setStatus('Sin conexión · guardado en este equipo', 'error');
         console.warn('[Eventos] Error al guardar:', res.error);
+        return 'error';
       } else if (!res.data || !res.data.length) {
         setStatus('No guardado: cambió en otro dispositivo', 'error');
         if (!_conflictoAvisado) {
           _conflictoAvisado = true;
           alert('Este evento se modificó en otro dispositivo o pestaña después de que lo abriste. Para no borrar esos cambios, lo que hiciste aquí NO se guardó. Recarga la página para ver la versión más reciente.');
         }
+        return 'conflicto';
       } else {
         _event.updated_at = res.data[0].updated_at;
         setStatus('Guardado', 'ok');
+        return 'ok';
       }
+    });
+  }
+
+  // Botón Guardar: actualiza el evento abierto en ese momento (mismo evento, mismo nombre)
+  function guardarAhora() {
+    if (!_event) return;
+    ensurePlanner(function () {
+      if (window.App && window.App.getLayout) {
+        _lastLayoutJson = JSON.stringify(window.App.getLayout());
+        _event.data.layout = JSON.parse(_lastLayoutJson);
+      }
+      clearTimeout(_saveTimer);
+      setStatus('Guardando…', 'pending');
+      _conflictoAvisado = false; // al guardar a mano siempre se avisa si hubo conflicto
+      var p = saveNow();
+      if (!p) return;
+      p.then(function (r) {
+        if (r === 'ok') toast('Evento guardado: ' + _event.nombre + '.', 'success');
+        else if (r === 'error') toast('Sin conexión: se guardó solo en este equipo. Vuelve a guardar cuando haya internet.', 'error');
+      });
     });
   }
 
@@ -1656,6 +1679,7 @@
     isPlanner: function () { return _isPlanner; },
     client: client,
     scheduleSave: scheduleSave,
+    guardarAhora: guardarAhora,
     comprimirFoto: compressImage
   };
 })();

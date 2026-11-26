@@ -547,8 +547,8 @@
     copy.id = uid();
     copy.x = Math.min(src.x + 1.5, AppState.terrain.w - src.w / 2);
     copy.y = Math.min(src.y + 1.5, AppState.terrain.h - src.h / 2);
-    var isTable = copy.type.startsWith('table_') || copy.type === 'lounge_set';
-    if (copy.mesaConfig && isTable) {
+    // Solo lleva número la copia de una mesa numerada (periqueras, salas lounge y mesas de regalos no)
+    if (copy.mesaConfig && src.mesaConfig && src.mesaConfig.mesaNum > 0) {
       _tableCounter++;
       copy.mesaConfig.mesaNum = _tableCounter;
     } else if (copy.mesaConfig) {
@@ -2800,7 +2800,12 @@
 
   function _wireExportButtons() {
     var btnSave = document.getElementById('btn-save');
-    if (btnSave) btnSave.onclick = saveToLocalStorage;
+    // Con un evento abierto, Guardar actualiza ese evento (no pide nombre ni crea otro plano)
+    if (btnSave) btnSave.onclick = function () {
+      var PE = window.PEGEventos;
+      if (PE && PE.getEvent && PE.getEvent()) { PE.guardarAhora(); return; }
+      saveToLocalStorage();
+    };
 
     var btnExportJSON = document.getElementById('btn-export-json');
     if (btnExportJSON) btnExportJSON.onclick = exportJSON;
