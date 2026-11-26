@@ -1150,6 +1150,48 @@ window.ELEMENTS_CATALOG = [
     planoOnly: false
   },
   {
+    type: 'vendor_norteno',
+    name: 'Grupo norteño',
+    category: 'proveedores',
+    icon: 'fa-guitar',
+    defaultW: 5,
+    defaultH: 3,
+    shape: 'rect',
+    color: '#0f766e',
+    defaultChairs: 0,
+    description: 'Espacio para grupo norteño (templete, instrumentos y bocinas).',
+    layer: 'proveedores',
+    planoOnly: false
+  },
+  {
+    type: 'vendor_versatil',
+    name: 'Grupo versátil',
+    category: 'proveedores',
+    icon: 'fa-music',
+    defaultW: 5,
+    defaultH: 3,
+    shape: 'rect',
+    color: '#be185d',
+    defaultChairs: 0,
+    description: 'Espacio para grupo versátil (templete, instrumentos y bocinas).',
+    layer: 'proveedores',
+    planoOnly: false
+  },
+  {
+    type: 'vendor_chinelos',
+    name: 'Chinelos',
+    category: 'proveedores',
+    icon: 'fa-people-group',
+    defaultW: 3,
+    defaultH: 2,
+    shape: 'rect',
+    color: '#ea580c',
+    defaultChairs: 0,
+    description: 'Lugar de espera y entrada de la comparsa de chinelos (con su banda de viento).',
+    layer: 'proveedores',
+    planoOnly: false
+  },
+  {
     type: 'vendor_saxo',
     name: 'Saxofonista',
     category: 'proveedores',

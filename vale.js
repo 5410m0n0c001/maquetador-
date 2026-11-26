@@ -62,7 +62,7 @@
     ['DJ', /(^|\W)dj(\W|$)|dj_booth/], ['Pista de baile', /pista|dancefloor/], ['Cabina inflable', /inflable|photobooth_inflatable/],
     ['Cabina 360°', /360/], ['Espejo selfie', /espejo|photobooth_mirror/], ['Magazine Cover Booth', /magazine/], ['Robot LED', /robot/],
     ['Show men (cabezones)', /show ?men|cabezones|showmen/], ['Chisperos', /chispero|sparklers|detonacion/], ['Mariachi', /mariachi/],
-    ['Saxofonista', /saxo/], ['Fotografía y video', /fotografia|foto y video/], ['Pantalla / proyección', /pantalla|projector|laser/]
+    ['Saxofonista', /saxo/], ['Grupo norteño', /norteno/], ['Grupo versátil', /versatil/], ['Chinelos', /chinelo/], ['Banda', /(^| )banda( |$)|vendor_banda/], ['Fotografía y video', /fotografia|foto y video/], ['Pantalla / proyección', /pantalla|projector|laser/]
   ];
   function canon(texto) {
     var t = norm(texto);
@@ -147,6 +147,12 @@
   }
   function guardar() {
     if (PE() && PE().scheduleSave) PE().scheduleSave();
+  }
+  function cuadre() {
+    var inv = invitados(), app = window.App;
+    if (!inv || !app || !app.getState || !window.PEGCalculo) return '';
+    var t = window.PEGCalculo.lugares(app.getState().elements, inv).total;
+    return t === inv ? '' : t + ' lugares → ' + inv;
   }
   function invitados() {
     var ev = evento();
@@ -322,6 +328,7 @@
       ((v.pendientes || []).length ? '<div class="vale-pendientes"><b><i class="fa-solid fa-circle-exclamation"></i> Falta definir</b><ul>' +
         v.pendientes.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '') +
       '<div class="vale-acciones">' +
+        (editar && cuadre() ? '<button type="button" class="event-btn" id="vale-cuadrar" title="Quita o agrega sillas en las mesas del plano (empezando por la mesa 1, de 8 a 12 por mesa) para que los lugares sean exactamente los invitados"><i class="fa-solid fa-chair"></i> Cuadrar sillas con invitados (' + cuadre() + ')</button>' : '') +
         (editar ? '<button type="button" class="event-btn" id="vale-calcular" title="Calcula loza, cubiertos, cristalería, mantelería, sillas, mesas y arreglos desde el plano, el menú y las amenidades"><i class="fa-solid fa-calculator"></i> Calcular desde el evento</button>' : '') +
         (editar ? '<button type="button" class="event-btn" id="vale-inventario"><i class="fa-solid fa-list-check"></i> Imprimir requisición para llenar a mano</button>' +
           '<button type="button" class="event-btn" id="vale-libre"><i class="fa-solid fa-pen"></i> Artículo que no está en inventario</button>' : '') +
@@ -352,6 +359,20 @@
     m.querySelector('#vale-imprimir').onclick = imprimir;
     if (!editar) return;
     m.querySelector('#vale-inventario').onclick = imprimirInventario;
+    var btnCuadrar = m.querySelector('#vale-cuadrar');
+    if (btnCuadrar) btnCuadrar.onclick = function () {
+      var app = window.App, inv = invitados();
+      if (!app || !app.getState || !window.PEGCalculo) return;
+      var r = window.PEGCalculo.cuadrar(app.getState().elements, inv);
+      if (!r.cambios.length) { toast('No se pudo cuadrar: las mesas ya están en el mínimo (8) o máximo (12) de sillas.', 'warning'); return; }
+      if (!confirm('Se ajustarán las sillas en el plano:\n' + r.cambios.map(function (c) { return 'Mesa ' + (c.mesa || '?') + ': ' + c.antes + ' → ' + c.despues; }).join('\n') +
+        (r.falta ? '\n\nAun así ' + (r.falta > 0 ? 'sobran ' + r.falta : 'faltan ' + (-r.falta)) + ' lugares: hay que cambiar el número de mesas.' : '') + '\n\n¿Continuar?')) return;
+      r.cambios.forEach(function (c) { app.updateElement(c.id, { chairs: c.despues }); });
+      calcularDesdeEvento();
+      guardar();
+      toast('Sillas cuadradas con ' + inv + ' invitados. Falta definir quién va en cada mesa (lista de invitados).', 'success');
+      pintar();
+    };
     m.querySelector('#vale-calcular').onclick = function () {
       var r = calcularDesdeEvento();
       toast('Requisición calculada: ' + r.items.length + ' artículos' + (r.pendientes.length ? ' · ' + r.pendientes.length + ' cosas por definir' : ''), 'success');

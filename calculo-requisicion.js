@@ -225,12 +225,38 @@
 
     // Lugares contra invitados
     if (invitados && L.total !== invitados) {
-      pendientes.unshift('El plano tiene ' + L.total + ' lugares (mesas + principal) y son ' + invitados + ' invitados: ajustar las sillas de las mesas. ' +
+      pendientes.unshift('El plano tiene ' + L.total + ' lugares (mesas + principal) y son ' + invitados + ' invitados: usa "Cuadrar sillas con invitados" para ajustar las mesas en el plano. ' +
         'Las cantidades por lugar de esta requisición salen del plano.');
     }
+    var conLista = L.banquete.some(function (e) { return e.mesaConfig && e.mesaConfig.invitados && e.mesaConfig.invitados.length; });
+    if (invitados && !conLista) pendientes.push('Falta definir cuántas sillas va en cada mesa: depende de la lista de invitados.');
     pendientes.push('Copas: confirmar cuántas piezas de cada color van por mesa (el plano pone las dos copas en todos los lugares).');
     return { items: items, pendientes: pendientes, lugares: L };
   }
 
-  window.PEGCalculo = { calcular: calcular, lugares: lugares };
+  // Cambios de sillas para que los lugares (mesas + principal) sean exactamente los invitados.
+  // Se quita (o agrega) una silla por mesa empezando por la mesa 1, sin bajar de 8 ni pasar de 12.
+  // Devuelve { cambios: [{ id, mesa, antes, despues }], falta } (falta ≠ 0 si no alcanzó con 8–12 por mesa).
+  function cuadrar(elements, invitados) {
+    var L = lugares(elements, invitados);
+    var dif = L.total - invitados, cambios = {};
+    var mesas = L.banquete.slice().sort(function (a, b) {
+      return ((a.mesaConfig && parseInt(a.mesaConfig.mesaNum, 10)) || 999) - ((b.mesaConfig && parseInt(b.mesaConfig.mesaNum, 10)) || 999);
+    });
+    var sillas = function (e) { return cambios[e.id] ? cambios[e.id].despues : (parseInt(e.chairs, 10) || 0); };
+    var guard = 0;
+    while (dif !== 0 && mesas.length && guard++ < 1000) {
+      var movio = false;
+      for (var i = 0; i < mesas.length && dif !== 0; i++) {
+        var e = mesas[i], n = sillas(e);
+        if (dif > 0 && n > 8) { n--; dif--; } else if (dif < 0 && n < 12) { n++; dif++; } else continue;
+        cambios[e.id] = { id: e.id, mesa: e.mesaConfig && e.mesaConfig.mesaNum, antes: cambios[e.id] ? cambios[e.id].antes : (parseInt(e.chairs, 10) || 0), despues: n };
+        movio = true;
+      }
+      if (!movio) break;
+    }
+    return { cambios: Object.keys(cambios).map(function (k) { return cambios[k]; }), falta: dif };
+  }
+
+  window.PEGCalculo = { calcular: calcular, lugares: lugares, cuadrar: cuadrar };
 })();

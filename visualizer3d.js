@@ -3466,7 +3466,7 @@ window.Visualizer3D = (function () {
         group.add(pan);
       }
 
-    } else if (elem.type === 'vendor_mariachi') {
+    } else if (elem.type === 'vendor_mariachi' || elem.type === 'vendor_chinelos') {
       // Mariachi space – semi-circular arrangement of standing figures
       var mariFigMat = new THREE.MeshStandardMaterial({ color: 0xc9a96e, roughness: 0.6 });
       var mariCount = 5;
@@ -3495,7 +3495,7 @@ window.Visualizer3D = (function () {
         group.add(mariHead);
       }
 
-    } else if (elem.type === 'vendor_banda') {
+    } else if (elem.type === 'vendor_banda' || elem.type === 'vendor_norteno' || elem.type === 'vendor_versatil') {
       // Live band – raised platform
       var bandaPlatform = new THREE.Mesh(
         new THREE.BoxGeometry(w, 0.15, h),
