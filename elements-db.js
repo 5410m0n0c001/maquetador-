@@ -1266,6 +1266,144 @@ window.CATEGORY_LABELS = {
 };
 
 // Helper: look up a catalog entry by type
+// ────────────────────────────────────────────────
+// Lago artificial (forma irregular con agua) y cabina inflable con forma de cámara
+// Dibujo propio en 2D (dibujar2D) y 3D (construir3D), como los elementos del rancho
+// ────────────────────────────────────────────────
+(function () {
+  // Contorno irregular dentro de un rectángulo w × h (siempre la misma forma para el mismo tamaño)
+  function contornoLago(w, h, n) {
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var a = (i / n) * Math.PI * 2;
+      var r = 1 + 0.11 * Math.sin(3 * a + 0.7) + 0.07 * Math.sin(5 * a + 1.9) + 0.05 * Math.cos(2 * a + 0.3);
+      pts.push([Math.cos(a) * (w / 2) * r * 0.82, Math.sin(a) * (h / 2) * r * 0.82]);
+    }
+    return pts;
+  }
+  function trazo(pts, cx, cy, k) {
+    return pts.map(function (p, i) { return (i ? 'L' : 'M') + (cx + p[0] * k).toFixed(1) + ' ' + (cy + p[1] * k).toFixed(1); }).join(' ') + ' Z';
+  }
+
+  window.ELEMENTS_CATALOG.push({
+    type: 'lake',
+    name: 'Lago artificial',
+    category: 'estructuras',
+    icon: 'fa-water',
+    defaultW: 8,
+    defaultH: 4,
+    shape: 'rect',
+    color: '#2563eb',
+    defaultChairs: 0,
+    description: 'Mini lago artificial de forma irregular, con agua.',
+    layer: 'estructuras',
+    planoOnly: false,
+    dibujar2D: function (svgEl, g, e, o) {
+      var pts = contornoLago(o.pw, o.ph, 36);
+      g.appendChild(svgEl('path', { d: trazo(pts, o.px, o.py, 1.06), fill: '#78716c', opacity: 0.9 }));            // orilla de piedra
+      g.appendChild(svgEl('path', { d: trazo(pts, o.px, o.py, 1), fill: o.color || '#2563eb',
+        stroke: o.selected ? '#F65C7A' : '#93c5fd', 'stroke-width': o.selected ? 2 : 1 }));                      // agua
+      g.appendChild(svgEl('path', { d: trazo(pts, o.px - o.pw * 0.06, o.py - o.ph * 0.08, 0.45), fill: '#93c5fd', opacity: 0.35, 'pointer-events': 'none' })); // reflejo
+    },
+    construir3D: function (group, e) {
+      var T = window.THREE;
+      var pts = contornoLago(e.w, e.h, 48);
+      function forma(k) {
+        var s = new T.Shape();
+        pts.forEach(function (p, i) { if (i) s.lineTo(p[0] * k, p[1] * k); else s.moveTo(p[0] * k, p[1] * k); });
+        s.closePath();
+        return s;
+      }
+      // Orilla de piedra un poco elevada y agua azul con brillo
+      var orilla = new T.Mesh(new T.ExtrudeGeometry(forma(1.08), { depth: 0.18, bevelEnabled: false }),
+        new T.MeshStandardMaterial({ color: 0x8a8178, roughness: 0.9 }));
+      orilla.rotation.x = -Math.PI / 2;
+      orilla.receiveShadow = true;
+      group.add(orilla);
+      var agua = new T.Mesh(new T.ShapeGeometry(forma(1)),
+        new T.MeshStandardMaterial({ color: 0x1e6fd9, roughness: 0.08, metalness: 0.55, transparent: true, opacity: 0.92 }));
+      agua.rotation.x = -Math.PI / 2;
+      agua.position.y = 0.2;
+      group.add(agua);
+      // Algunas piedras en la orilla
+      var piedraMat = new T.MeshStandardMaterial({ color: 0x9ca3af, roughness: 0.95 });
+      [3, 11, 19, 27, 40].forEach(function (i) {
+        var p = pts[i % pts.length];
+        var piedra = new T.Mesh(new T.DodecahedronGeometry(0.22 + (i % 3) * 0.06, 0), piedraMat);
+        piedra.position.set(p[0] * 1.06, 0.22, -p[1] * 1.06);
+        piedra.castShadow = true;
+        group.add(piedra);
+      });
+    }
+  });
+
+  // Cabina inflable con forma de cámara fotográfica (el lente al frente)
+  var cabina = window.ELEMENTS_CATALOG.find(function (c) { return c.type === 'photobooth_inflatable'; });
+  if (cabina) {
+    cabina.description = 'Cabina fotográfica inflable con forma de cámara.';
+    cabina.dibujar2D = function (svgEl, g, e, o) {
+      var bw = o.pw, bh = o.ph * 0.78, r = Math.min(bw, bh) * 0.18;
+      var y0 = o.py - o.ph / 2 + o.ph * 0.22;
+      g.appendChild(svgEl('rect', { x: o.px - bw * 0.22, y: o.py - o.ph / 2, width: bw * 0.44, height: o.ph * 0.26, rx: r * 0.6,
+        fill: o.color, stroke: o.light, 'stroke-width': 1 }));                                                        // visor
+      g.appendChild(svgEl('rect', { x: o.px - bw / 2, y: y0, width: bw, height: bh, rx: r,
+        fill: o.color, stroke: o.selected ? '#F65C7A' : o.light, 'stroke-width': o.selected ? 2 : 1 }));             // cuerpo
+      var cy = y0 + bh / 2, lr = Math.min(bw, bh) * 0.32;
+      g.appendChild(svgEl('circle', { cx: o.px, cy: cy, r: lr, fill: '#111827', stroke: '#e5e7eb', 'stroke-width': 1.5 })); // lente
+      g.appendChild(svgEl('circle', { cx: o.px, cy: cy, r: lr * 0.55, fill: '#1e3a8a' }));
+      g.appendChild(svgEl('circle', { cx: o.px - lr * 0.2, cy: cy - lr * 0.2, r: lr * 0.15, fill: '#ffffff', opacity: 0.7 }));
+      g.appendChild(svgEl('circle', { cx: o.px + bw * 0.34, cy: y0 + bh * 0.16, r: Math.min(bw, bh) * 0.06, fill: '#ef4444' })); // botón
+    };
+    cabina.construir3D = function (group, e) {
+      var T = window.THREE, w = e.w, h = e.h;
+      var color = (function () { try { return new T.Color(e.color || '#0369a1'); } catch (x) { return new T.Color(0x0369a1); } })();
+      var inflado = new T.MeshStandardMaterial({ color: color, roughness: 0.55 });
+      var blanco = new T.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.55 });
+      var alto = 2.4, ancho = w, fondo = h * 0.8, rr = 0.35;
+      // Cuerpo inflado: caja con bordes redondeados (cilindros y esferas en las aristas)
+      var cuerpo = new T.Mesh(new T.BoxGeometry(ancho - 2 * rr, alto - 2 * rr, fondo), inflado);
+      cuerpo.position.y = alto / 2; cuerpo.castShadow = true; group.add(cuerpo);
+      var lados = new T.Mesh(new T.BoxGeometry(ancho, alto - 2 * rr, fondo - 2 * rr), inflado);
+      lados.position.y = alto / 2; group.add(lados);
+      var tapa = new T.Mesh(new T.BoxGeometry(ancho - 2 * rr, alto, fondo - 2 * rr), inflado);
+      tapa.position.y = alto / 2; group.add(tapa);
+      [-1, 1].forEach(function (sx) {
+        [-1, 1].forEach(function (sz) {
+          var col = new T.Mesh(new T.CylinderGeometry(rr, rr, alto - 2 * rr, 16), inflado);
+          col.position.set(sx * (ancho / 2 - rr), alto / 2, sz * (fondo / 2 - rr)); group.add(col);
+          [rr, alto - rr].forEach(function (y) {
+            var esq = new T.Mesh(new T.SphereGeometry(rr, 12, 10), inflado);
+            esq.position.set(sx * (ancho / 2 - rr), y, sz * (fondo / 2 - rr)); group.add(esq);
+          });
+        });
+        [rr, alto - rr].forEach(function (y) {
+          var bx = new T.Mesh(new T.CylinderGeometry(rr, rr, fondo - 2 * rr, 16), inflado);
+          bx.rotation.x = Math.PI / 2; bx.position.set(sx * (ancho / 2 - rr), y, 0); group.add(bx);
+          var bz = new T.Mesh(new T.CylinderGeometry(rr, rr, ancho - 2 * rr, 16), inflado);
+          bz.rotation.z = Math.PI / 2; bz.position.set(0, y, sx * (fondo / 2 - rr)); group.add(bz);
+        });
+      });
+      // Lente al frente (hacia +z): aro blanco, cuerpo negro y cristal azul oscuro con brillo
+      var lr = Math.min(ancho, alto) * 0.3;
+      var aro = new T.Mesh(new T.TorusGeometry(lr, 0.12, 12, 32), blanco);
+      aro.position.set(0, alto * 0.48, fondo / 2 + 0.25); group.add(aro);
+      var lente = new T.Mesh(new T.CylinderGeometry(lr, lr * 1.05, 0.5, 32), new T.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 }));
+      lente.rotation.x = Math.PI / 2; lente.position.set(0, alto * 0.48, fondo / 2 + 0.2); lente.castShadow = true; group.add(lente);
+      var cristal = new T.Mesh(new T.CircleGeometry(lr * 0.62, 32), new T.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.05, metalness: 0.7, emissive: 0x0b1a4a, emissiveIntensity: 0.4 }));
+      cristal.position.set(0, alto * 0.48, fondo / 2 + 0.46); group.add(cristal);
+      var brillo = new T.Mesh(new T.CircleGeometry(lr * 0.14, 16), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 }));
+      brillo.position.set(-lr * 0.22, alto * 0.48 + lr * 0.22, fondo / 2 + 0.47); group.add(brillo);
+      // Visor arriba, flash y botón disparador
+      var visor = new T.Mesh(new T.BoxGeometry(ancho * 0.36, 0.5, fondo * 0.5), inflado);
+      visor.position.set(0, alto + 0.25, 0); visor.castShadow = true; group.add(visor);
+      var flash = new T.Mesh(new T.BoxGeometry(ancho * 0.16, 0.3, 0.1), new T.MeshStandardMaterial({ color: 0xfef9c3, emissive: 0xfef08a, emissiveIntensity: 0.5 }));
+      flash.position.set(-ancho * 0.3, alto * 0.82, fondo / 2 + 0.36); group.add(flash);
+      var boton = new T.Mesh(new T.CylinderGeometry(0.18, 0.18, 0.18, 16), new T.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 }));
+      boton.position.set(ancho * 0.3, alto + rr * 0.3 + 0.05, 0); group.add(boton);
+    };
+  }
+})();
+
 window.getCatalogEntry = function(type) {
   return window.ELEMENTS_CATALOG.find(function(e) { return e.type === type; }) || null;
 };
