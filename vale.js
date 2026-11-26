@@ -182,7 +182,12 @@
     var r = window.PEGCalculo ? window.PEGCalculo.calcular(ev) : { items: [], pendientes: [] };
     var porId = {};
     r.items = r.items.reduce(function (lista, i) {
-      var art = [i.nombre].concat(i.alt || []).map(buscarArticulo).find(Boolean) || null;
+      var opciones = (i.opciones || []).map(buscarArticulo).filter(Boolean).map(function (a) { return { id: a.id, nombre: a.nombre }; });
+      if (opciones.length > 1) {
+        lista.push({ id: null, nombre: i.nombre, categoria: i.categoria, cant: i.cant, nota: i.nota || '', origen: 'calculo', opciones: opciones });
+        return lista;
+      }
+      var art = [i.nombre].concat(i.alt || []).map(buscarArticulo).find(Boolean) || (opciones[0] ? buscarArticulo(opciones[0].nombre) : null);
       var nota = i.nota || '';
       // Servilleta de un color que no está en el inventario: va como servilleta de tela con el color en la nota
       if (!art && /^Servilleta /.test(i.nombre)) { art = buscarArticulo('Servilleta de tela'); nota = i.nombre.replace(/^Servilleta /, 'color ') + (nota ? ' · ' + nota : ''); }
@@ -203,7 +208,8 @@
       var ya = v.items.some(function (i) { return it.id ? i.id === it.id : norm(i.nombre) === norm(it.nombre); });
       if (!ya) v.items.push(it);
     });
-    v.pendientes = r.pendientes;
+    var porElegir = v.items.filter(function (i) { return i.opciones && i.opciones.length; });
+    v.pendientes = r.pendientes.concat(porElegir.map(function (i) { return 'Elegir uno: ' + i.nombre + ' — ' + i.cant + ' pz (' + i.opciones.map(function (o) { return o.nombre; }).join(' / ') + ').'; }));
     v.calculado = new Date().toISOString();
     guardar();
     return r;
@@ -250,7 +256,11 @@
           var idx = v.items.indexOf(i);
           return editar
             ? '<tr data-i="' + idx + '"><td><input type="number" min="0" class="form-input vale-cant" placeholder="¿?" value="' + esc(i.cant) + '"></td>' +
-              '<td>' + esc(i.nombre) + (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : i.origen === 'calculo' ? ' <span class="vale-tag">calculado</span>' : '') + '</td>' +
+              '<td>' + (i.opciones && i.opciones.length
+                ? '<select class="form-input vale-elegir" title="Elige cuál se va a ocupar"><option value="">' + esc(i.nombre) + ' — elegir uno…</option>' +
+                  i.opciones.map(function (o, k) { return '<option value="' + k + '">' + esc(o.nombre) + '</option>'; }).join('') + '</select>'
+                : esc(i.nombre)) +
+                (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : i.origen === 'calculo' ? ' <span class="vale-tag">calculado</span>' : '') + '</td>' +
               '<td><input class="form-input vale-nota" placeholder="Color, medida…" value="' + esc(i.nota) + '"></td>' +
               '<td><select class="form-input vale-surte" title="Quién lo surte">' + surteOpciones(i.surte || '') + '</select></td>' +
               '<td><button type="button" class="btn-icon-sm vale-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button></td></tr>' +
@@ -377,6 +387,17 @@
     Array.prototype.forEach.call(m.querySelectorAll('tr[data-i]'), function (tr) {
       var item = v.items[parseInt(tr.getAttribute('data-i'), 10)];
       tr.querySelector('.vale-cant').onchange = function (e) { if (item.origen === 'calculo') item.origen = 'ajustado'; item.cant = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0); guardar(); pintar(); };
+      var elegir = tr.querySelector('.vale-elegir');
+      if (elegir) elegir.onchange = function () {
+        var o = item.opciones[parseInt(elegir.value, 10)];
+        if (!o) return;
+        var art = (_inventario || []).find(function (a) { return a.id === o.id; }) || o;
+        item.id = o.id; item.nombre = o.nombre; item.categoria = art.categoria || item.categoria; item.origen = 'ajustado';
+        delete item.opciones;
+        var v = vale();
+        if (v.pendientes) v.pendientes = v.pendientes.filter(function (p) { return p.indexOf('Elegir uno: ') !== 0 || v.items.some(function (x) { return x.opciones && p.indexOf(x.nombre) > -1; }); });
+        guardar(); pintar();
+      };
       tr.querySelector('.vale-nota').onchange = function (e) { if (item.origen === 'calculo') item.origen = 'ajustado'; item.nota = e.target.value; guardar(); };
       tr.querySelector('.vale-quitar').onclick = function () { v.items.splice(v.items.indexOf(item), 1); guardar(); pintar(); };
       tr.querySelector('.vale-surte').onchange = function (e) {
@@ -546,6 +567,9 @@
     var grupos = agrupar(_inventario || []).map(function (g) {
       return '<section class="grupo"><h3>' + esc(g.categoria) + '</h3>' + cabeza + g.items.map(function (a) {
         var it = v.items.find(function (i) { return i.id === a.id; });
+        var op = !it && v.items.find(function (i) { return i.opciones && i.opciones.some(function (o) { return o.id === a.id; }); });
+        if (op) return '<div class="art elegir"><span class="caja"></span><span class="nom">' + esc(a.nombre) + ' <em>elegir uno</em></span>' +
+          '<span class="cant">' + esc(op.cant) + '</span><span class="surte">' + cajasSurte(null) + '</span></div>';
         return '<div class="art"><span class="caja">' + (it ? '✓' : '') + '</span><span class="nom">' + esc(a.nombre) + '</span>' +
           '<span class="cant">' + (it ? esc(it.cant) : '') + '</span><span class="surte">' + cajasSurte(it ? it.surte || '' : null) + '</span></div>';
       }).join('') + '</section>';
@@ -567,7 +591,7 @@
     }).join('');
 
     // Sección 3: otros artículos (capturados en la app sin estar en el inventario + renglones en blanco)
-    var otros = v.items.filter(function (i) { return !i.id && !i.surte; });
+    var otros = v.items.filter(function (i) { return !i.id && !i.surte && !(i.opciones && i.opciones.length); });
     var filasOtros = otros.map(function (i) {
       return '<tr><td class="caja-td">✓</td><td>' + esc(i.nombre) + '</td><td class="centro">' + esc(i.cant) + '</td><td class="centro">' + cajasSurte('') + '</td><td>' + esc(i.nota) + '</td></tr>';
     }).join('');
@@ -589,6 +613,7 @@
       '.cols{column-count:2;column-gap:22px}.grupo{break-inside:auto;margin-bottom:8px}' +
       '.grupo h3{font-size:11px;color:var(--pink);border-bottom:1px solid var(--gold);padding-bottom:1px;margin-bottom:1px;break-after:avoid}' +
       '.art{display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px dotted var(--line);break-inside:avoid}' +
+      '.art.elegir{background:#FFF6E5}.art.elegir em{font-style:normal;font-size:7px;letter-spacing:.06em;text-transform:uppercase;color:#B7791F;border:1px solid #E7C27A;border-radius:3px;padding:0 3px;margin-left:3px}' +
       '.art.rot{border-bottom:0;padding:0;color:var(--gray);font-size:7px;text-transform:uppercase;letter-spacing:.06em;break-after:avoid}.art.rot .cant{border:0;text-align:center}.art.rot .ok{width:10px;text-align:center;flex:none}' +
       '.caja{width:10px;height:10px;border:1px solid var(--ink);border-radius:2px;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:8px;line-height:1}.nom{flex:1}' +
       '.cant{width:40px;border-bottom:1px solid var(--gray);height:11px;flex:none;text-align:center;font-weight:600}' +
@@ -643,7 +668,10 @@
     var v = ev && ev.data.vale;
     if (v && v.items && v.items.length) return { items: v.items, pendientes: v.pendientes || [], calculada: false };
     var r = ev ? calculoItems(ev) : { items: [], pendientes: [] };
-    return { items: r.items, pendientes: r.pendientes, calculada: true };
+    var elegir = r.items.filter(function (i) { return i.opciones && i.opciones.length; }).map(function (i) {
+      return 'Elegir uno: ' + i.nombre + ' — ' + i.cant + ' pz (' + i.opciones.map(function (o) { return o.nombre; }).join(' / ') + ').';
+    });
+    return { items: r.items, pendientes: r.pendientes.concat(elegir), calculada: true };
   }
   function filasFicha() {
     var ev = evento();

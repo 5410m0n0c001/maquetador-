@@ -57,11 +57,22 @@
     }
     return null;
   }
-  var SILLA = { tiffany: 'Silla Tiffany blanca', crossback: 'Silla cross back — elegir miel o nogal', metalica: 'Silla metálica — elegir Boss o Lotus',
-    princesa: 'Sillón principal — elegir color', napoleon: 'Silla Napoleón', ghost: 'Silla ghost', banquete: 'Silla de banquete' };
-  var MESA = { table_rectangular: 'Mesa rectangular de madera — elegir miel o nogal', table_marble_square: 'Mesa rectangular tipo marmol',
+  var SILLA = { tiffany: 'Silla Tiffany blanca', crossback: 'Silla cross back (miel o nogal)', metalica: 'Silla metálica (Boss o Lotus)',
+    princesa: 'Sillón principal (elegir color)', napoleon: 'Silla Napoleón', ghost: 'Silla ghost', banquete: 'Silla de banquete' };
+  var MESA = { table_rectangular: 'Mesa rectangular de madera (miel o nogal)', table_marble_square: 'Mesa rectangular tipo marmol',
     table_marble_round: 'Mesa redonda tipo mármol', table_round: 'Mesa redonda', table_square: 'Mesa cuadrada — elegir modelo',
-    table_campirana: 'Mesa rectangular de madera — elegir miel o nogal', table_kids: 'Mesa infantil', table_umbrella: 'Mesa con sombrilla' };
+    table_campirana: 'Mesa rectangular de madera (miel o nogal)', table_kids: 'Mesa infantil', table_umbrella: 'Mesa con sombrilla' };
+  // Artículos que hay que elegir entre varios del inventario: la cantidad sugerida va en cada opción ("elegir uno")
+  var OPCIONES = {
+    'Mesa rectangular de madera (miel o nogal)': ['Mesa rectangular de madera color miel', 'Mesa rectangular de madera color nogal clasico'],
+    'Silla cross back (miel o nogal)': ['Silla cross back madera tono miel', 'Silla cross back madera tono nogal'],
+    'Silla metálica (Boss o Lotus)': ['Silla metálica Boss', 'Silla metálica Lotus'],
+    'Sillón principal (elegir color)': ['Sillón principal beige', 'Sillón principal gris Oxford', 'Sillón principal palo de rosa (alita)'],
+    'Periquera (madera o metal)': ['Periquera alta madera', 'Periquera alta metal'],
+    'Banco alto (elegir modelo)': ['Banco madera alto', 'Banco metálico alto', 'Banco alto tejido plástico negro'],
+    'Números de mesa (acrílico o madera)': ['Números de mesa acrilicos', 'Números para mesa en madera'],
+    'Letra gigante XV (1.10 o 1.80 m)': ['Letra gigante XV 1.10 mt', 'Letra gigante XV 1.80 mt']
+  };
 
   function calcular(ev) {
     var d = ev.data || {}, b = d.brief || {};
@@ -73,7 +84,7 @@
       if (!nombre || cant === 0 || cant == null) return; // '' = por confirmar
       var ya = items.find(function (i) { return norm(i.nombre) === norm(nombre); });
       if (ya) { if (cant !== '') ya.cant = (parseInt(ya.cant, 10) || 0) + cant; if (nota && ya.nota.indexOf(nota) < 0) ya.nota = [ya.nota, nota].filter(Boolean).join(' · '); return; }
-      items.push({ nombre: nombre, categoria: categoria || 'Otros', cant: cant, nota: nota || '', alt: alt || [] });
+      items.push({ nombre: nombre, categoria: categoria || 'Otros', cant: cant, nota: nota || '', alt: alt || [], opciones: OPCIONES[nombre] || null });
     }
 
     // Menú: qué tiempos hay (define platos y cubiertos)
@@ -97,7 +108,7 @@
       var c = e.mesaConfig || {}, n = parseInt(e.chairs, 10) || 0;
       var principal = MESAS_PRINCIPALES.test(e.type);
       var mesa = principal ? (principalMarmol ? 'Mesa rectangular tipo marmol' : 'Mesa principal — tipo por confirmar') : (e.type === 'table_imperial' ? 'Mesa tablón' : MESA[e.type] || ('Mesa — ' + (e.name || e.type)));
-      sumar(mesa, e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mesas y periqueras');
+      sumar(mesa, e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mesas y periqueras', principal ? '1 es la mesa principal' : '');
       if (!n) return;
       if (principal && sillonPrincesa) {
         // Mesa principal de XV: sillón de princesa para la festejada; los demás lugares (chambelanes) con otra silla
@@ -136,7 +147,7 @@
     if (altos && altos.cant > 4) pendientes.push('Hay ' + altos.cant + ' arreglos altos y solo existen 4 bases metálicas altas.');
     var numeradas = L.banquete.filter(function (e) { return e.mesaConfig && parseInt(e.mesaConfig.mesaNum, 10) > 0; }).length;
     if (numeradas) {
-      sumar('Números de mesa — elegir acrílicos o madera', numeradas, 'Identificadores de mesa');
+      sumar('Números de mesa (acrílico o madera)', numeradas, 'Identificadores de mesa');
       sumar('Base metálica para numeración de mesas', numeradas, 'Identificadores de mesa');
     }
     if (/cojin/.test(norm(b.vajilla_color || '')) && L.banquete.some(function (e) { return e.mesaConfig && e.mesaConfig.tipoSilla === 'crossback'; })) {
@@ -147,9 +158,9 @@
     // Cóctel: periqueras, sombrillas, bancos y salas lounge
     L.coctel.forEach(function (e) {
       if (e.type === 'lounge_set') { sumar('Sala lounge madera', 1, 'Salas y sombrillas'); return; }
-      sumar('Periquera — elegir madera o metal', 1, 'Mesas y periqueras');
+      sumar('Periquera (madera o metal)', 1, 'Mesas y periqueras');
       if (/umbrella/.test(e.type)) sumar('Sombrilla', 1, 'Salas y sombrillas');
-      if (parseInt(e.chairs, 10)) sumar('Banco alto — elegir modelo', parseInt(e.chairs, 10), 'Sillas y bancos');
+      if (parseInt(e.chairs, 10)) sumar('Banco alto (elegir modelo)', parseInt(e.chairs, 10), 'Sillas y bancos');
     });
     L.otras.forEach(function (e) {
       if (/carrito/.test(norm(e.name))) sumar('Carrito de snacks', 1, 'Snacks y estaciones');
@@ -179,7 +190,7 @@
     var amen = (b.amenidades || []).map(norm);
     var ilumina = false;
     if (amen.some(function (a) { return /letra gigante xv/.test(a); })) {
-      sumar('Letra gigante XV — confirmar 1.10 o 1.80 m', 1, 'Letras gigantes');
+      sumar('Letra gigante XV (1.10 o 1.80 m)', 1, 'Letras gigantes');
       ilumina = true;
     }
     if (amen.some(function (a) { return /l-o-v-e|love/.test(a); })) {
