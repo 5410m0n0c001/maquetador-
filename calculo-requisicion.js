@@ -87,14 +87,23 @@
     if (!hayPostre && /postre/.test(norm((b.observaciones || '') + ' ' + (b.menu_notas || '')))) pendientes.push('Postre por confirmar: si se sirve, agregar plato de postre y cucharita por invitado.');
     if (!hayFuerte) pendientes.push('No hay plato fuerte en el menú: confirmar cuchillo y tenedor.');
 
+    // Todo lo escrito en el brief (para detectar lo que se va a ocupar aunque no esté en el plano)
+    var textoBrief = norm(JSON.stringify(b));
+    var principalMarmol = /mesa principal[^.]{0,40}marmol/.test(textoBrief);
+    var sillonPrincesa = /sillon de princesa/.test(textoBrief);
+
     // Mesas del banquete y mesa principal: montaje por lugar
     L.banquete.concat(L.principal).forEach(function (e) {
       var c = e.mesaConfig || {}, n = parseInt(e.chairs, 10) || 0;
       var principal = MESAS_PRINCIPALES.test(e.type);
-      var mesa = principal ? 'Mesa principal — tipo por confirmar' : (e.type === 'table_imperial' ? 'Mesa tablón' : MESA[e.type] || ('Mesa — ' + (e.name || e.type)));
+      var mesa = principal ? (principalMarmol ? 'Mesa rectangular tipo marmol' : 'Mesa principal — tipo por confirmar') : (e.type === 'table_imperial' ? 'Mesa tablón' : MESA[e.type] || ('Mesa — ' + (e.name || e.type)));
       sumar(mesa, e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mesas y periqueras');
       if (!n) return;
-      if (c.tipoSilla) sumar(SILLA[c.tipoSilla] || ('Silla ' + cap(c.tipoSilla)), n, 'Sillas y bancos');
+      if (principal && sillonPrincesa) {
+        // Mesa principal de XV: sillón de princesa para la festejada; los demás lugares (chambelanes) con otra silla
+        sumar('Sillón de princesa', 1, 'Sillas y bancos', 'mesa principal');
+        if (n > 1) sumar('Silla para la mesa principal — elegir modelo', n - 1, 'Sillas y bancos', 'chambelanes / acompañantes');
+      } else if (c.tipoSilla) sumar(SILLA[c.tipoSilla] || ('Silla ' + cap(c.tipoSilla)), n, 'Sillas y bancos');
       if (c.sillaFunda && c.sillaFunda !== 'ninguna') sumar('Funda completa para silla Tiffany color ' + norm(c.sillaFunda), n, 'Sillas y bancos');
       if (c.platoBase && c.platoBase !== 'ninguno') sumar(PLATO_BASE[c.platoBase] || ('Plato base ' + cap(c.platoBase)), n, 'Loza');
       if (hayFuerte && c.platoTrinche && c.platoTrinche !== 'ninguno') sumar(TRINCHE[c.platoTrinche] || ('Plato trinche ' + cap(c.platoTrinche)), n, 'Loza');
@@ -147,6 +156,24 @@
       else if (e.type === 'table_gifts') sumar('Mesa de regalos — elegir mesa', 1, 'Mesas y periqueras');
       else if (e.type === 'table_cake') sumar('Mesa de pastel — elegir mesa', 1, 'Mesas y periqueras');
     });
+
+    // Templete (por ejemplo, para dar altura a la mesa principal)
+    if (/templete/.test(textoBrief)) {
+      sumar('Pieza de templete de madera', '', 'Decoración y estructuras', 'POR CONFIRMAR: cuántas piezas');
+      pendientes.push('Templete: definir cuántas piezas de templete se ocupan.');
+    }
+    // Aguas y bebidas que se sirven en vitrolero: uno por cada sabor
+    var SABORES = [['agua fresca', /agua(s)? fresca/], ['margaritas', /margarita/], ['piñadas', /pinada/], ['limonada', /limonada/], ['naranjada', /naranjada/],
+      ['jamaica', /jamaica/], ['horchata', /horchata/], ['tamarindo', /tamarindo/], ['agua de sabor', /agua(s)? de (sabor|frutas?)/]];
+    var sabores = SABORES.filter(function (x) { return x[1].test(textoBrief); }).map(function (x) { return x[0]; });
+    if (sabores.indexOf('agua fresca') > -1 && sabores.indexOf('agua de sabor') > -1) sabores.splice(sabores.indexOf('agua de sabor'), 1);
+    if (sabores.length) {
+      sumar('Vitrolero de cristal pequeño', sabores.length, 'Barra y cocina', 'uno por sabor: ' + sabores.join(', ') + ' (o vitrolero de plástico grande)');
+      pendientes.push('Aguas: se sugiere 1 vitrolero por sabor (' + sabores.join(', ') + '). Si hay más sabores, uno más por cada sabor.');
+    }
+    // Hielo en barra que se menciona en el brief (extras, observaciones)
+    var hielo = textoBrief.match(/(\d+)?\s*barras? de hielo/);
+    if (hielo) sumar('Hielo en barra', parseInt(hielo[1], 10) || 1, 'Bebidas y hielo', 'mencionado en el brief');
 
     // Amenidades que salen de bodega
     var amen = (b.amenidades || []).map(norm);
