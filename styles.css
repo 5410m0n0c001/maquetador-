@@ -1879,8 +1879,8 @@ body.peg-view-only #svg-canvas .elem-group { pointer-events: none; }
 .brief-empty { font-size: 13px; color: var(--text-muted); padding: 6px 0 12px; }
 
 .minuto-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-.minuto-row { display: grid; grid-template-columns: 120px 1fr 200px 36px; gap: 8px; align-items: center; }
-body.peg-view-only .minuto-row { grid-template-columns: 120px 1fr 200px; }
+.minuto-row { display: grid; grid-template-columns: 110px 110px 1fr 200px 36px; gap: 8px; align-items: center; }
+body.peg-view-only .minuto-row { grid-template-columns: 110px 110px 1fr 200px; }
 .minuto-del {
   width: 36px;
   height: 36px;
@@ -1946,8 +1946,7 @@ body.peg-view-only .minuto-row { grid-template-columns: 120px 1fr 200px; }
   .brief-head { padding: 18px 16px 12px; }
   .brief-head h2 { font-size: 22px; }
   .brief-nav, .brief-body { padding-left: 16px; padding-right: 16px; }
-  .minuto-row, body.peg-view-only .minuto-row { grid-template-columns: 96px 1fr; }
-  .minuto-row [data-m="responsable"] { grid-column: 1 / 2; }
+  .minuto-row, body.peg-view-only .minuto-row { grid-template-columns: 1fr 1fr; }
   .foto-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -2242,6 +2241,9 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
 .vale-lista .vale-nota { width: 100%; }
 .vale-grupo td { color: #F65C7A; font-weight: 600; padding-top: 10px; }
 .vale-tag { font-size: 10px; color: #C9A96E; border: 1px solid #C9A96E; border-radius: 999px; padding: 0 5px; }
+.vale-pendientes { border: 1px solid rgba(201,169,110,.5); background: rgba(201,169,110,.08); border-radius: 10px; padding: 8px 12px; margin: 0 0 10px; font-size: 12px; }
+.vale-pendientes b { color: #C9A96E; }
+.vale-pendientes ul { margin: 4px 0 0 18px; padding: 0; }
 .vale-vacio { color: #94a3b8; font-size: 13px; }
 @media (max-width: 760px) { .vale-cuerpo { grid-template-columns: 1fr; } }
 
@@ -2255,8 +2257,9 @@ body.plan-claro .elem-label, body.plan-claro .elem-badge { fill: #1F1F1F; stroke
 .vale-prov .form-input { font-size: 11px; padding: 5px 6px; }
 .vale-externo { font-size: 11px; color: #C9A96E; }
 @media (max-width: 768px) {
-  .minuto-row, body.peg-view-only .minuto-row { grid-template-columns: 96px 1fr 36px; grid-template-areas: "h a d" "r r r"; }
+  .minuto-row, body.peg-view-only .minuto-row { grid-template-columns: 1fr 1fr 36px; grid-template-areas: "h f d" "a a a" "r r r"; }
   .minuto-row [data-m="hora"] { grid-area: h; }
+  .minuto-row [data-m="fin"] { grid-area: f; }
   .minuto-row [data-m="actividad"] { grid-area: a; }
   .minuto-row [data-m="responsable"] { grid-area: r; }
   .minuto-row .minuto-del, .minuto-row .minuto-badge { grid-area: d; }

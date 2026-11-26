@@ -21,7 +21,7 @@
   var PLANNER_FLAG = 'peg_modo_planner'; // ya no se usa: al recargar siempre se entra en solo lectura (se borra si quedó de antes)
   var LOCAL_PREFIX = 'peg_evento_';
   var MAX_FOTOS = 8;
-  var FOTO_ETIQUETAS = ['Montaje', 'Loza', 'Plato', 'Cubertería', 'Cristalería', 'Centro de mesa', 'Mantelería', 'Otro'];
+  var FOTO_ETIQUETAS = ['Montaje', 'Montaje 1', 'Montaje 2', 'Centro de mesa', '1er tiempo', '2do tiempo', 'Plato fuerte', 'Postre', 'Loza', 'Plato', 'Cubertería', 'Cristalería', 'Mantelería', 'Otro'];
   // Límites del plan gratuito de Supabase (confirmar en el panel de Supabase → Usage)
   var LIMITE_DB = 500 * 1024 * 1024;
   var LIMITE_ARCHIVOS = 1024 * 1024 * 1024;
@@ -933,7 +933,8 @@
     rows.forEach(function (r, i) {
       var fijo = ro || r.origen ? ' disabled' : '';
       html += '<div class="minuto-row' + (r.origen ? ' del-brief' : '') + '" data-i="' + i + '"' + (r.origen && !ro ? ' title="Viene del brief: se edita en su sección"' : '') + '>' +
-        '<input class="form-input" type="' + inputTipo('time', ro) + '" data-m="hora" value="' + esc(inputValor('time', r.hora, ro)) + '"' + fijo + ' />' +
+        '<input class="form-input" type="' + inputTipo('time', ro) + '" data-m="hora" title="Inicia" value="' + esc(inputValor('time', r.hora, ro)) + '"' + fijo + ' />' +
+        '<input class="form-input minuto-fin" type="' + inputTipo('time', ro) + '" data-m="fin" title="Termina" placeholder="Termina" value="' + esc(inputValor('time', r.fin, ro)) + '"' + dis + ' />' +
         '<input class="form-input" data-m="actividad" placeholder="Actividad" value="' + esc(r.actividad) + '"' + fijo + ' />' +
         '<input class="form-input' + (!ro && !String(r.responsable || '').trim() ? ' sin-prov' : '') + '" data-m="responsable" list="minuto-provs" placeholder="¿Quién lo hace? PEG o proveedor" value="' + esc(r.responsable) + '"' +
           (ro || String(r.origen || '').indexOf('prov|') === 0 ? ' disabled' : '') + ' />' +
@@ -942,7 +943,8 @@
     });
     html += '</div>';
     if (!ro) {
-      html += '<p class="panel-hint">Las ceremonias, momentos, protocolo, tiempos del banquete, proveedores y entregas de objetos en resguardo con hora se agregan solos (marcados "brief") y se editan en su sección. Aquí puedes agregar otras actividades.</p>' +
+      html += '<p class="panel-hint">Cada actividad lleva la hora en que <b>inicia</b> y la hora en que <b>termina</b> (la de término se puede anotar también en las que vienen del brief). Los tiempos del menú salen juntos en una sola fila de <b>Banquete</b>.</p>' +
+        '<p class="panel-hint">Las ceremonias, momentos, protocolo, tiempos del banquete, proveedores y entregas de objetos en resguardo con hora se agregan solos (marcados "brief") y se editan en su sección. Aquí puedes agregar otras actividades.</p>' +
         '<p class="panel-hint minuto-criterio"><b>Criterio:</b> siempre hay música del DJ, salvo en ceremonias dentro del venue o cuando toca otro grupo. Marca sobre todo los momentos en que <b>se detiene la música</b> (pastel, vals, coreografías, palabras con micrófono, entrada de un grupo). Lo que pasa con música de fondo (tornafiesta, chinelos, apertura de cabinas) corre en simultáneo: anota su hora, pero no corta la cronología.</p>' +
         '<div class="minuto-actions">' +
         '<button type="button" class="btn-ghost" id="minuto-add"><i class="fa-solid fa-plus"></i> Agregar actividad</button>' +
@@ -1010,18 +1012,35 @@
   function porHora(a, b) { return minutosDelEvento(a.hora) - minutosDelEvento(b.hora); }
 
   // Ceremonias, momentos, protocolo y tiempos del banquete con hora → filas del minuto a minuto
+  var TIEMPOS_BANQUETE = ['Entrada', 'Sopa / Crema', 'Ensalada', 'Plato fuerte', 'Postre'];
   function timedFromBrief(brief) {
     var rows = [];
     SECTIONS.forEach(function (s) {
       s.fields.forEach(function (f) {
         if (f.type !== 'detail' || !f.timed) return;
         var val = brief[f.k] || {};
-        Object.keys(val).forEach(function (n) {
+        var banquete = null;
+        var claves = Object.keys(val);
+        // Los tiempos del banquete en su orden (entrada, sopa, ensalada, plato fuerte, postre)
+        if (f.k === 'tiempos_menu') claves.sort(function (x, y) { return (TIEMPOS_BANQUETE.indexOf(x) + 1 || 99) - (TIEMPOS_BANQUETE.indexOf(y) + 1 || 99); });
+        claves.forEach(function (n) {
           var it = val[n] || {};
+          // Entrada, sopa, ensalada, plato fuerte y postre son parte del banquete: van juntos en una fila
+          if (f.k === 'tiempos_menu' && TIEMPOS_BANQUETE.indexOf(n) > -1) {
+            banquete = banquete || { horas: [], partes: [], quien: '' };
+            if (it.hora) banquete.horas.push(it.hora);
+            banquete.partes.push(n + (it.platillo ? ' (' + it.platillo + ')' : ''));
+            if (!banquete.quien && it.quien) banquete.quien = it.quien;
+            return;
+          }
           if (!it.hora) return;
           var extra = [it.lugar, it.platillo].filter(Boolean).join(' · ');
           rows.push({ hora: it.hora, actividad: n + (extra ? ' — ' + extra : ''), responsable: it.quien || '', origen: f.k + '|' + n });
         });
+        if (banquete && banquete.horas.length) {
+          banquete.horas.sort(function (a, b) { return minutosDelEvento(a) - minutosDelEvento(b); });
+          rows.push({ hora: banquete.horas[0], actividad: 'Banquete — ' + banquete.partes.join(' · '), responsable: banquete.quien || 'PEG — Cocina', origen: 'tiempos_menu|Banquete' });
+        }
       });
     });
     return rows;

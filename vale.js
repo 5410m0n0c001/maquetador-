@@ -164,6 +164,39 @@
     if (ya) { if (cant !== '') ya.cant = (parseInt(ya.cant, 10) || 0) + cant; return; }
     v.items.push({ id: art.id || null, nombre: art.nombre, categoria: art.categoria || 'Otros', cant: cant, nota: '', origen: origen || 'manual' });
   }
+  // Requisición calculada desde el plano, el menú y las amenidades (calculo-requisicion.js).
+  // Recalcular solo reemplaza lo calculado; lo que alguien ajustó a mano o agregó se respeta.
+  function calculoItems(ev) {
+    var r = window.PEGCalculo ? window.PEGCalculo.calcular(ev) : { items: [], pendientes: [] };
+    var porId = {};
+    r.items = r.items.reduce(function (lista, i) {
+      var art = [i.nombre].concat(i.alt || []).map(buscarArticulo).find(Boolean) || null;
+      var nota = i.nota || '';
+      // Servilleta de un color que no está en el inventario: va como servilleta de tela con el color en la nota
+      if (!art && /^Servilleta /.test(i.nombre)) { art = buscarArticulo('Servilleta de tela'); nota = i.nombre.replace(/^Servilleta /, 'color ') + (nota ? ' · ' + nota : ''); }
+      var it = { id: art ? art.id : null, nombre: art ? art.nombre : i.nombre, categoria: art ? art.categoria : i.categoria, cant: i.cant, nota: nota, origen: 'calculo' };
+      var ya = it.id && porId[it.id];
+      if (ya) { ya.cant = (parseInt(ya.cant, 10) || 0) + (parseInt(it.cant, 10) || 0); ya.nota = [ya.nota, it.nota].filter(Boolean).join(' · '); return lista; }
+      if (it.id) porId[it.id] = it;
+      lista.push(it);
+      return lista;
+    }, []);
+    return r;
+  }
+  function calcularDesdeEvento() {
+    var ev = evento(), v = vale();
+    var r = calculoItems(ev);
+    v.items = v.items.filter(function (i) { return i.origen !== 'calculo'; });
+    r.items.forEach(function (it) {
+      var ya = v.items.some(function (i) { return it.id ? i.id === it.id : norm(i.nombre) === norm(it.nombre); });
+      if (!ya) v.items.push(it);
+    });
+    v.pendientes = r.pendientes;
+    v.calculado = new Date().toISOString();
+    guardar();
+    return r;
+  }
+
   // ── Ventana del vale ───────────────────────────────────────
   function abrir() {
     var ev = evento();
@@ -175,7 +208,11 @@
     }
     document.body.appendChild(_modal);
     _modal.innerHTML = '<div class="venue-picker vale-modal"><p>Cargando inventario…</p></div>';
-    cargarInventario().then(pintar).catch(function (err) {
+    cargarInventario().then(function () {
+      var v = vale();
+      if (esPlanner() && !v.calculado && !v.items.length) calcularDesdeEvento();
+      pintar();
+    }).catch(function (err) {
       _modal.querySelector('.vale-modal').innerHTML = '<p>No se pudo cargar el inventario: ' + esc(err.message || err) + '</p>';
     });
   }
@@ -201,7 +238,7 @@
           var idx = v.items.indexOf(i);
           return editar
             ? '<tr data-i="' + idx + '"><td><input type="number" min="0" class="form-input vale-cant" placeholder="¿?" value="' + esc(i.cant) + '"></td>' +
-              '<td>' + esc(i.nombre) + (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : '') + '</td>' +
+              '<td>' + esc(i.nombre) + (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : i.origen === 'calculo' ? ' <span class="vale-tag">calculado</span>' : '') + '</td>' +
               '<td><input class="form-input vale-nota" placeholder="Color, medida…" value="' + esc(i.nota) + '"></td>' +
               '<td><select class="form-input vale-surte" title="Quién lo surte">' + surteOpciones(i.surte || '') + '</select></td>' +
               '<td><button type="button" class="btn-icon-sm vale-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button></td></tr>' +
@@ -260,7 +297,10 @@
           (pendientes ? ' <b class="vale-alerta">' + pendientes + (pendientes === 1 ? ' servicio no tiene' : ' servicios no tienen') + ' quién lo surte.</b>' : '') + '</p>' +
         (servs.length ? '<div class="vale-servicios-lista">' + serviciosHtml + '</div>' : '<p class="vale-vacio">Sin servicios registrados.</p>') +
       '</section>' +
+      ((v.pendientes || []).length ? '<div class="vale-pendientes"><b><i class="fa-solid fa-circle-exclamation"></i> Falta definir</b><ul>' +
+        v.pendientes.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '') +
       '<div class="vale-acciones">' +
+        (editar ? '<button type="button" class="event-btn" id="vale-calcular" title="Calcula loza, cubiertos, cristalería, mantelería, sillas, mesas y arreglos desde el plano, el menú y las amenidades"><i class="fa-solid fa-calculator"></i> Calcular desde el evento</button>' : '') +
         (editar ? '<button type="button" class="event-btn" id="vale-inventario"><i class="fa-solid fa-list-check"></i> Imprimir requisición para llenar a mano</button>' +
           '<button type="button" class="event-btn" id="vale-libre"><i class="fa-solid fa-pen"></i> Artículo que no está en inventario</button>' : '') +
         '<button type="button" class="event-btn active" id="vale-imprimir"><i class="fa-solid fa-dolly"></i> Generar vale de salida</button>' +
@@ -290,6 +330,11 @@
     m.querySelector('#vale-imprimir').onclick = imprimir;
     if (!editar) return;
     m.querySelector('#vale-inventario').onclick = imprimirInventario;
+    m.querySelector('#vale-calcular').onclick = function () {
+      var r = calcularDesdeEvento();
+      toast('Requisición calculada: ' + r.items.length + ' artículos' + (r.pendientes.length ? ' · ' + r.pendientes.length + ' cosas por definir' : ''), 'success');
+      pintar();
+    };
     m.querySelector('#vale-libre').onclick = function () {
       var nombre = prompt('Artículo que no está en el inventario (por ejemplo: Refresco Coca-Cola 2 L):');
       if (!nombre || !nombre.trim()) return;
@@ -319,8 +364,8 @@
     });
     Array.prototype.forEach.call(m.querySelectorAll('tr[data-i]'), function (tr) {
       var item = v.items[parseInt(tr.getAttribute('data-i'), 10)];
-      tr.querySelector('.vale-cant').onchange = function (e) { item.cant = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0); guardar(); pintar(); };
-      tr.querySelector('.vale-nota').onchange = function (e) { item.nota = e.target.value; guardar(); };
+      tr.querySelector('.vale-cant').onchange = function (e) { if (item.origen === 'calculo') item.origen = 'ajustado'; item.cant = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0); guardar(); pintar(); };
+      tr.querySelector('.vale-nota').onchange = function (e) { if (item.origen === 'calculo') item.origen = 'ajustado'; item.nota = e.target.value; guardar(); };
       tr.querySelector('.vale-quitar').onclick = function () { v.items.splice(v.items.indexOf(item), 1); guardar(); pintar(); };
       tr.querySelector('.vale-surte').onchange = function (e) {
         item.surte = e.target.value;
@@ -470,11 +515,13 @@
   // 2. Servicios, equipo y proveedores externos: proveedor, teléfono, horarios y quién recibe
   // 3. Otros artículos que no están en el inventario
   // Lo que ya se capturó en la app sale prellenado; lo demás queda en blanco con su rótulo.
-  function imprimirInventario() {
-    var w = window.open('', '_blank');
-    if (!w) { toast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error'); return; }
+  // soloHtml: devuelve el documento en vez de abrirlo (la ficha técnica lo incluye).
+  // Si el evento aún no tiene requisición, sale prellenada con la sugerida (calculada desde el evento).
+  function imprimirInventario(soloHtml) {
+    var w = soloHtml === true ? null : window.open('', '_blank');
+    if (soloHtml !== true && !w) { toast('El navegador bloqueó la ventana emergente. Permite las ventanas emergentes en este sitio.', 'error'); return; }
     var ev = evento(), b = ev ? ev.data.brief || {} : {};
-    var v = ev ? vale() : { items: [] };
+    var v = ev ? { items: datosFicha().items } : { items: [] };
     var servs = ev ? servicios() : [];
     var fecha = b.fecha_evento ? new Date(b.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
     var lugar = b.venue_red || b.venue_externo || '';
@@ -572,15 +619,23 @@
         '<div class="firma"><b>Recibe</b><span>Coordinador en locación</span><i>Nombre y firma</i><i>Fecha y hora</i></div>' +
       '</section>' +
       '<footer class="footer">Primavera Events Group® · Documento de control interno</footer></body></html>';
+    if (soloHtml === true) return html;
     w.document.open();
     w.document.write(html);
     w.document.close();
   }
 
   // Lista para la ficha técnica del coordinador
+  function datosFicha() {
+    var ev = evento();
+    var v = ev && ev.data.vale;
+    if (v && v.items && v.items.length) return { items: v.items, pendientes: v.pendientes || [], calculada: false };
+    var r = ev ? calculoItems(ev) : { items: [], pendientes: [] };
+    return { items: r.items, pendientes: r.pendientes, calculada: true };
+  }
   function filasFicha() {
     var ev = evento();
-    var items = ev && ev.data.vale ? ev.data.vale.items : [];
+    var items = datosFicha().items;
     var servs = ev && ev.data.vale && Array.isArray(ev.data.vale.servicios) ? ev.data.vale.servicios : [];
     if (!items.length && !servs.length) return '';
     return agrupar(items).map(function (g) {
@@ -598,5 +653,6 @@
     if (btn) btn.onclick = abrir;
   });
 
-  window.PEGVale = { abrir: abrir, imprimir: imprimir, imprimirInventario: imprimirInventario, filasFicha: filasFicha };
+  window.PEGVale = { abrir: abrir, imprimir: imprimir, imprimirInventario: imprimirInventario, filasFicha: filasFicha, datosFicha: datosFicha, cargarInventario: cargarInventario,
+    inventarioListo: function () { return !!_inventario; } };
 })();

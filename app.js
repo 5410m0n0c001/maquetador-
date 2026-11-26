@@ -2384,7 +2384,17 @@
       _exportPDFBodega(svgEl, printWindow);
       return;
     }
+    // La requisición de la ficha usa el inventario de bodega: si aún no se carga, se espera
+    var V = window.PEGVale;
+    if (V && V.inventarioListo && !V.inventarioListo()) {
+      printWindow.document.write('<p style="font-family:sans-serif;padding:24px">Preparando la ficha técnica…</p>');
+      V.cargarInventario().then(function () { _fichaTecnica(svgEl, printWindow); }, function () { _fichaTecnica(svgEl, printWindow); });
+      return;
+    }
+    _fichaTecnica(svgEl, printWindow);
+  }
 
+  function _fichaTecnica(svgEl, printWindow) {
     function esc(v) {
       return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -2446,8 +2456,10 @@
       vb = [x0 * 15, y0 * 15, (x1 - x0) * 15, (y1 - y0) * 15];
     }
     clonedSvg.setAttribute('viewBox', vb.join(' '));
-    // Etiquetas con tamaño fijo en la hoja (~9 px) sin importar el zoom de la pantalla
-    var escala = Math.min(725 / vb[2], 400 / vb[3]);
+    // El croquis ocupa una hoja carta completa: si el plano es más ancho que alto se imprime girado
+    // (la hoja se lee en horizontal); si no, derecho. Etiquetas a ~9 px en la hoja sin importar el zoom.
+    var horizontal = vb[2] >= vb[3];
+    var escala = Math.min((horizontal ? 877 : 725) / vb[2], (horizontal ? 688 : 870) / vb[3]);
     Array.prototype.forEach.call(clonedSvg.querySelectorAll('.elem-label'), function (l) {
       var fs = 9 * (AppState.labelScale || 1) / escala;
       l.setAttribute('font-size', fs);
@@ -2465,18 +2477,12 @@
     if (AppState.selectedId && window.Editor2D) window.Editor2D.select(AppState.selectedId);
 
     // ── Mesas y elementos del plano ──
-    var tablesList = [];
-    var otherElementsList = [];
-    var capacity = 0;
-    AppState.elements.forEach(function (elem) {
-      if (elem.bg2d) return; // estructuras fijas de la plantilla
-      if (elem.type.indexOf('table_') === 0 || elem.type === 'lounge_set') {
-        tablesList.push(elem);
-        capacity += parseInt(elem.chairs, 10) || 0;
-      } else {
-        otherElementsList.push(elem);
-      }
+    var tablesList = AppState.elements.filter(function (elem) {
+      return !elem.bg2d && (elem.type.indexOf('table_') === 0 || elem.type === 'lounge_set');
     });
+    // Lugares del banquete (mesas + mesa principal) contra invitados; el cóctel no cuenta
+    var invitadosN = parseInt(b.invitados, 10) || 0;
+    var L = window.PEGCalculo.lugares(AppState.elements, invitadosN);
     tablesList.sort(function (a, c) {
       var na = (a.mesaConfig && parseInt(a.mesaConfig.mesaNum, 10)) || 999;
       var nc = (c.mesaConfig && parseInt(c.mesaConfig.mesaNum, 10)) || 999;
@@ -2546,7 +2552,23 @@
       '.card .l { font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--gray); }' +
       '.section { margin-top: 18px; }' +
       '.section h2 { font-size: 15px; padding-left: 10px; border-left: 3px solid var(--pink); margin-bottom: 10px; }' +
-      '.plan { height: 520px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }' +
+      '.plan { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }' +
+      '.plano-h .plan { aspect-ratio: 232 / 182; } .plano-v .plan { aspect-ratio: 192 / 232; }' +
+      '.equipo { color: var(--ink) !important; } .equipo b { color: var(--gold); font-weight: 600; }' +
+      // Tablas con celdas y colores de la marca (minuto a minuto, proveedores, requisición)
+      'table.grid { border: 1px solid #E8D9C4; }' +
+      'table.grid th { background: var(--ink); color: #fff; border-bottom: 2px solid var(--gold); border-right: 1px solid #3a3a3a; }' +
+      'table.grid td { border: 1px solid #EADFD3; }' +
+      'table.grid tbody tr:nth-child(even) td { background: #FDF3F5; }' +
+      'table.grid td.hora { color: var(--pink); font-weight: 600; white-space: nowrap; }' +
+      'table.grid td.hora.deducido { color: #B9A99A; font-weight: 400; font-style: italic; }' +
+      'table.grid tr.vacia td { height: 24px; background: #fff !important; }' +
+      '.renglon { border-bottom: 1px solid #D9CFC5; min-height: 17px; font-size: 8.5px; color: var(--gray); margin-top: 2px; }' +
+      '.pendientes { border: 1px solid var(--gold); background: #FBF7F0; border-radius: 8px; padding: 6px 10px; margin: 6px 0 8px; }' +
+      '.pendientes b { color: var(--gold); text-transform: uppercase; letter-spacing: .1em; font-size: 9px; }' +
+      '.pendientes ul { margin: 3px 0 0 16px; padding: 0; }' +
+      '.lugares-resumen { margin: 8px 0 4px; } .lugares-resumen b { color: var(--pink); }' +
+      '.nota-chica { font-size: 9px; margin: 4px 0 0; }' +
       '.plan svg { width: 100%; height: 100%; display: block; }' +
       '.flow-path { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 9; opacity: .85; }' +
       // Plano en versión clara para imprimir
@@ -2579,7 +2601,11 @@
       '@media print { body { padding: 0; font-size: 9.5px; line-height: 1.35; } .toolbar { display: none; }' +
         ' .letterhead { padding-bottom: 8px; } .brand img { width: 46px; height: 46px; } .qr svg { width: 72px; height: 72px; }' +
         ' .hero { margin: 8px 0 8px; } .hero h1 { font-size: 20px; } .cards { gap: 6px; margin-bottom: 10px; } .card { padding: 5px 8px; }' +
-        ' .section { margin-top: 10px; } .section h2 { font-size: 13px; margin-bottom: 6px; } .plan { height: 400px; }' +
+        ' .section { margin-top: 10px; } .section h2 { font-size: 13px; margin-bottom: 6px; }' +
+        ' .plano-pagina { break-before: page; break-after: page; margin: 0; }' +
+        ' .plano-h .plan-giro { height: 232mm; } .plano-h .plan { width: 232mm; height: 182mm; aspect-ratio: auto; transform-origin: 0 0; transform: translate(187mm, 0) rotate(90deg); }' +
+        ' .plano-v .plan { height: 232mm; aspect-ratio: auto; }' +
+        ' table.grid tr.vacia td { height: 20px; }' +
         ' th, td { padding: 3px 6px; } table { font-size: 9px; } .kv { grid-template-columns: repeat(3, 1fr); gap: 0 14px; } .kv div { padding: 3px 0; }' +
         ' .block { margin-bottom: 6px; } .block h3 { font-size: 11px; margin-bottom: 2px; }' +
         ' .info-cols { column-count: 2; column-gap: 18px; } .info-cols .kv { display: block; } .info-cols .kv div { padding: 1px 0; }' +
@@ -2598,15 +2624,22 @@
       (qrSvg ? '<div class="qr">' + qrSvg + 'Escanea para ver el evento</div>' : '') +
       '</header>';
 
-    // Encabezado del evento
+    // Encabezado del evento, con su coordinador y capitán
+    var staffLista = data.staff || [];
+    var deStaff = function (rol) {
+      return staffLista.filter(function (p) { return p.rol === rol && p.nombre; }).map(function (p) { return p.nombre + (p.telefono ? ' · ' + p.telefono : ''); }).join(', ');
+    };
+    var coordinador = deStaff('Coordinador'), capitan = deStaff('Capitán');
     html += '<section class="hero"><h1>' + esc(eventName) + '</h1>' +
-      (b.fecha_evento ? '<p>' + esc(fmtDate(b.fecha_evento)) + (horario ? ' · ' + esc(horario) : '') + '</p>' : '') + '</section>';
+      (b.fecha_evento ? '<p>' + esc(fmtDate(b.fecha_evento)) + (horario ? ' · ' + esc(horario) : '') + '</p>' : '') +
+      (coordinador || capitan ? '<p class="equipo">' + [coordinador && '<b>Coordinador:</b> ' + esc(coordinador), capitan && '<b>Capitán:</b> ' + esc(capitan)].filter(Boolean).join(' &nbsp;·&nbsp; ') + '</p>' : '') +
+      '</section>';
 
     var cards = [
       ['Tipo de evento', tipo],
       ['Invitados', b.invitados ? b.invitados + (b.adultos || b.ninos ? ' (' + (b.adultos || 0) + ' adultos · ' + (b.ninos || 0) + ' niños)' : '') : ''],
       ['Venue', venueName],
-      ['Mesas · capacidad', tablesList.filter(function (t) { return t.mesaConfig && t.mesaConfig.mesaNum; }).length + ' mesas · ' + capacity + ' lugares'],
+      ['Mesas · lugares del banquete', L.banquete.length || L.principal.length ? L.banquete.length + ' mesas' + (L.principal.length ? ' + principal' : '') + ' · ' + L.total + ' lugares' : ''],
       ['Formalidad', b.formalidad],
       ['Temática', b.tematica],
       ['Paleta de colores', [].concat(b.paletas || [], b.paleta ? [b.paleta] : []).join(' · ')],
@@ -2616,44 +2649,124 @@
       return '<div class="card"><div class="v">' + esc(c[1]) + '</div><div class="l">' + esc(c[0]) + '</div></div>';
     }).join('') + '</div>';
 
-    // Plano
-    html += '<section class="section block"><h2>Plano y distribución</h2><div class="plan">' + planSvg + '</div></section>';
+    // Información del evento (al principio y sin repetir lo de arriba)
+    var EN_TARJETAS = ['tipo_evento', 'tipo_evento_otro', 'fecha_evento', 'hora_inicio', 'hora_cierre', 'invitados', 'adultos', 'ninos',
+      'venue_red', 'venue_externo', 'formalidad', 'tematica', 'paletas', 'paleta', 'planner'];
+    // Brief: solo campos con respuesta; en la versión para personal sin lo interno
+    var briefHtml = '';
+    (schema.sections || []).forEach(function (s) {
+      if (!isPlanner && s.internal) return;
+      var fmt = function (f) {
+        var v = b[f.k];
+        if (f.k === 'tipo_evento' && v === 'Otro' && b.tipo_evento_otro) return b.tipo_evento_otro;
+        if (f.k === 'tipo_evento_otro') return ''; // ya se muestra como tipo de evento
+        if (f.type === 'date') return fmtDate(v);
+        return PE && PE.formatValue ? PE.formatValue(f, v) : (Array.isArray(v) ? v.join(' · ') : (v || ''));
+      };
+      var rows = s.fields.filter(function (f) {
+        if (!f.k || (!isPlanner && f.internal)) return false;
+        if (f.timed) return false; // lo que tiene hora ya sale en el minuto a minuto
+        if (EN_TARJETAS.indexOf(f.k) > -1) return false; // ya está en el encabezado o en las tarjetas
+        return fmt(f) !== '';
+      });
+      if (!rows.length) return;
+      briefHtml += '<div class="block"><h3>' + esc(s.title) + '</h3><div class="kv">' + rows.map(function (f) {
+        var wide = ['textarea', 'checks', 'detail', 'palette', 'swatches'].indexOf(f.type) > -1;
+        return '<div' + (wide ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(fmt(f)) + '</div>';
+      }).join('') + '</div></div>';
+    });
+    if (briefHtml) html += '<section class="section"><h2>Información del evento</h2><div class="info-cols">' + briefHtml + '</div></section>';
 
-    // Minuto a minuto
+
+    // Mesas y lugares: desglose por tipo y cuadre contra los invitados
+    if (L.banquete.length || L.principal.length || L.coctel.length) {
+      var grupos = [];
+      var agrupa = function (lista, uso) {
+        lista.forEach(function (e) {
+          var nombre = typeLabels[e.type] || e.name || e.type;
+          var g = grupos.find(function (x) { return x.nombre === nombre && x.uso === uso; });
+          if (!g) grupos.push(g = { nombre: nombre, uso: uso, n: 0, lugares: 0 });
+          g.n++;
+          g.lugares += parseInt(e.chairs, 10) || 0;
+        });
+      };
+      agrupa(L.principal, 'Mesa principal');
+      agrupa(L.banquete, 'Banquete');
+      agrupa(L.coctel, 'Cóctel (no cuenta para el banquete)');
+      html += '<section class="section block"><h2>Mesas y lugares</h2><table class="grid"><thead><tr><th>Tipo</th><th style="width:12%">Cantidad</th><th style="width:14%">Lugares</th><th style="width:34%">Uso</th></tr></thead><tbody>' +
+        grupos.map(function (g) { return '<tr><td><strong>' + esc(g.nombre) + '</strong></td><td>' + g.n + '</td><td>' + (g.lugares || '-') + '</td><td>' + esc(g.uso) + '</td></tr>'; }).join('') +
+        '</tbody></table>';
+      var dif = L.total - invitadosN;
+      html += '<p class="lugares-resumen">Lugares del banquete (mesas + mesa principal): <b>' + L.total + '</b>' +
+        (invitadosN ? ' · Invitados: <b>' + invitadosN + '</b> · ' + (dif === 0 ? 'cuadra exacto' : dif > 0 ? 'sobran <b>' + dif + '</b> lugares' : 'faltan <b>' + (-dif) + '</b> lugares') : '') + '</p>';
+      if (L.sugerido && dif !== 0) {
+        var sg = L.sugerido;
+        html += '<p>' + (sg.valido
+          ? 'Para que cuadre: ' + (L.principal.length ? 'mesa principal con ' + L.lugaresPrincipal + ' y ' : '') + sg.porRepartir + ' invitados en ' + sg.mesas + ' mesas → ' +
+            (sg.extra ? (sg.mesas - sg.extra) + ' mesas de ' + sg.base + ' y ' + sg.extra + ' mesas de ' + (sg.base + 1) : sg.mesas + ' mesas de ' + sg.base) + ' (las mesas son de 8 a 12).'
+          : 'Con ' + sg.mesas + ' mesas quedarían ' + sg.base + (sg.extra ? ' a ' + (sg.base + 1) : '') + ' personas por mesa, fuera del rango de 8 a 12: se necesitan entre ' +
+            Math.ceil(sg.porRepartir / 12) + ' y ' + Math.floor(sg.porRepartir / 8) + ' mesas.') + '</p>';
+      }
+      var conLista = tablesList.some(function (t) { return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length; });
+      if (!conLista) html += '<div class="pendientes"><b>Falta definir</b><ul><li>Cuántas personas se sientan en cada mesa: se necesita la lista de invitados.</li></ul></div>';
+      html += '</section>';
+    }
+
+    // Croquis en hoja completa
+    html += '<section class="section plano-pagina ' + (horizontal ? 'plano-h' : 'plano-v') + '"><h2>Plano y distribución</h2><div class="plan-giro"><div class="plan">' + planSvg + '</div></div></section>';
+
+    // Minuto a minuto: inicia, termina, actividad y responsable, con renglones para apuntes
+    var minDelEvento = function (h) {
+      if (!h) return 9999;
+      var p = h.split(':'), mm = parseInt(p[0], 10) * 60 + (parseInt(p[1], 10) || 0);
+      return mm < 360 ? mm + 1440 : mm;
+    };
     var minuto = (data.minuto || []).filter(function (r) { return r.hora || r.actividad; });
-    if (minuto.length) {
-      html += '<section class="section"><h2>Minuto a minuto</h2><table><thead><tr><th style="width:14%">Hora</th><th>Actividad</th><th style="width:28%">Responsable</th></tr></thead><tbody>';
-      minuto.forEach(function (r) {
-        html += '<tr><td><strong>' + esc(h12(r.hora)) + '</strong></td><td>' + esc(r.actividad) + '</td><td>' + esc(r.responsable) + '</td></tr>';
-      });
-      html += '</tbody></table></section>';
-    }
+    var hayDeducidas = false;
+    html += '<section class="section"><h2>Minuto a minuto</h2><table class="grid minuto"><thead><tr><th style="width:10%">Inicia</th><th style="width:10%">Termina</th><th>Actividad</th><th style="width:27%">Responsable</th></tr></thead><tbody>';
+    minuto.forEach(function (r, i) {
+      var termina = r.fin || '', deducida = false;
+      if (!termina && r.hora) {
+        var sig = minuto.slice(i + 1).find(function (x) { return x.hora && minDelEvento(x.hora) > minDelEvento(r.hora); });
+        if (sig) { termina = sig.hora; deducida = hayDeducidas = true; }
+      }
+      html += '<tr><td class="hora">' + esc(h12(r.hora)) + '</td><td class="hora' + (deducida ? ' deducido' : '') + '">' + esc(h12(termina)) + '</td><td>' + esc(r.actividad) + '</td><td>' + esc(r.responsable) + '</td></tr>';
+    });
+    for (var vm = 0; vm < (minuto.length ? 4 : 10); vm++) html += '<tr class="vacia"><td></td><td></td><td></td><td></td></tr>';
+    html += '</tbody></table>' + (hayDeducidas ? '<p class="muted nota-chica">Las horas de término en gris se tomaron del inicio de la actividad siguiente: confírmalas.</p>' : '') + '</section>';
 
-    // Mobiliario del vale de salida: lo que el coordinador recibe en locación
-    var valeFilas = window.PEGVale ? window.PEGVale.filasFicha() : '';
-    if (valeFilas) {
-      html += '<section class="section"><h2>Mobiliario que sale de bodega (vale de salida)</h2><table><thead><tr><th>Cant.</th><th>Artículo</th><th>Nota</th></tr></thead><tbody>' + valeFilas + '</tbody></table></section>';
-    }
-
-    // Staff: quién va, su teléfono, mesas y radio
+    // Staff y fuerza de trabajo del capitán: sus meseros (con sus mesas) y quién está en barra.
+    // Si aún no están asignados, quedan renglones para escribir los nombres.
     var staffFilas = window.PEGStaff ? window.PEGStaff.filasFicha() : '';
-    if (staffFilas) {
-      html += '<section class="section"><h2>Staff del evento</h2><p class="muted">' + esc(window.PEGStaff.resumen()) + '</p><table><thead><tr><th>Rol</th><th>Nombre</th><th>Teléfono</th><th>Mesas</th><th>Radio</th></tr></thead><tbody>' + staffFilas + '</tbody></table></section>';
-    }
+    var tieneRol = function (rol) { return staffLista.some(function (p) { return p.rol === rol && p.nombre; }); };
+    var vaciaStaff = function (rol) { return '<tr class="vacia"><td><strong>' + esc(rol) + '</strong></td><td></td><td></td><td></td><td></td></tr>'; };
+    var staffVacias = '';
+    if (!tieneRol('Mesero')) for (var vs = 0; vs < 6; vs++) staffVacias += vaciaStaff('Mesero');
+    if (!tieneRol('Barra')) staffVacias += vaciaStaff('Barra') + vaciaStaff('Barra');
+    staffVacias += vaciaStaff('') + vaciaStaff('');
+    html += '<section class="section"><h2>Staff y fuerza de trabajo del capitán</h2>' +
+      '<p class="muted">' + (staffFilas ? esc(window.PEGStaff.resumen()) + ' · ' : '') + 'Meseros con las mesas que atiende cada uno y quién va en la posición de barra.' +
+      (!tieneRol('Mesero') || !tieneRol('Barra') ? ' <b>Falta asignar ' + [!tieneRol('Mesero') && 'meseros', !tieneRol('Barra') && 'barra'].filter(Boolean).join(' y ') + ':</b> escribe los nombres en los renglones.' : '') + '</p>' +
+      '<table class="grid"><thead><tr><th style="width:16%">Rol</th><th>Nombre</th><th style="width:16%">Teléfono</th><th style="width:16%">Mesas</th><th style="width:10%">Radio</th></tr></thead><tbody>' + staffFilas + staffVacias + '</tbody></table></section>';
 
-    // Proveedores externos contratados por el cliente
+    // Proveedores externos: lo que falta queda en renglones para anotarlo a mano
     var provs = (data.proveedores || []).filter(function (p) { return p.servicio || p.nombre; });
-    if (provs.length) {
-      html += '<section class="section"><h2>Proveedores externos</h2><table><thead><tr><th style="width:18%">Servicio</th><th style="width:24%">Proveedor / contacto</th><th style="width:20%">Horario</th><th>Condiciones y requerimientos</th></tr></thead><tbody>';
-      provs.forEach(function (p) {
-        var horario = [p.llegada && 'Llega ' + p.llegada, p.inicio && 'Inicia ' + p.inicio, p.fin && 'Termina ' + p.fin].filter(Boolean).join('<br>');
-        html += '<tr><td><strong>' + esc(p.servicio || '-') + '</strong>' + (p.red ? '<br><span class="muted">Red Primavera</span>' : '') + (p.contrata ? '<br><span class="muted">Contrata: ' + esc(p.contrata) + '</span>' : '') + '</td>' +
-          '<td>' + esc(p.nombre || '-') + (p.telefono ? '<br>' + esc(p.telefono) : '') + (p.recibe ? '<br><span class="muted">Recibe: ' + esc(p.recibe) + '</span>' : '') + '</td>' +
-          '<td>' + (horario || '-') + '</td>' +
-          '<td>' + [isPlanner && p.condiciones && '<b>Condiciones:</b> ' + esc(p.condiciones), p.requerimientos && '<b>Requerimientos:</b> ' + esc(p.requerimientos)].filter(Boolean).join('<br>') + '</td></tr>';
-      });
-      html += '</tbody></table></section>';
+    var renglon = function (t) { return '<div class="renglon">' + esc(t || '') + '</div>'; };
+    html += '<section class="section"><h2>Proveedores externos</h2><table class="grid"><thead><tr><th style="width:18%">Servicio</th><th style="width:24%">Proveedor / contacto</th><th style="width:18%">Horario</th><th>Condiciones y requerimientos</th></tr></thead><tbody>';
+    provs.forEach(function (p) {
+      var horas = [['llegada', 'Llega'], ['inicio', 'Inicia'], ['fin', 'Termina']].map(function (x) {
+        return p[x[0]] ? '<div>' + x[1] + ' ' + esc(h12(p[x[0]])) + '</div>' : renglon(x[1] + ':');
+      }).join('');
+      var notas = (isPlanner ? (p.condiciones ? '<div><b>Condiciones:</b> ' + esc(p.condiciones) + '</div>' : renglon('Condiciones:')) : '') +
+        (p.requerimientos ? '<div><b>Requerimientos:</b> ' + esc(p.requerimientos) + '</div>' : renglon('Requerimientos:')) + renglon('');
+      html += '<tr><td><strong>' + esc(p.servicio || '-') + '</strong>' + (p.red ? '<br><span class="muted">Red Primavera</span>' : '') + (p.contrata ? '<br><span class="muted">Contrata: ' + esc(p.contrata) + '</span>' : '') + '</td>' +
+        '<td>' + esc(p.nombre || '') + (p.nombre ? '' : renglon('Nombre:')) + (p.telefono ? '<br>' + esc(p.telefono) : renglon('Tel.:')) + (p.recibe ? '<br><span class="muted">Recibe: ' + esc(p.recibe) + '</span>' : renglon('Recibe:')) + '</td>' +
+        '<td>' + horas + '</td><td>' + notas + '</td></tr>';
+    });
+    for (var vp = 0; vp < (provs.length ? 2 : 4); vp++) {
+      html += '<tr class="vacia"><td>' + renglon('') + '</td><td>' + renglon('Nombre:') + renglon('Tel.:') + '</td><td>' + renglon('Llega:') + renglon('Inicia:') + renglon('Termina:') + '</td><td>' + renglon('') + renglon('') + '</td></tr>';
     }
+    html += '</tbody></table></section>';
 
     // Montaje elegido
     var m = data.montaje || {};
@@ -2670,30 +2783,6 @@
       }
       html += '</section>';
     }
-
-    // Brief: solo campos con respuesta; en la versión para personal sin lo interno
-    var briefHtml = '';
-    (schema.sections || []).forEach(function (s) {
-      if (!isPlanner && s.internal) return;
-      var fmt = function (f) {
-        var v = b[f.k];
-        if (f.k === 'tipo_evento' && v === 'Otro' && b.tipo_evento_otro) return b.tipo_evento_otro;
-        if (f.k === 'tipo_evento_otro') return ''; // ya se muestra como tipo de evento
-        if (f.type === 'date') return fmtDate(v);
-        return PE && PE.formatValue ? PE.formatValue(f, v) : (Array.isArray(v) ? v.join(' · ') : (v || ''));
-      };
-      var rows = s.fields.filter(function (f) {
-        if (!f.k || (!isPlanner && f.internal)) return false;
-        if (f.timed) return false; // lo que tiene hora ya sale en el minuto a minuto
-        return fmt(f) !== '';
-      });
-      if (!rows.length) return;
-      briefHtml += '<div class="block"><h3>' + esc(s.title) + '</h3><div class="kv">' + rows.map(function (f) {
-        var wide = ['textarea', 'checks', 'detail', 'palette', 'swatches'].indexOf(f.type) > -1;
-        return '<div' + (wide ? ' class="wide"' : '') + '><b>' + esc(f.label) + '</b>' + esc(fmt(f)) + '</div>';
-      }).join('') + '</div></div>';
-    });
-    if (briefHtml) html += '<section class="section"><h2>Información del evento</h2><div class="info-cols">' + briefHtml + '</div></section>';
 
     // Mobiliario por mesa (las mesas con el mismo montaje se agrupan en una sola fila)
     // Números consecutivos como rango: 1, 2, 3, 5 → 1–3, 5
@@ -2752,24 +2841,26 @@
       html += '</tbody></table></section>';
     }
 
-    // Áreas y equipamiento
-    if (otherElementsList.length) {
-      html += '<section class="section"><h2>Áreas y equipamiento</h2><table><thead><tr><th>Elemento</th><th style="width:22%">Categoría</th><th style="width:18%">Medidas</th></tr></thead><tbody>';
-      // Elementos iguales (mismo nombre y medidas) en una sola fila con su cantidad
-      var areas = [];
-      otherElementsList.forEach(function (e) {
-        var cat = window.getCatalogEntry ? window.getCatalogEntry(e.type) : null;
-        var nombre = e.name || (cat ? cat.name : e.type);
-        // La pantalla se lista sin medidas (su huella en el plano no es la medida real de la pantalla)
-        var medidas = e.type !== 'projector_screen' && e.w && e.h ? e.w + ' × ' + e.h + ' m' : '-';
-        var r = areas.find(function (x) { return x.nombre === nombre && x.medidas === medidas; });
-        if (r) r.n++; else areas.push({ nombre: nombre, medidas: medidas, cat: cat ? cap(cat.category) : '-', n: 1 });
-      });
-      areas.forEach(function (r) {
-        html += '<tr><td><strong>' + esc(r.nombre) + '</strong>' + (r.n > 1 ? ' × ' + r.n : '') + '</td>' +
-          '<td>' + esc(r.cat) + '</td><td>' + esc(r.medidas) + '</td></tr>';
-      });
-      html += '</tbody></table></section>';
+    // Requisición de material: la plantilla de bodega, prellenada con lo sugerido (o con lo que ya llenaron).
+    // La revisan y completan planner, capitán y coordinador.
+    var req = window.PEGVale && window.PEGVale.datosFicha ? window.PEGVale.datosFicha() : { items: [], pendientes: [], calculada: true };
+    var reqDoc = window.PEGVale ? window.PEGVale.imprimirInventario(true) : '';
+    if (reqDoc) {
+      // Sus estilos se limitan a la sección (.reqp) para no chocar con los de la ficha
+      var reqCss = (reqDoc.match(/<style>([\s\S]*?)<\/style>/) || ['', ''])[1].replace(/@media print\{[\s\S]*$/, '')
+        .replace(/(^|\})([^{}@]+)\{/g, function (m0, a, sel) {
+          return a + sel.split(',').map(function (x) {
+            x = x.trim();
+            return x === ':root' || x === 'html' || x === 'body' ? '.reqp' : x === '*' ? '.reqp *' : '.reqp ' + x;
+          }).join(',') + '{';
+        });
+      var reqBody = reqDoc.split('<body>')[1].split('</body>')[0].replace(/<div class="toolbar">[\s\S]*?<\/div>/, '');
+      html += '<style>' + reqCss + '.reqp{margin:0;max-width:none;padding:0}@media print{.reqp thead{display:table-header-group}}</style>' +
+        '<section class="reqp page-break">' +
+        '<p class="muted" style="margin:0 0 6px">' + (req.calculada ? '<b>Sugerido</b> calculado desde el plano, el menú y las amenidades. ' : '') +
+        'Planner, capitán y coordinador revisan las cantidades, eligen modelo y color donde se indica y completan lo que falte.</p>' +
+        (req.pendientes.length ? '<div class="pendientes"><b>Falta definir</b><ul>' + req.pendientes.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '') +
+        reqBody + '</section>';
     }
 
     // Invitados por mesa
