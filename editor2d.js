@@ -252,9 +252,25 @@ window.Editor2D = (function () {
     var rulerBgV = svgEl('rect', { x: 0, y: 0, width: RULER_SIZE, height: '100%', fill: '#1F1F1F' });
     _gRulerV.appendChild(rulerBgV);
 
-    // Horizontal marks every 5m
-    for (var mx = 0; mx <= _terrain.w; mx += 5) {
-      var px = _panX + mx * SCALE * _zoom;
+    // El paso de los números se adapta al zoom (que queden al menos ~44 px entre uno y otro);
+    // entre número y número, rayitas sin número
+    var pxPorM = SCALE * _zoom;
+    var PASOS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500];
+    var paso = PASOS.find(function (p) { return p * pxPorM >= 44; }) || 1000;
+    var menor = PASOS.find(function (p) { return p * pxPorM >= 8 && paso % p === 0; }) || paso;
+    for (var mm = 0; mm <= _terrain.w; mm += menor) {
+      if (mm % paso === 0) continue;
+      var pm = _panX + mm * pxPorM;
+      _gRulerH.appendChild(svgEl('line', { x1: pm, y1: RULER_SIZE - 3, x2: pm, y2: RULER_SIZE, stroke: '#C9A96E', 'stroke-width': 1, opacity: 0.6 }));
+    }
+    for (var mn = 0; mn <= _terrain.h; mn += menor) {
+      if (mn % paso === 0) continue;
+      var pn = _panY + mn * pxPorM;
+      _gRulerV.appendChild(svgEl('line', { x1: RULER_SIZE - 3, y1: pn, x2: RULER_SIZE, y2: pn, stroke: '#C9A96E', 'stroke-width': 1, opacity: 0.6 }));
+    }
+
+    for (var mx = 0; mx <= _terrain.w; mx += paso) {
+      var px = _panX + mx * pxPorM;
       var tick = svgEl('line', { x1: px, y1: RULER_SIZE - 6, x2: px, y2: RULER_SIZE, stroke: '#C9A96E', 'stroke-width': 1 });
       _gRulerH.appendChild(tick);
       var lbl = svgEl('text', { x: px + 2, y: RULER_SIZE - 8, fill: '#C9A96E', 'font-size': 9, 'font-family': 'sans-serif' });
@@ -262,9 +278,8 @@ window.Editor2D = (function () {
       _gRulerH.appendChild(lbl);
     }
 
-    // Vertical marks every 5m
-    for (var my = 0; my <= _terrain.h; my += 5) {
-      var py = _panY + my * SCALE * _zoom;
+    for (var my = 0; my <= _terrain.h; my += paso) {
+      var py = _panY + my * pxPorM;
       var tickV = svgEl('line', { x1: RULER_SIZE - 6, y1: py, x2: RULER_SIZE, y2: py, stroke: '#C9A96E', 'stroke-width': 1 });
       _gRulerV.appendChild(tickV);
       var lblV = svgEl('text', {
@@ -1049,8 +1064,17 @@ window.Editor2D = (function () {
     _zoomAt(delta, ms.x, ms.y);
   }
 
+  // Lo más que se puede alejar: la mitad del zoom en que cabe todo el terreno (en terrenos grandes,
+  // como un rancho, el 0.2 fijo no alcanzaba para verlo completo)
+  function _zoomMinimo() {
+    var rect = _svg ? _svg.getBoundingClientRect() : null;
+    if (!rect || !rect.width || !rect.height) return MIN_ZOOM;
+    var cabe = Math.min((rect.width - RULER_SIZE) / mToPx(_terrain.w), (rect.height - RULER_SIZE) / mToPx(_terrain.h));
+    return Math.max(0.01, Math.min(MIN_ZOOM, cabe * 0.5));
+  }
+
   function _zoomAt(factor, cx, cy) {
-    var newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, _zoom * factor));
+    var newZoom = Math.min(MAX_ZOOM, Math.max(_zoomMinimo(), _zoom * factor));
     var scale = newZoom / _zoom;
     _panX = cx - (cx - _panX) * scale;
     _panY = cy - (cy - _panY) * scale;
