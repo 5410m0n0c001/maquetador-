@@ -1316,54 +1316,29 @@ window.Visualizer3D = (function () {
     _sucio = false;
 
     if (_renderer && _scene && _camera) {
-      // Rótulos que responden a la distancia: se dimensionan en pixeles de pantalla (grandes de cerca,
-      // chicos de lejos) y, si dos se enciman, solo queda el más cercano a la cámara. Así en vista
-      // lejana se ven los elementos del plano y al acercarse aparecen todos los rótulos completos.
-      // Respetan A−/A+ (labelScale) y se achican en lienzos angostos.
+      // Rótulos que responden a la distancia: se dimensionan en pixeles de pantalla según su texto
+      // (letra de ~15 px de cerca y ~6 px de lejos) para que en vista lejana se vean los elementos
+      // y al acercarse crezcan. Todos se muestran siempre. Respetan A−/A+ y se achican en lienzos angostos.
       var stL = _getState ? _getState() : null;
       var escalaUsuario = (stL && stL.labelScale) || 1;
       var lienzo = _renderer.domElement;
       var anchoPx = lienzo.clientWidth || 1100, altoPx = lienzo.clientHeight || 700;
-      var factorPantalla = Math.max(0.65, Math.min(1, anchoPx / 1100));
+      var factorPantalla = Math.max(0.7, Math.min(1, anchoPx / 1100));
       var tanFov = Math.tan((_camera.fov * Math.PI / 180) / 2);
-      var worldPos = new THREE.Vector3(), proy = new THREE.Vector3();
-      var rotulos = [];
+      var worldPos = new THREE.Vector3();
       _scene.traverse(function (object) {
         if (!object.is3DLabel) return;
         object.getWorldPosition(worldPos);
         var dist = _camera.position.distanceTo(worldPos);
-        var baseScaleX = object.userData.baseScaleX || 6.0;
-        var baseScaleY = object.userData.baseScaleY || 0.75;
-        var renglones = baseScaleY > 1 ? 2 : 1; // con subtítulo el rótulo tiene dos renglones
-        // Alto deseado por renglón: ~17 px de cerca (≤ 12 m) y ~8 px de lejos (≥ 90 m)
-        var t = Math.max(0, Math.min(1, (dist - 12) / 78));
-        var pxRenglon = (17 - 9 * t) * escalaUsuario * factorPantalla;
+        var u = object.userData;
+        var proporcion = (u.baseScaleX || 6) / (u.baseScaleY || 0.75);
+        var mult = u.escalaOriginal ? u.baseScaleY / u.escalaOriginal : 1; // la bodega usa rótulos más chicos
+        var t = Math.max(0, Math.min(1, (dist - 10) / 80));
+        var pxLetra = (15 - 9 * t) * escalaUsuario * factorPantalla * mult;
         var metrosPorPx = 2 * dist * tanFov / altoPx;
-        var alto = pxRenglon * renglones * 1.25 * metrosPorPx;
-        var ancho = alto * baseScaleX / baseScaleY;
-        object.scale.set(ancho, alto, 1);
-        proy.copy(worldPos).project(_camera);
-        var visibleEnPantalla = proy.z < 1 && Math.abs(proy.x) < 1.2 && Math.abs(proy.y) < 1.2;
-        rotulos.push({
-          obj: object, dist: dist, dentro: visibleEnPantalla,
-          x: (proy.x + 1) / 2 * anchoPx, y: (1 - proy.y) / 2 * altoPx,
-          w: ancho / metrosPorPx, h: alto / metrosPorPx,
-          sel: !!(_selectedId && object.parent && _active3dElements[_selectedId] === object.parent.parent)
-        });
-      });
-      // Sin encimarse: primero el seleccionado y luego los más cercanos a la cámara
-      rotulos.sort(function (p, q) { return (q.sel - p.sel) || (p.dist - q.dist); });
-      var ocupados = [];
-      rotulos.forEach(function (r) {
-        var muestra = r.dentro;
-        if (muestra && !r.sel) {
-          var x0 = r.x - r.w / 2 - 2, x1 = r.x + r.w / 2 + 2, y0 = r.y - r.h / 2 - 2, y1 = r.y + r.h / 2 + 2;
-          muestra = !ocupados.some(function (o) { return x0 < o[2] && x1 > o[0] && y0 < o[3] && y1 > o[1]; });
-          if (muestra) ocupados.push([x0, y0, x1, y1]);
-        } else if (muestra) ocupados.push([r.x - r.w / 2, r.y - r.h / 2, r.x + r.w / 2, r.y + r.h / 2]);
-        // Se oculta el rótulo con su línea al piso
-        var contenedor = r.obj.parent || r.obj;
-        contenedor.visible = muestra;
+        var alto = pxLetra * (u.altoRelativo || 1.5) * metrosPorPx;
+        object.scale.set(alto * proporcion, alto, 1);
+        if (object.parent && !object.parent.visible) object.parent.visible = true;
       });
 
       _renderer.render(_scene, _camera);
@@ -3945,79 +3920,78 @@ window.Visualizer3D = (function () {
   function create3DLabel(text, subtext, colorHex, bgColor, heightOffset) {
     bgColor = bgColor || "rgba(15, 23, 42, 0.85)";
     heightOffset = heightOffset || 2.0;
-    
+
+    // La caja mide lo que su texto más un margen chico: "Mesa 10" no ocupa lo mismo que un nombre largo
+    var F1 = 34, F2 = 24, padX = 12, padY = 7, sep = 3;
+    var medir = document.createElement("canvas").getContext("2d");
+    medir.font = "bold " + F1 + "px Arial, sans-serif";
+    var w1 = medir.measureText(text).width;
+    var w2 = 0;
+    if (subtext) {
+      medir.font = "600 " + F2 + "px Arial, sans-serif";
+      w2 = medir.measureText(subtext).width;
+    }
+    var cw = Math.ceil(Math.min(900, Math.max(w1, w2)) + padX * 2);
+    var ch = Math.ceil(padY * 2 + F1 + (subtext ? sep + F2 : 0));
     var canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = subtext ? 128 : 64;
+    canvas.width = cw;
+    canvas.height = ch;
     var ctx = canvas.getContext("2d");
 
-    // Round rect background
+    // Fondo redondeado con borde del color del elemento
+    var lw = 3, r = 9, x0 = lw / 2, y0 = lw / 2, x1 = cw - lw / 2, y1 = ch - lw / 2;
     ctx.fillStyle = bgColor;
     ctx.strokeStyle = colorHex;
-    ctx.lineWidth = 4;
-    
-    var r = 16;
-    var w = 512;
-    var h = canvas.height;
+    ctx.lineWidth = lw;
     ctx.beginPath();
-    ctx.moveTo(r, 2);
-    ctx.lineTo(w - r, 2);
-    ctx.quadraticCurveTo(w - 2, 2, w - 2, r);
-    ctx.lineTo(w - 2, h - r);
-    ctx.quadraticCurveTo(w - 2, h - 2, w - r, h - 2);
-    ctx.lineTo(r, h - 2);
-    ctx.quadraticCurveTo(2, h - 2, 2, h - r);
-    ctx.lineTo(2, r);
-    ctx.quadraticCurveTo(2, 2, r, 2);
+    ctx.moveTo(x0 + r, y0);
+    ctx.lineTo(x1 - r, y0);
+    ctx.quadraticCurveTo(x1, y0, x1, y0 + r);
+    ctx.lineTo(x1, y1 - r);
+    ctx.quadraticCurveTo(x1, y1, x1 - r, y1);
+    ctx.lineTo(x0 + r, y1);
+    ctx.quadraticCurveTo(x0, y1, x0, y1 - r);
+    ctx.lineTo(x0, y0 + r);
+    ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Draw main text with auto-scaling
-    ctx.fillStyle = "#ffffff";
-    var mainFontSize = 32;
-    ctx.font = "bold " + mainFontSize + "px Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
-    while (ctx.measureText(text).width > 480 && mainFontSize > 16) {
-      mainFontSize -= 2;
-      ctx.font = "bold " + mainFontSize + "px Arial, sans-serif";
-    }
-    
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold " + F1 + "px Arial, sans-serif";
+    var yTitulo = padY + F1 / 2 + 1;
+    ctx.fillText(text, cw / 2, yTitulo, cw - padX * 2);
     if (subtext) {
-      ctx.fillText(text, 256, 42);
       ctx.fillStyle = colorHex;
-      var subFontSize = 24;
-      ctx.font = "bold " + subFontSize + "px Arial, sans-serif";
-      while (ctx.measureText(subtext).width > 480 && subFontSize > 12) {
-        subFontSize -= 2;
-        ctx.font = "bold " + subFontSize + "px Arial, sans-serif";
-      }
-      ctx.fillText(subtext, 256, 88);
-    } else {
-      ctx.fillText(text, 256, 32);
+      ctx.font = "600 " + F2 + "px Arial, sans-serif";
+      ctx.fillText(subtext, cw / 2, yTitulo + F1 / 2 + sep + F2 / 2, cw - padX * 2);
     }
 
     var texture = new THREE.CanvasTexture(canvas);
-    var spriteMaterial = new THREE.SpriteMaterial({ 
-      map: texture, 
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    var spriteMaterial = new THREE.SpriteMaterial({
+      map: texture,
       transparent: true,
       depthTest: true,
       depthWrite: false
     });
-    
+
     var sprite = new THREE.Sprite(spriteMaterial);
-    var scaleX = subtext ? 7.5 : 6.0;
-    var scaleY = subtext ? 1.875 : 0.75;
+    var scaleY = 0.6 * ch / (padY * 2 + F1);
+    var scaleX = scaleY * cw / ch;
     sprite.scale.set(scaleX, scaleY, 1);
-    
-    // Tag sprite for dynamic scaling in animate loop
+
+    // Datos para dimensionarla en pantalla según la distancia (ver el ciclo de dibujo)
     sprite.is3DLabel = true;
     sprite.userData = {
       baseScaleX: scaleX,
       baseScaleY: scaleY,
       baseScaleZ: 1,
+      escalaOriginal: scaleY,
+      altoRelativo: ch / F1, // alto de la caja en "tamaños de letra" del título
       heightOffset: heightOffset
     };
 
