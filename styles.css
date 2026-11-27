@@ -2266,6 +2266,18 @@ body.sin-eleccion { background: radial-gradient(circle at 30% 20%, #2a1f24 0%, #
 .acceso-error { min-height: 18px; margin: 0; color: #F65C7A; font-size: 13px; }
 .counter-badge.counter-alerta { border-color: #F65C7A; box-shadow: 0 0 0 1px rgba(246, 92, 122, 0.5); }
 .counter-badge.counter-alerta .counter-value { color: #F65C7A; }
+.btn-guardar { border-color: #7fbf9a !important; color: #b9e4c9 !important; }
+.btn-guardar:hover { background: rgba(127, 191, 154, 0.15) !important; }
+.staff-como { font-size: 12px; line-height: 1.5; color: var(--text-secondary, #cbd5e1); background: rgba(201, 169, 110, 0.08);
+  border: 1px solid rgba(201, 169, 110, 0.3); border-radius: 10px; padding: 8px 12px; margin: 0 0 10px; }
+.staff-como i { color: #C9A96E; margin-right: 4px; }
+.staff-grupo { margin: 14px 0 6px; font-size: 13px; color: #C9A96E; letter-spacing: .04em; text-transform: uppercase; }
+.staff-grupo span { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 999px; background: rgba(201,169,110,.18); color: #f5e6c8; font-size: 11px; text-align: center; }
+.staff-resumen-mesas { margin: 0 0 10px; font-size: 12px; }
+.staff-resumen-mesas b { display: block; margin-bottom: 4px; color: #C9A96E; }
+.staff-resumen-mesas div { display: flex; flex-wrap: wrap; gap: 4px; }
+.staff-resumen-mesas span { padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+.staff-resumen-mesas span.libre { border-color: #F65C7A; color: #F65C7A; }
 .vale-pendientes { border: 1px solid rgba(201,169,110,.5); background: rgba(201,169,110,.08); border-radius: 10px; padding: 8px 12px; margin: 0 0 10px; font-size: 12px; }
 .vale-pendientes b { color: #C9A96E; }
 .vale-pendientes ul { margin: 4px 0 0 18px; padding: 0; }

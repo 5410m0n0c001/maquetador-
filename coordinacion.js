@@ -58,7 +58,7 @@
     document.body.appendChild(_modal);
     pintar();
   }
-  function cerrar() { if (_modal) _modal.remove(); }
+  function cerrar() { if (_modal) _modal.remove(); if (PE() && PE().guardarPendiente) PE().guardarPendiente(); }
 
   function pintar() {
     if (!_modal || !_modal.isConnected) return;
@@ -113,7 +113,8 @@
     _modal.innerHTML = '<div class="venue-picker coord-modal">' +
       '<div class="venue-picker-head"><h2>Hoja del coordinador · ' + esc(evento().nombre) + '</h2>' +
         '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
-      '<div class="vale-acciones"><button type="button" class="event-btn active" id="coord-imprimir"><i class="fa-solid fa-print"></i> Imprimir hoja del coordinador</button></div>' +
+      '<div class="vale-acciones"><button type="button" class="event-btn active" id="coord-imprimir"><i class="fa-solid fa-print"></i> Imprimir hoja del coordinador</button>' +
+        (editar ? '<button type="button" class="event-btn btn-guardar" data-guardar="1" title="Guarda los cambios en la base de datos"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>' : '') + '</div>' +
 
       '<section class="coord-sec"><h3><i class="fa-solid fa-shirt"></i> Uniforme del día</h3><div class="coord-grid">' +
         UNIFORME.map(function (u) {
@@ -150,6 +151,8 @@
     m.querySelector('.coord-modal').scrollTop = scroll;
     m.querySelector('.venue-picker-close').onclick = cerrar;
     m.querySelector('#coord-imprimir').onclick = imprimir;
+    var bg = m.querySelector('[data-guardar]');
+    if (bg) bg.onclick = function () { if (PE() && PE().guardarAhora) PE().guardarAhora(); };
     if (!editar) return;
 
     function on(sel, fn, evt) {

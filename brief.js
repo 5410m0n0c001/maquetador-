@@ -313,6 +313,7 @@
   var _isPlanner = false;
   var _capitan = null;         // nombre del capitán con sesión abierta (null = planner o solo lectura)
   var _saveTimer = null;
+  var _cambiosPendientes = false;
   var _lastLayoutJson = '';
   var _panel = null;
 
@@ -480,12 +481,20 @@
   function scheduleSave() {
     if (!_event || !_isPlanner) return;
     setStatus('Guardando…', 'pending');
+    _cambiosPendientes = true;
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(saveNow, 1200);
+  }
+  // Al cerrar un panel: si quedó un cambio sin guardar, se guarda ya
+  function guardarPendiente() {
+    if (!_cambiosPendientes || !_event || !_isPlanner) return;
+    clearTimeout(_saveTimer);
+    saveNow();
   }
 
   function saveNow() {
     if (!_event || !_isPlanner || !client()) return;
+    _cambiosPendientes = false;
     syncMinuto(_event.data);
     var b = _event.data.brief || {};
     _event.nombre = b.festejados || b.cliente_nombre || _event.nombre || 'Evento sin nombre';
@@ -908,6 +917,7 @@
 
   function closePanel() {
     if (_panel) _panel.classList.add('hidden');
+    guardarPendiente();
   }
 
   function fieldHtml(f, brief, ro) {
@@ -1485,6 +1495,7 @@
             (ro ? '<span class="brief-ro"><i class="fa-solid fa-eye"></i> Solo lectura</span>' : '') +
             '<button type="button" class="btn-ghost" id="brief-share"><i class="fa-solid fa-share-nodes"></i> Compartir</button>' +
             '<button type="button" class="btn-ghost" id="brief-pdf"><i class="fa-solid fa-file-pdf"></i> Ficha PDF</button>' +
+            (ro ? '' : '<button type="button" class="btn-ghost btn-guardar" id="brief-guardar" title="Guarda los cambios en la base de datos"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>') +
             '<button type="button" class="btn-primary" id="brief-close"><i class="fa-solid fa-map"></i> Ver plano</button>' +
           '</div>' +
         '</header>' +
@@ -1554,6 +1565,7 @@
   function wirePanel() {
     var d = _event.data;
     $('brief-close').onclick = closePanel;
+    if ($('brief-guardar')) $('brief-guardar').onclick = guardarAhora;
     $('brief-share').onclick = shareEvent;
     $('brief-pdf').onclick = function () { if (window.App && window.App.exportPDF) window.App.exportPDF(); };
     _panel.querySelectorAll('.brief-nav a').forEach(function (a) {
@@ -1820,6 +1832,7 @@
     client: client,
     scheduleSave: scheduleSave,
     guardarAhora: guardarAhora,
+    guardarPendiente: guardarPendiente,
     comprimirFoto: compressImage
   };
 })();

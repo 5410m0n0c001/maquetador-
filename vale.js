@@ -285,7 +285,7 @@
       _modal.querySelector('.vale-modal').innerHTML = '<p>No se pudo cargar el inventario: ' + esc(err.message || err) + '</p>';
     });
   }
-  function cerrar() { if (_modal) _modal.remove(); }
+  function cerrar() { if (_modal) _modal.remove(); if (PE() && PE().guardarPendiente) PE().guardarPendiente(); }
 
   function agrupar(items) {
     var g = {};
@@ -385,6 +385,7 @@
         (editar ? '<button type="button" class="event-btn" id="vale-inventario"><i class="fa-solid fa-list-check"></i> Imprimir requisición para llenar a mano</button>' +
           '<button type="button" class="event-btn" id="vale-libre"><i class="fa-solid fa-pen"></i> Artículo que no está en inventario</button>' : '') +
         '<button type="button" class="event-btn active" id="vale-imprimir"><i class="fa-solid fa-dolly"></i> Generar vale de salida</button>' +
+        (editar ? '<button type="button" class="event-btn btn-guardar" data-guardar="1" title="Guarda los cambios en la base de datos"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>' : '') +
       '</div>' +
       '<div class="vale-cuerpo' + (editar ? '' : ' solo-lista') + '">' +
         (editar ? '<div class="vale-inv"><input class="form-input" id="vale-buscar" placeholder="Buscar en el inventario…" value="' + esc(_filtro) + '">' +
@@ -411,6 +412,7 @@
     m.querySelector('#vale-imprimir').onclick = imprimir;
     if (!editar) return;
     m.querySelector('#vale-inventario').onclick = imprimirInventario;
+    m.querySelector('[data-guardar]').onclick = function () { if (PE() && PE().guardarAhora) PE().guardarAhora(); };
     Array.prototype.forEach.call(m.querySelectorAll('.vale-agregar-plano'), function (btn) {
       btn.onclick = function () { agregarAlPlano(btn.getAttribute('data-tipo')); calcularDesdeEvento(); pintar(); };
     });

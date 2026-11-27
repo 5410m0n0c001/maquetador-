@@ -79,7 +79,7 @@
     document.body.appendChild(_modal);
     pintar();
   }
-  function cerrar() { if (_modal) _modal.remove(); }
+  function cerrar() { if (_modal) _modal.remove(); if (PE() && PE().guardarPendiente) PE().guardarPendiente(); }
 
   function pintar() {
     if (!_modal || !_modal.isConnected) return;
@@ -103,13 +103,30 @@
           '<button type="button" class="btn-icon-sm staff-quitar" title="Quitar"><i class="fa-solid fa-xmark"></i></button>' +
         '</div>' +
         (AYUDA_ROL[p.rol] ? '<div class="staff-ayuda">' + esc(AYUDA_ROL[p.rol]) + '</div>' : '') +
-        (mesas.length && (p.rol === 'Mesero' || p.rol === 'Capitán' || (p.mesas || []).length) ? '<div class="staff-mesas"><span>Mesas:</span>' + mesas.map(function (n) {
+        (mesas.length && (p.rol === 'Mesero' || p.rol === 'Capitán' || (p.mesas || []).length) ? '<div class="staff-mesas"><span>Mesas que atiende:</span>' + mesas.map(function (n) {
           var mia = (p.mesas || []).indexOf(n) > -1;
           var otro = !mia && asignadas[n];
           return '<button type="button" class="staff-mesa' + (mia ? ' mia' : '') + (otro ? ' otra' : '') + '" data-n="' + n + '" title="' + (otro ? 'Ya la tiene otra persona' : 'Mesa ' + n) + '">' + n + '</button>';
         }).join('') + '</div>' : '') +
       '</div>';
-    }).join('');
+    });
+    // En edición: agrupada por puesto, en el orden de ROLES, con cuántos hay de cada uno
+    if (editar) {
+      var porPuesto = {};
+      lista.forEach(function (p, i) { var r = p.rol || 'Otro'; (porPuesto[r] = porPuesto[r] || []).push(filas[i]); });
+      var orden = ROLES.concat(Object.keys(porPuesto).filter(function (r) { return ROLES.indexOf(r) < 0; }));
+      filas = orden.filter(function (r) { return porPuesto[r]; }).map(function (r) {
+        var n = porPuesto[r].length;
+        return '<h4 class="staff-grupo">' + esc(n > 1 && PLURAL[r] ? PLURAL[r] : r) + ' <span>' + n + '</span></h4>' + porPuesto[r].join('');
+      }).join('');
+    } else filas = filas.join('');
+
+    // Qué mesa tiene quién (las que no tienen mesero se marcan)
+    var quienMesa = {};
+    lista.forEach(function (p) { (p.mesas || []).forEach(function (n) { quienMesa[n] = p.nombre || p.rol; }); });
+    var resumenMesas = mesas.length && editar ? '<div class="staff-resumen-mesas"><b>Mesas y quién las atiende</b><div>' + mesas.map(function (n) {
+      return '<span class="' + (quienMesa[n] ? '' : 'libre') + '">Mesa ' + n + ' · ' + esc(quienMesa[n] || 'sin mesero') + '</span>';
+    }).join('') + '</div></div>' : '';
 
     var capitanes = PE() && PE().capitanes ? PE().capitanes() : [];
     _modal.innerHTML = '<div class="venue-picker staff-modal">' +
@@ -120,10 +137,15 @@
       (sinCoord ? '<p class="minuto-aviso"><i class="fa-solid fa-triangle-exclamation"></i> No hay coordinador ni capitán asignado.</p>' : '') +
       (lista.length && libres.length ? '<p class="minuto-aviso"><i class="fa-solid fa-triangle-exclamation"></i> Mesas sin mesero: ' + esc(rangos(libres)) + '</p>' : '') +
       (!mesas.length ? '<p class="vale-sub">El croquis no tiene mesas numeradas: cuando las tenga, aquí podrás asignarlas.</p>' : '') +
+      (editar ? '<p class="staff-como"><i class="fa-solid fa-circle-info"></i> Agrega una persona a la vez con su puesto. A cada mesero o capitán toca las <b>mesas que atiende</b>: ' +
+        'una persona puede atender <b>varias mesas</b>, y cada mesa la atiende <b>una sola persona</b> (si se la das a otro, se le quita al anterior).</p>' : '') +
       '<div class="vale-acciones">' +
-        (editar ? '<button type="button" class="event-btn" id="staff-agregar"><i class="fa-solid fa-user-plus"></i> Agregar persona</button>' : '') +
+        (editar ? ['Mesero', 'Barra', 'Capitán', 'Coordinador'].map(function (r) {
+          return '<button type="button" class="event-btn staff-agregar" data-rol="' + r + '"><i class="fa-solid fa-user-plus"></i> ' + r + '</button>';
+        }).join('') + '<button type="button" class="event-btn staff-agregar" data-rol="Otro"><i class="fa-solid fa-user-plus"></i> Otro puesto</button>' + '<button type="button" class="event-btn btn-guardar" data-guardar="1" title="Guarda los cambios en la base de datos"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>' : '') +
         '<button type="button" class="event-btn active" id="staff-imprimir"><i class="fa-solid fa-print"></i> Imprimir hoja de staff</button>' +
       '</div>' +
+      resumenMesas +
       (editar ? '<div class="staff-lista">' + filas + '</div>'
         : (lista.length ? '<div class="vale-lista"><table><thead><tr><th>Rol</th><th>Nombre</th><th>Teléfono</th><th>Mesas</th><th>Radio</th></tr></thead><tbody>' + porRol(lista).map(function (p) {
             return '<tr><td><b>' + esc(p.rol) + '</b></td><td>' + esc(p.nombre) + '</td><td>' + esc(p.telefono) + '</td><td>' + esc(rangos(p.mesas)) + '</td><td>' + esc(p.radio) + '</td></tr>';
@@ -133,13 +155,16 @@
     _modal.querySelector('.venue-picker-close').onclick = cerrar;
     _modal.querySelector('#staff-imprimir').onclick = imprimir;
     if (!editar) return;
-    _modal.querySelector('#staff-agregar').onclick = function () {
-      lista.push({ rol: 'Mesero', nombre: '', telefono: '', mesas: [], radio: '' });
-      guardar();
-      pintar();
-      var ult = _modal.querySelectorAll('.staff-persona [data-k="nombre"]');
-      if (ult.length) ult[ult.length - 1].focus();
-    };
+    Array.prototype.forEach.call(_modal.querySelectorAll('.staff-agregar'), function (btn) {
+      btn.onclick = function () {
+        lista.push({ rol: btn.getAttribute('data-rol'), nombre: '', telefono: '', mesas: [], radio: '' });
+        guardar();
+        pintar();
+        var nueva = _modal.querySelector('.staff-persona[data-i="' + (lista.length - 1) + '"] [data-k="nombre"]');
+        if (nueva) { nueva.focus(); nueva.scrollIntoView({ block: 'center' }); }
+      };
+    });
+    _modal.querySelector('[data-guardar]').onclick = function () { if (PE() && PE().guardarAhora) PE().guardarAhora(); };
     Array.prototype.forEach.call(_modal.querySelectorAll('.staff-persona'), function (fila) {
       var p = lista[parseInt(fila.getAttribute('data-i'), 10)];
       Array.prototype.forEach.call(fila.querySelectorAll('[data-k]'), function (el) {
