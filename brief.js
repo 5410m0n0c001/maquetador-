@@ -387,6 +387,47 @@
     _isPlanner = !_event || asignadoA(_event.data.staff, _capitan);
     if (antes && !_isPlanner) toast('Este evento no te está asignado: solo puedes verlo.', 'warning');
   }
+  // ── Acceso: al abrir la app no se muestra nada hasta escribir la contraseña de planner o de capitán ──
+  var _accesoListo = false;
+  function yaEligio() { document.body.classList.remove('sin-eleccion'); }
+  function pedirAcceso(listo) {
+    document.body.classList.add('acceso-bloqueado', 'sin-eleccion');
+    var gate = document.createElement('div');
+    gate.id = 'acceso-gate';
+    gate.innerHTML =
+      '<form class="acceso-caja" autocomplete="on">' +
+        '<img src="assets/logo-primavera.png" alt="Primavera Events Group">' +
+        '<h1>Maquetador de planos</h1>' +
+        '<p class="acceso-sub">Primavera Events Group</p>' +
+        '<label class="form-label" for="acceso-clave">Contraseña de planner o de capitán</label>' +
+        '<input type="password" id="acceso-clave" class="form-input" autocomplete="current-password" required>' +
+        '<button type="submit" class="event-btn active">Entrar</button>' +
+        '<p class="acceso-error" id="acceso-error" role="alert"></p>' +
+      '</form>';
+    document.body.appendChild(gate);
+    var input = gate.querySelector('#acceso-clave');
+    setTimeout(function () { input.focus(); }, 50);
+    gate.querySelector('form').onsubmit = function (e) {
+      e.preventDefault();
+      var pwd = input.value;
+      var cap = CAPITANES.find(function (c) { return c.clave === pwd; });
+      if (pwd === PLANNER_PASSWORD) { _capitan = null; }
+      else if (cap) { _capitan = cap.nombre; }
+      else {
+        gate.querySelector('#acceso-error').textContent = 'Contraseña incorrecta.';
+        input.select();
+        return;
+      }
+      _isPlanner = true;
+      applyMode();
+      _accesoListo = true;
+      gate.remove();
+      document.body.classList.remove('acceso-bloqueado');
+      toast(_capitan ? 'Sesión de capitán: ' + _capitan + '.' : 'Modo planner activado.', 'success');
+      listo();
+    };
+  }
+
   // Pide la contraseña; abre sesión de planner o de capitán
   function entrar(next, soloPlanner) {
     var pwd = prompt(soloPlanner ? 'Contraseña de planner:' : 'Contraseña de planner o de capitán:');
@@ -521,6 +562,11 @@
         toast('No se encontró el evento.', 'error');
         return;
       }
+      if (_capitan && !asignadoA((row.data || {}).staff, _capitan)) {
+        setStatus('', '');
+        toast('Este evento no te está asignado.', 'warning');
+        return null;
+      }
       row.data = Object.assign(emptyData(), row.data || {});
       row.data.montaje = Object.assign({ fotos: [] }, row.data.montaje || {});
       if (!Array.isArray(row.data.proveedores)) row.data.proveedores = [];
@@ -652,27 +698,27 @@
     modal.className = 'venue-picker-overlay';
     modal.innerHTML =
       '<div class="venue-picker">' +
-        '<div class="venue-picker-head"><h2>' + esc(_event.nombre) + '</h2>' +
-        '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
-        '<p>' + (fecha ? esc(fecha.charAt(0).toUpperCase() + fecha.slice(1)) + ' · ' : '') + 'Estás en <strong>solo lectura</strong>. ¿Qué quieres hacer?</p>' +
+        '<div class="venue-picker-head"><h2>' + esc(_event.nombre) + '</h2></div>' +
+        '<p>' + (fecha ? esc(fecha.charAt(0).toUpperCase() + fecha.slice(1)) + ' · ' : '') +
+          (_isPlanner ? (_capitan ? 'Sesión de capitán: <strong>' + esc(_capitan) + '</strong>' : 'Sesión de <strong>planner</strong>') : 'Estás en <strong>solo lectura</strong>') + '. ¿Qué quieres hacer?</p>' +
         (b.wifi_red || b.wifi_clave ? '<p class="wifi-aviso"><i class="fa-solid fa-wifi"></i> Wi-Fi para invitados: <strong>' + esc(b.wifi_red || '') + '</strong>' + (b.wifi_clave ? ' · Contraseña: <strong>' + esc(b.wifi_clave) + '</strong>' : '') + '</p>' : '') +
         '<div class="venue-grid">' +
           '<button class="venue-card" data-w="brief"><i class="fa-solid fa-clipboard-list"></i><strong>Ver el brief</strong><span>Datos del evento, minuto a minuto y fotos del montaje.</span></button>' +
           '<button class="venue-card" data-w="plano"><i class="fa-solid fa-map-location-dot"></i><strong>Ver el plano</strong><span>Distribución del salón en 2D y 3D.</span></button>' +
-          '<button class="venue-card" data-w="editar"><i class="fa-solid fa-unlock"></i><strong>Editar (planner o capitán)</strong><span>Pide la contraseña de planner o de capitán.</span></button>' +
-          '<button class="venue-card venue-card-empty" data-w="inicio"><i class="fa-solid fa-house"></i><strong>Ir al inicio</strong><span>Crear otro evento o abrir uno guardado.</span></button>' +
+          (_isPlanner ? '' : '<button class="venue-card" data-w="editar"><i class="fa-solid fa-unlock"></i><strong>Editar (planner o capitán)</strong><span>Pide la contraseña de planner o de capitán.</span></button>') +
+          '<button class="venue-card venue-card-empty" data-w="inicio"><i class="fa-solid fa-house"></i><strong>Ir al inicio</strong><span>' + (_capitan ? 'Ver tus eventos asignados.' : 'Crear otro evento o abrir uno guardado.') + '</span></button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(modal);
+    // Obligatorio: no se cierra con la X ni con clic afuera; se elige una opción
     var close = function () { modal.remove(); };
-    modal.querySelector('.venue-picker-close').onclick = close;
-    modal.onclick = function (e) { if (e.target === modal) close(); };
     Array.prototype.forEach.call(modal.querySelectorAll('[data-w]'), function (btn) {
       btn.onclick = function () {
         var w = btn.getAttribute('data-w');
-        if (w === 'inicio') { location.href = location.pathname; return; }
-        if (w === 'editar') { ensurePlanner(function () { close(); openPanel(); }); return; }
+        if (w === 'inicio') { close(); history.replaceState(null, '', location.pathname); openStartChooser(); return; }
+        if (w === 'editar') { ensurePlanner(function () { close(); yaEligio(); openPanel(); }); return; }
         close();
+        yaEligio();
         if (w === 'brief') openPanel();
       };
     });
@@ -684,30 +730,29 @@
     modal.className = 'venue-picker-overlay';
     modal.innerHTML =
       '<div class="venue-picker start-chooser">' +
-        '<div class="venue-picker-head"><h2>¿Qué quieres hacer primero?</h2>' +
-        '<button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
-        '<p>Puedes empezar por cualquiera: el brief y el plano quedan guardados en el mismo evento.</p>' +
-        '<div class="venue-grid">' +
+        '<div class="venue-picker-head"><h2>' + (_capitan ? 'Hola, ' + esc(_capitan) : '¿Qué quieres hacer primero?') + '</h2></div>' +
+        '<p>' + (_capitan ? 'Abre uno de los eventos que tienes asignados.' : 'Puedes empezar por cualquiera: el brief y el plano quedan guardados en el mismo evento.') + '</p>' +
+        '<div class="venue-grid">' + (_capitan ? '' :
           '<button class="venue-card" data-go="brief"><i class="fa-solid fa-clipboard-list"></i>' +
             '<strong>Llenar el brief</strong><span>Cuestionario del evento con el cliente: datos, menú, montaje, minuto a minuto y fotos.</span></button>' +
           '<button class="venue-card" data-go="maquetar"><i class="fa-solid fa-map-location-dot"></i>' +
             '<strong>Maquetar</strong><span>Elige un salón ya maquetado o empieza desde cero.</span></button>' +
           '<button class="venue-card" data-go="bodega"><i class="fa-solid fa-warehouse"></i>' +
-            '<strong>Maquetar bodega</strong><span>Repisas, islas de mesas, pisos, vehículos y más, sin brief.</span></button>' +
+            '<strong>Maquetar bodega</strong><span>Repisas, islas de mesas, pisos, vehículos y más, sin brief.</span></button>') +
           '<button class="venue-card venue-card-empty" data-go="abrir"><i class="fa-solid fa-folder-open"></i>' +
             '<strong>Abrir un evento</strong><span>Continúa un evento o una bodega guardada.</span></button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(modal);
+    // Obligatorio: no se cierra con la X ni con clic afuera; se elige una opción
     var close = function () { modal.remove(); };
-    modal.querySelector('.venue-picker-close').onclick = close;
-    modal.onclick = function (e) { if (e.target === modal) close(); };
     Array.prototype.forEach.call(modal.querySelectorAll('[data-go]'), function (btn) {
       btn.onclick = function () {
         var go = btn.getAttribute('data-go');
         if (go === 'abrir') { close(); openEventsModal(); return; }
         ensurePlanner(function () {
           close();
+          yaEligio();
           if (go === 'brief') createEvent();
           else if (go === 'bodega') createBodega();
           else if (go === 'maquetar') { if (window.App && window.App.openVenuePicker) window.App.openVenuePicker(); }
@@ -761,10 +806,11 @@
       '</div>';
     document.body.appendChild(modal);
     var close = function () { modal.remove(); };
-    modal.querySelector('.venue-picker-close').onclick = close;
-    modal.onclick = function (e) { if (e.target === modal) close(); };
-    $('btn-new-event').onclick = function () { ensurePlanner(createEvent, true); };
-    $('btn-new-bodega').onclick = function () { ensurePlanner(function () { close(); createBodega(); }, true); };
+    var cerrarSinElegir = function () { close(); if (!_event && _accesoListo) openStartChooser(); };
+    modal.querySelector('.venue-picker-close').onclick = cerrarSinElegir;
+    modal.onclick = function (e) { if (e.target === modal) cerrarSinElegir(); };
+    $('btn-new-event').onclick = function () { ensurePlanner(function () { yaEligio(); createEvent(); }, true); };
+    $('btn-new-bodega').onclick = function () { ensurePlanner(function () { close(); yaEligio(); createBodega(); }, true); };
 
     client().from(TABLE).select('id,nombre,fecha_evento,venue_id,updated_at,modo:data->layout->>mode,' +
       'tipo:data->brief->>tipo_evento,tipoOtro:data->brief->>tipo_evento_otro,festejados:data->brief->>festejados,' +
@@ -796,7 +842,7 @@
             (salon ? '<span class="evento-salon"><i class="fa-solid fa-location-dot"></i> ' + esc(salon) + '</span>' : '') +
             '<small>Editado ' + esc(new Date(ev.updated_at).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })) + '</small>';
           // El planner va directo al brief; los demás ven la bienvenida (brief, plano o editar)
-          card.onclick = function () { closeModals(); goToEvent(ev.id, function () { if (evBodega) return; if (_isPlanner) openPanel(); else openEventWelcome(); }); };
+          card.onclick = function () { closeModals(); yaEligio(); goToEvent(ev.id, function () { if (evBodega) return; if (_isPlanner) openPanel(); else openEventWelcome(); }); };
           grid.appendChild(card);
         });
         var cuenta = $('events-cuenta'), buscar = $('events-buscar');
@@ -1730,12 +1776,17 @@
     bind('event-name', renombrarBodega);
     watchLayout();
 
-    var id = eventIdFromUrl();
-    if (id) {
-      loadEvent(id).then(function (row) { if (row && !esBodega()) openEventWelcome(); });
-    } else {
-      openStartChooser();
-    }
+    pedirAcceso(function () {
+      var id = eventIdFromUrl();
+      if (id) {
+        loadEvent(id).then(function (row) {
+          if (!row) { history.replaceState(null, '', location.pathname); openStartChooser(); return; }
+          if (!esBodega()) openEventWelcome(); else yaEligio();
+        });
+      } else {
+        openStartChooser();
+      }
+    });
   }
 
   window.PEGEventos = {
