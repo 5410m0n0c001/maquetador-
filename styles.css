@@ -2258,8 +2258,6 @@ body.sin-eleccion { background: radial-gradient(circle at 30% 20%, #2a1f24 0%, #
 .acceso-sub { margin: 0 0 8px; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: #C9A96E; }
 .acceso-caja .form-label { text-align: left; }
 .acceso-caja .event-btn { justify-content: center; padding: 10px; }
-#acceso-gate #acceso-clave { background: #ffffff; color: #1F1F1F; border: 1px solid #C9A96E; font-size: 16px; padding: 10px 12px; }
-#acceso-gate #acceso-clave:focus { outline: none; border-color: #F65C7A; box-shadow: 0 0 0 3px rgba(246, 92, 122, 0.25); }
 .acceso-error { min-height: 18px; margin: 0; color: #F65C7A; font-size: 13px; }
 .counter-badge.counter-alerta { border-color: #F65C7A; box-shadow: 0 0 0 1px rgba(246, 92, 122, 0.5); }
 .counter-badge.counter-alerta .counter-value { color: #F65C7A; }
