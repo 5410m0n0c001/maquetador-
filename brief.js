@@ -400,13 +400,26 @@
         '<h1>Maquetador de planos</h1>' +
         '<p class="acceso-sub">Primavera Events Group</p>' +
         '<label class="form-label" for="acceso-clave">Contraseña de planner o de capitán</label>' +
-        '<input type="password" id="acceso-clave" class="form-input" autocomplete="current-password" required>' +
+        '<div class="acceso-clave-wrap">' +
+          '<input type="password" id="acceso-clave" class="form-input" autocomplete="current-password" required>' +
+          '<button type="button" id="acceso-ver" title="Ver contraseña" aria-label="Ver contraseña"><i class="fa-solid fa-eye"></i></button>' +
+        '</div>' +
         '<button type="submit" class="event-btn active">Entrar</button>' +
         '<p class="acceso-error" id="acceso-error" role="alert"></p>' +
       '</form>';
     document.body.appendChild(gate);
     var input = gate.querySelector('#acceso-clave');
     setTimeout(function () { input.focus(); }, 50);
+    // Ver u ocultar lo que se escribió
+    var ver = gate.querySelector('#acceso-ver');
+    ver.onclick = function () {
+      var mostrar = input.type === 'password';
+      input.type = mostrar ? 'text' : 'password';
+      ver.innerHTML = '<i class="fa-solid ' + (mostrar ? 'fa-eye-slash' : 'fa-eye') + '"></i>';
+      ver.title = mostrar ? 'Ocultar contraseña' : 'Ver contraseña';
+      ver.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Ver contraseña');
+      input.focus();
+    };
     gate.querySelector('form').onsubmit = function (e) {
       e.preventDefault();
       var pwd = input.value;
