@@ -17,7 +17,7 @@
   var PLANNER_PASSWORD = 'PrimaveraVIP';
   // Capitanes: editan solo los eventos donde el Staff los registra como Capitán o Coordinador,
   // y no ven presupuesto, pagos, contrato, seguimiento ni datos del cliente.
-  var CAPITANES = [{ nombre: 'Isis Uribe', clave: 'Primavera2.0' }];
+  var CAPITANES = [{ nombre: 'Isis Uribe', clave: 'Primavera2.0' }, { nombre: 'Cristian', clave: 'Primavera3.1416' }];
   var PLANNER_FLAG = 'peg_modo_planner'; // ya no se usa: al recargar siempre se entra en solo lectura (se borra si quedó de antes)
   var LOCAL_PREFIX = 'peg_evento_';
   var MAX_FOTOS = 8;

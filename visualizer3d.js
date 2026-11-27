@@ -1316,25 +1316,54 @@ window.Visualizer3D = (function () {
     _sucio = false;
 
     if (_renderer && _scene && _camera) {
-      // Tamaño de los rótulos: crecen un poco al alejarse para seguir legibles, pero nunca más
-      // anchos que una fracción del terreno (si no, en vista lejana o en celular tapan las mesas).
+      // Rótulos que responden a la distancia: se dimensionan en pixeles de pantalla (grandes de cerca,
+      // chicos de lejos) y, si dos se enciman, solo queda el más cercano a la cámara. Así en vista
+      // lejana se ven los elementos del plano y al acercarse aparecen todos los rótulos completos.
       // Respetan A−/A+ (labelScale) y se achican en lienzos angostos.
       var stL = _getState ? _getState() : null;
       var escalaUsuario = (stL && stL.labelScale) || 1;
-      var anchoLienzo = (_container && _container.clientWidth) || 1100;
-      var factorPantalla = Math.max(0.65, Math.min(1, anchoLienzo / 1100));
-      var anchoMax = Math.max(_terrain.w, _terrain.h) / 6; // metros
-      var worldPos = new THREE.Vector3();
+      var lienzo = _renderer.domElement;
+      var anchoPx = lienzo.clientWidth || 1100, altoPx = lienzo.clientHeight || 700;
+      var factorPantalla = Math.max(0.65, Math.min(1, anchoPx / 1100));
+      var tanFov = Math.tan((_camera.fov * Math.PI / 180) / 2);
+      var worldPos = new THREE.Vector3(), proy = new THREE.Vector3();
+      var rotulos = [];
       _scene.traverse(function (object) {
-        if (object.is3DLabel) {
-          object.getWorldPosition(worldPos);
-          var dist = _camera.position.distanceTo(worldPos);
-          var baseScaleX = object.userData.baseScaleX || 6.0;
-          var baseScaleY = object.userData.baseScaleY || 0.75;
-          var scaleFactor = Math.max(0.35, Math.min(4.5, dist / 30.0));
-          scaleFactor = Math.min(scaleFactor, anchoMax / baseScaleX) * escalaUsuario * factorPantalla;
-          object.scale.set(baseScaleX * scaleFactor, baseScaleY * scaleFactor, 1);
-        }
+        if (!object.is3DLabel) return;
+        object.getWorldPosition(worldPos);
+        var dist = _camera.position.distanceTo(worldPos);
+        var baseScaleX = object.userData.baseScaleX || 6.0;
+        var baseScaleY = object.userData.baseScaleY || 0.75;
+        var renglones = baseScaleY > 1 ? 2 : 1; // con subtítulo el rótulo tiene dos renglones
+        // Alto deseado por renglón: ~17 px de cerca (≤ 12 m) y ~8 px de lejos (≥ 90 m)
+        var t = Math.max(0, Math.min(1, (dist - 12) / 78));
+        var pxRenglon = (17 - 9 * t) * escalaUsuario * factorPantalla;
+        var metrosPorPx = 2 * dist * tanFov / altoPx;
+        var alto = pxRenglon * renglones * 1.25 * metrosPorPx;
+        var ancho = alto * baseScaleX / baseScaleY;
+        object.scale.set(ancho, alto, 1);
+        proy.copy(worldPos).project(_camera);
+        var visibleEnPantalla = proy.z < 1 && Math.abs(proy.x) < 1.2 && Math.abs(proy.y) < 1.2;
+        rotulos.push({
+          obj: object, dist: dist, dentro: visibleEnPantalla,
+          x: (proy.x + 1) / 2 * anchoPx, y: (1 - proy.y) / 2 * altoPx,
+          w: ancho / metrosPorPx, h: alto / metrosPorPx,
+          sel: !!(_selectedId && object.parent && _active3dElements[_selectedId] === object.parent.parent)
+        });
+      });
+      // Sin encimarse: primero el seleccionado y luego los más cercanos a la cámara
+      rotulos.sort(function (p, q) { return (q.sel - p.sel) || (p.dist - q.dist); });
+      var ocupados = [];
+      rotulos.forEach(function (r) {
+        var muestra = r.dentro;
+        if (muestra && !r.sel) {
+          var x0 = r.x - r.w / 2 - 2, x1 = r.x + r.w / 2 + 2, y0 = r.y - r.h / 2 - 2, y1 = r.y + r.h / 2 + 2;
+          muestra = !ocupados.some(function (o) { return x0 < o[2] && x1 > o[0] && y0 < o[3] && y1 > o[1]; });
+          if (muestra) ocupados.push([x0, y0, x1, y1]);
+        } else if (muestra) ocupados.push([r.x - r.w / 2, r.y - r.h / 2, r.x + r.w / 2, r.y + r.h / 2]);
+        // Se oculta el rótulo con su línea al piso
+        var contenedor = r.obj.parent || r.obj;
+        contenedor.visible = muestra;
       });
 
       _renderer.render(_scene, _camera);

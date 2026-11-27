@@ -2434,18 +2434,38 @@
 
     // ── Plano: copia limpia del lienzo 2D, encuadrada al terreno ──
     if (window.Editor2D) window.Editor2D.update(AppState.elements);
-    var clonedSvg = svgEl.cloneNode(true);
-    ['.active-selection', '#svg-ruler-h', '#svg-ruler-v', '#svg-terrain-border'].forEach(function (sel) {
-      var n = clonedSvg.querySelector(sel);
-      if (n) n.remove();
-    });
-    Array.prototype.forEach.call(clonedSvg.querySelectorAll('.resize-handle'), function (h) { h.remove(); });
     var tw = AppState.terrain.w * 15;
     var th = AppState.terrain.h * 15;
-    var svgBg = clonedSvg.querySelector('#svg-background');
-    if (svgBg) { svgBg.setAttribute('width', tw); svgBg.setAttribute('height', th); }
-    var zoomGroup = clonedSvg.querySelector('#svg-zoom-group');
-    if (zoomGroup) zoomGroup.removeAttribute('transform');
+    // Copia limpia del lienzo encuadrada en vbx (px del lienzo) para una caja de anchoPx × altoPx en la hoja.
+    // Rótulos a ~9 px en la hoja sin importar el zoom de la pantalla.
+    function copiaPlano(vbx, anchoPx, altoPx) {
+      var c = svgEl.cloneNode(true);
+      ['.active-selection', '#svg-ruler-h', '#svg-ruler-v', '#svg-terrain-border'].forEach(function (sel) {
+        var n = c.querySelector(sel);
+        if (n) n.remove();
+      });
+      Array.prototype.forEach.call(c.querySelectorAll('.resize-handle'), function (h) { h.remove(); });
+      var bg = c.querySelector('#svg-background');
+      if (bg) { bg.setAttribute('width', tw); bg.setAttribute('height', th); }
+      var zg = c.querySelector('#svg-zoom-group');
+      if (zg) zg.removeAttribute('transform');
+      c.setAttribute('viewBox', vbx.join(' '));
+      var esc = Math.min(anchoPx / vbx[2], altoPx / vbx[3]);
+      Array.prototype.forEach.call(c.querySelectorAll('.elem-label'), function (l) {
+        var fs = 9 * (AppState.labelScale || 1) / esc;
+        l.setAttribute('font-size', fs);
+        l.setAttribute('font-weight', '700');
+        var badge = l.nextElementSibling;
+        if (badge && badge.classList.contains('elem-badge')) {
+          badge.setAttribute('font-size', 7 * (AppState.labelScale || 1) / esc);
+          badge.setAttribute('y', parseFloat(l.getAttribute('y')) + fs * 1.1);
+        }
+      });
+      c.setAttribute('width', '100%');
+      c.setAttribute('height', '100%');
+      c.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      return new XMLSerializer().serializeToString(c);
+    }
     // Encuadre: la zona donde están las mesas y elementos (con margen), no todo el terreno
     var vb = [0, 0, tw, th];
     // Todo lo que está en el plano del evento (mesas, jardines, área de niños, barras…) + el salón completo
@@ -2470,25 +2490,33 @@
       if (y1 - y0 < 15) { var cym = (y0 + y1) / 2; y0 = Math.max(0, cym - 7.5); y1 = y0 + 15; }
       vb = [x0 * 15, y0 * 15, (x1 - x0) * 15, (y1 - y0) * 15];
     }
-    clonedSvg.setAttribute('viewBox', vb.join(' '));
     // El croquis ocupa una hoja carta completa: si el plano es más ancho que alto se imprime girado
-    // (la hoja se lee en horizontal); si no, derecho. Etiquetas a ~9 px en la hoja sin importar el zoom.
+    // (la hoja se lee en horizontal); si no, derecho.
     var horizontal = vb[2] >= vb[3];
-    var escala = Math.min((horizontal ? 877 : 695) / vb[2], (horizontal ? 688 : 877) / vb[3]);
-    Array.prototype.forEach.call(clonedSvg.querySelectorAll('.elem-label'), function (l) {
-      var fs = 9 * (AppState.labelScale || 1) / escala;
-      l.setAttribute('font-size', fs);
-      l.setAttribute('font-weight', '700');
-      var badge = l.nextElementSibling;
-      if (badge && badge.classList.contains('elem-badge')) {
-        badge.setAttribute('font-size', 7 * (AppState.labelScale || 1) / escala);
-        badge.setAttribute('y', parseFloat(l.getAttribute('y')) + fs * 1.1);
-      }
-    });
-    clonedSvg.setAttribute('width', '100%');
-    clonedSvg.setAttribute('height', '100%');
-    clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    var planSvg = new XMLSerializer().serializeToString(clonedSvg);
+    var planSvg = copiaPlano(vb, horizontal ? 877 : 695, horizontal ? 688 : 877);
+
+    // Planos muy grandes con zonas definidas (p. ej. Rancho Los Potrillos): en lugar del terreno completo,
+    // sus zonas en una sola hoja: Salón y Cóctel; si una ceremonia se celebra en el jardín, también Áreas verdes.
+    var vistasFicha = [];
+    var vistasPlano = AppState.vistas || [];
+    if (vistasPlano.length) {
+      var sinAcento = function (t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); };
+      var vista = function (re) { return vistasPlano.find(function (v) { return re.test(sinAcento(v.nombre)); }); };
+      var ceremoniaJardin = Object.keys(b.ceremonias || {}).some(function (k) {
+        var it = (b.ceremonias || {})[k] || {};
+        return /jardin|area(s)? verde|explanada|palapa/.test(sinAcento(it.lugar));
+      });
+      vistasFicha = [vista(/salon/), vista(/coctel/)].concat(ceremoniaJardin ? [vista(/verde|jardin/)] : []).filter(Boolean);
+      if (!vistasFicha.length) vistasFicha = vistasPlano.slice(0, 3);
+      // Caja de cada vista en la hoja (px): con 3, las dos primeras lado a lado y la tercera abajo a lo ancho
+      vistasFicha = vistasFicha.map(function (v, i) {
+        var ancho = vistasFicha.length === 3 && i < 2 ? 340 : 695;
+        var alto = vistasFicha.length === 3 ? 400 : 420;
+        var vbv = [(v.x - v.w / 2) * 15, (v.y - v.h / 2) * 15, v.w * 15, v.h * 15];
+        return { nombre: v.nombre, svg: copiaPlano(vbv, ancho, alto) };
+      });
+      if (vistasFicha.length) horizontal = false;
+    }
     if (AppState.selectedId && window.Editor2D) window.Editor2D.select(AppState.selectedId);
 
     // ── Mesas y elementos del plano ──
@@ -2570,6 +2598,10 @@
       '.section h2 { font-size: 15px; padding-left: 10px; border-left: 3px solid var(--pink); margin-bottom: 10px; }' +
       '.plan { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }' +
       '.plano-h .plan { aspect-ratio: 232 / 182; } .plano-v .plan { aspect-ratio: 192 / 232; }' +
+      '.vistas-plano { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }' +
+      '.vista-plano { grid-column: 1 / -1; } .vistas-3 .vista-plano:nth-child(-n+2) { grid-column: auto; }' +
+      '.vista-plano h3 { font-size: 12px; color: var(--pink); margin: 0 0 3px; }' +
+      '.vistas-plano .plan, .plano-v .vistas-plano .plan { aspect-ratio: 695 / 420; } .vistas-3 .vista-plano:nth-child(-n+2) .plan { aspect-ratio: 340 / 400; }' +
       '.equipo { color: var(--ink) !important; } .equipo b { color: var(--gold); font-weight: 600; }' +
       // Tablas con celdas y colores de la marca (minuto a minuto, proveedores, requisición)
       'table.grid { border: 1px solid #E8D9C4; }' +
@@ -2643,6 +2675,7 @@
         ' .plano-pagina { break-before: page; break-after: page; margin: 0; }' +
         ' .plano-h .plan-giro { height: 232mm; } .plano-h .plan { width: 232mm; height: 182mm; aspect-ratio: auto; transform-origin: 0 0; transform: translate(182mm, 0) rotate(90deg); }' +
         ' .plano-v .plan { height: 232mm; aspect-ratio: auto; }' +
+        ' .plano-v .vistas-plano .plan { height: 108mm; } .vistas-3 .vista-plano .plan { height: 104mm; }' +
         ' table.grid tr.vacia td { height: 20px; }' +
         ' th, td { padding: 3px 6px; } table { font-size: 9px; } .kv { grid-template-columns: repeat(3, 1fr); gap: 0 14px; } .kv div { padding: 3px 0; }' +
         ' .block { margin-bottom: 6px; } .block h3 { font-size: 11px; margin-bottom: 2px; }' +
@@ -2956,7 +2989,11 @@
     }
 
     // Croquis en hoja completa (antes de la requisición: así los saltos de hoja no dejan huecos)
-    html += '<section class="section plano-pagina ' + (horizontal ? 'plano-h' : 'plano-v') + '"><h2>Plano y distribución</h2><div class="plan-giro"><div class="plan">' + planSvg + '</div></div></section>';
+    html += '<section class="section plano-pagina ' + (horizontal ? 'plano-h' : 'plano-v') + '"><h2>Plano y distribución</h2>' + (vistasFicha.length
+      ? '<div class="vistas-plano vistas-' + vistasFicha.length + '">' + vistasFicha.map(function (v) {
+          return '<div class="vista-plano"><h3>' + esc(v.nombre) + '</h3><div class="plan">' + v.svg + '</div></div>';
+        }).join('') + '</div>'
+      : '<div class="plan-giro"><div class="plan">' + planSvg + '</div></div>') + '</section>';
 
     // Requisición de material: la plantilla de bodega, prellenada con lo sugerido (o con lo que ya llenaron).
     // La revisan y completan planner, capitán y coordinador.
