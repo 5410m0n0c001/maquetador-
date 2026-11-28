@@ -790,7 +790,7 @@ window.Visualizer3D = (function () {
     _renderer.setSize(cw, ch);
     // Resolución máxima 1.5×: en celulares (2× y 3×) y en pantalla completa dibujar más pixeles lo vuelve lento sin verse mejor
     _renderer.setPixelRatio(Math.min(window.devicePixelRatio, movil ? 1 : 1.5));
-    _renderer.shadowMap.enabled = true;
+    _renderer.shadowMap.enabled = !movil; // en celular sin sombras: el 3D gira fluido y no se traba
     // Las sombras solo se recalculan cuando cambia el plano o la luz, no al mover la cámara
     _renderer.shadowMap.autoUpdate = false;
     _renderer.shadowMap.needsUpdate = true;
@@ -839,9 +839,17 @@ window.Visualizer3D = (function () {
       if (!_toque) return;
       var movido = Math.abs(e.clientX - _toque.x) + Math.abs(e.clientY - _toque.y);
       _toque = null;
-      if (movido > 8) return; // fue para girar o mover la cámara
+      // Con el dedo siempre hay un poco de movimiento: en táctil se tolera más antes de tomarlo como giro de cámara
+      if (movido > (e.pointerType === 'touch' ? 22 : 8)) return;
       var id = _elementoEnPantalla(e.clientX, e.clientY);
-      if (id) window.dispatchEvent(new CustomEvent('plano:tocar', { detail: { id: id } }));
+      var el = id && _currentElements.find(function (x) { return x.id === id; });
+      if (el && (el.mesaConfig || el.type === 'dj_booth')) {
+        window.dispatchEvent(new CustomEvent('plano:tocar', { detail: { id: id } }));
+        return;
+      }
+      // No cayó justo sobre una mesa (en el celular se ven chicas): se busca la mesa más cercana al punto tocado
+      var p = _puntoEnPiso(e.clientX, e.clientY);
+      if (p) window.dispatchEvent(new CustomEvent('plano:tocar', { detail: { x: p.x, y: p.z, tolerancia: e.pointerType === 'touch' ? 1.5 : 0.8, id3d: id || null } }));
     });
     console.log('[Visualizer3D] Initialized.');
   }
@@ -863,6 +871,17 @@ window.Visualizer3D = (function () {
   }
 
   // Id del elemento que está bajo un punto de la pantalla (o null)
+  // Punto del plano (en metros) bajo un punto de la pantalla, a la altura de las mesas
+  function _puntoEnPiso(cx, cy) {
+    if (!_renderer || !_camera) return null;
+    var r = _renderer.domElement.getBoundingClientRect();
+    var ndc = new THREE.Vector2(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+    var ray = new THREE.Raycaster();
+    ray.setFromCamera(ndc, _camera);
+    var p = new THREE.Vector3();
+    return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.75), p) ? p : null;
+  }
+
   function _elementoEnPantalla(cx, cy) {
     if (!_renderer || !_camera) return null;
     var r = _renderer.domElement.getBoundingClientRect();

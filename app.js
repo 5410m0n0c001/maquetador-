@@ -3679,14 +3679,15 @@
     });
   }
   // Mesa bajo un punto en metros (con margen para las sillas); si hay varias, la más cercana
-  function _mesaEnPunto(x, y) {
+  function _mesaEnPunto(x, y, tol) {
+    var extra = tol || 0.6; // en táctil se tolera más (el dedo cubre más que el mouse)
     var mejor = null, mejorD = Infinity;
     AppState.elements.forEach(function (el) {
       if (!el.mesaConfig) return;
       var rad = -(el.rotation || 0) * Math.PI / 180;
       var dx = x - el.x, dy = y - el.y;
       var lx = dx * Math.cos(rad) - dy * Math.sin(rad), ly = dx * Math.sin(rad) + dy * Math.cos(rad);
-      var mx = (el.w || 1) / 2 + 0.6, my = (el.h || el.w || 1) / 2 + 0.8;
+      var mx = (el.w || 1) / 2 + extra, my = (el.h || el.w || 1) / 2 + extra + 0.2;
       if (Math.abs(lx) <= mx && Math.abs(ly) <= my) {
         var d = dx * dx + dy * dy;
         if (d < mejorD) { mejorD = d; mejor = el; }
@@ -3753,8 +3754,8 @@
   }
   window.addEventListener('plano:tocar', function (ev) {
     var d = ev.detail || {};
-    var el = d.id ? AppState.elements.find(function (x) { return x.id === d.id; }) : _mesaEnPunto(d.x, d.y);
-    if (!el && !d.id) el = AppState.elements.find(function (x) { return x.type === 'dj_booth' && Math.abs(x.x - d.x) <= Math.max(x.w, x.h) / 2 && Math.abs(x.y - d.y) <= Math.max(x.w, x.h) / 2; });
+    var el = d.id ? AppState.elements.find(function (x) { return x.id === d.id; }) : _mesaEnPunto(d.x, d.y, d.tolerancia);
+    if (!el && !d.id) el = AppState.elements.find(function (x) { var t = Math.max(x.w, x.h) / 2 + (d.tolerancia || 0); return x.type === 'dj_booth' && Math.abs(x.x - d.x) <= t && Math.abs(x.y - d.y) <= t; });
     if (el && el.type === 'dj_booth') _mostrarDJ(el);
     else if (el && el.mesaConfig) _mostrarInvitadosMesa(el);
   });
