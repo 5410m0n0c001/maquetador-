@@ -3906,7 +3906,8 @@ window.Visualizer3D = (function () {
       } else {
         subtitle = 'Mesa Auxiliar';
       }
-      heightOffset = 1.6;
+      // Con arreglo floral alto (llega a ~1.7 m) la etiqueta va por encima para no taparlo
+      heightOffset = elem.mesaConfig && elem.mesaConfig.arregloFloralTipo === 'alto' ? 2.7 : 1.6;
     } else {
       switch (category) {
         case 'estructuras':
