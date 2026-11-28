@@ -3024,7 +3024,8 @@
       withGuests.forEach(function (t) {
         var inv = t.mesaConfig.invitados;
         var total = inv.reduce(function (s, g) { return s + (parseInt(g.pases, 10) || 0); }, 0);
-        html += '<div class="guest-card"><h3><span>Mesa ' + esc(t.mesaConfig.mesaNum || '') + '</span><span class="muted">' + total + ' pases</span></h3>' +
+        var nombreMesa = /^table_honor/.test(t.type) ? 'Mesa principal' : 'Mesa ' + esc(t.mesaConfig.mesaNum || '');
+        html += '<div class="guest-card"><h3><span>' + nombreMesa + '</span><span class="muted">' + total + ' pases</span></h3>' +
           inv.map(function (g) { return '<div>' + esc(g.nombre) + ' <span class="muted">· ' + esc(g.pases) + '</span></div>'; }).join('') + '</div>';
       });
       html += '</div></section>';

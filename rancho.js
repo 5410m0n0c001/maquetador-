@@ -462,7 +462,8 @@
       terrain: { w: 153, h: 147 }, elements: elementos, flows: [], layers: {}, venueId: 'rancho_los_potrillos',
       // Vistas para encuadrar cada zona del rancho (en metros)
       vistas: [
-        { nombre: 'Salón', x: 27, y: 46, w: 36, h: 44 },
+        // Solo el salón (28 × 34 m) con un margen chico: abajo termina antes del puente (y 60.6) para no mostrar puente ni cóctel
+        { nombre: 'Salón', x: 27, y: 42.6, w: 31, h: 36 },
         { nombre: 'Cóctel', x: 23, y: 76, w: 40, h: 40 },
         { nombre: 'Áreas verdes', x: 84, y: 61, w: 86, h: 86 }
       ]
