@@ -3544,31 +3544,42 @@ window.Visualizer3D = (function () {
       group.add(foliage);
 
     } else if (elem.type === 'backdrop') {
-      // Photo backdrop – tall vertical panel
-      var bdColor = colorNum || 0xd1d5db;
-      var bdPanel = new THREE.Mesh(
-        new THREE.BoxGeometry(w, h, 0.05),
-        new THREE.MeshStandardMaterial({ color: bdColor, roughness: 0.6 })
-      );
-      bdPanel.position.y = h / 2;
-      bdPanel.castShadow = true;
-      group.add(bdPanel);
-
-      // Two support legs angled behind
-      var bdLegMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6 });
-      var bdLegGeom = new THREE.CylinderGeometry(0.03, 0.03, h * 0.9, 6);
-
-      var bdLegL = new THREE.Mesh(bdLegGeom, bdLegMat);
-      bdLegL.position.set(-w / 3, h * 0.4, -0.35);
-      bdLegL.rotation.x = -0.25;
-      bdLegL.castShadow = true;
-      group.add(bdLegL);
-
-      var bdLegR = new THREE.Mesh(bdLegGeom, bdLegMat);
-      bdLegR.position.set(w / 3, h * 0.4, -0.35);
-      bdLegR.rotation.x = -0.25;
-      bdLegR.castShadow = true;
-      group.add(bdLegR);
+      // Back: portería metálica (2 postes y travesaño) con cortinas plisadas y guirnalda de globos.
+      // La altura es fija (2.6 m): en el plano "h" es solo la profundidad.
+      var ALTO_BACK = 2.6;
+      var marco = new THREE.MeshStandardMaterial({ color: elem.porteria === 'negra' ? 0x1f1f1f : 0xc9a96e, metalness: 0.6, roughness: 0.35 });
+      [-w / 2, w / 2].forEach(function (px) {
+        var poste = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, ALTO_BACK, 10), marco);
+        poste.position.set(px, ALTO_BACK / 2, 0); poste.castShadow = true; group.add(poste);
+        var base = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.5), marco);
+        base.position.set(px, 0.02, 0); group.add(base);
+      });
+      var trav = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, w, 10), marco);
+      trav.rotation.z = Math.PI / 2; trav.position.y = ALTO_BACK; group.add(trav);
+      // Cortinas: pliegues verticales que cuelgan del travesaño
+      var tela = new THREE.MeshStandardMaterial({ color: elem.cortinaColor ? new THREE.Color(elem.cortinaColor).getHex() : 0xf5efe6, roughness: 0.85, side: THREE.DoubleSide });
+      var nPl = Math.max(6, Math.round(w / 0.18));
+      for (var pl = 0; pl < nPl; pl++) {
+        var pliegue = new THREE.Mesh(new THREE.BoxGeometry(w / nPl * 1.05, ALTO_BACK - 0.05, 0.03), tela);
+        pliegue.position.set(-w / 2 + (pl + 0.5) * w / nPl, (ALTO_BACK - 0.05) / 2, pl % 2 ? 0.05 : -0.02);
+        pliegue.castShadow = true; group.add(pliegue);
+      }
+      // Guirnalda de globos: a lo largo del travesaño y bajando por un costado
+      var colores = (elem.globosColores && elem.globosColores.length ? elem.globosColores : ['#F65C7A', '#C9A96E', '#ffffff']).map(function (c) {
+        return new THREE.MeshStandardMaterial({ color: new THREE.Color(c).getHex(), roughness: 0.3, metalness: 0.1 });
+      });
+      var gGlobo = new THREE.SphereGeometry(1, 12, 10);
+      var globo = function (x, y, z, r, k) { var m = new THREE.Mesh(gGlobo, colores[k % colores.length]); m.position.set(x, y, z); m.scale.setScalar(r); m.castShadow = true; group.add(m); };
+      var nG = Math.round(w / 0.16);
+      for (var gi = 0; gi <= nG; gi++) {
+        var gx = -w / 2 + gi * w / nG;
+        globo(gx, ALTO_BACK + 0.05 + Math.sin(gi * 1.7) * 0.08, 0.12, 0.13 + (gi % 3) * 0.03, gi);
+        if (gi % 2 === 0) globo(gx + 0.05, ALTO_BACK - 0.12, 0.2, 0.09, gi + 1);
+      }
+      for (var gj = 0; gj < 14; gj++) {
+        var gy = ALTO_BACK - gj * (ALTO_BACK * 0.75 / 14);
+        globo(w / 2 + Math.sin(gj * 1.3) * 0.08, gy, 0.12, 0.12 + (gj % 3) * 0.03, gj + 2);
+      }
 
     } else {
       _buildGenericBox(group, elem, colorNum, 1.5);
