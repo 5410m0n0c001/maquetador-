@@ -1,4 +1,4 @@
-# Maquetador universal PEG — criterios de negocio
+# Virtual Planner (maquetador universal PEG) — criterios de negocio
 
 App web (vanilla JS, Three.js, SVG) de Primavera Events Group. `main` se publica en
 https://5410m0n0c001.github.io/maquetador-/ · datos en Supabase `fwqvkyeydykzleqowgqb`, tabla `maquetador_eventos`

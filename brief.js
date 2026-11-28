@@ -408,7 +408,7 @@
         '<img src="assets/logo-primavera.png" alt="Primavera Events Group">' +
         '<h1>Virtual Planner</h1>' +
         '<p class="acceso-sub">Primavera Events Group</p>' +
-        '<label class="form-label" for="acceso-clave">Contraseña de planner, capitán o DJ</label>' +
+        '<label class="form-label" for="acceso-clave">Contraseña de planner, capitán, DJ o anfitrión</label>' +
         '<div class="acceso-clave-wrap">' +
           '<input type="password" id="acceso-clave" class="form-input" autocomplete="current-password" required>' +
           '<button type="button" id="acceso-ver" title="Ver contraseña" aria-label="Ver contraseña"><i class="fa-solid fa-eye"></i></button>' +
