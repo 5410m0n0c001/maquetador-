@@ -659,15 +659,48 @@
     });
   }
 
+  // Ningún evento se crea sin su fecha: se pide antes de crearlo (Cancelar = no se crea)
+  function pedirFechaEvento(listo) {
+    var modal = document.createElement('div');
+    modal.className = 'venue-picker-overlay';
+    modal.innerHTML =
+      '<div class="venue-picker" style="max-width:420px">' +
+        '<div class="venue-picker-head"><h2>¿Cuándo es el evento?</h2></div>' +
+        '<p>Para crear un evento nuevo primero indica la fecha en que se realiza.</p>' +
+        '<label class="form-label" for="nuevo-fecha">Fecha del evento</label>' +
+        '<input type="date" id="nuevo-fecha" class="form-input" style="width:100%;margin:6px 0 14px">' +
+        '<div class="vale-acciones">' +
+          '<button type="button" class="event-btn active" id="nuevo-crear" disabled><i class="fa-solid fa-calendar-check"></i> Crear evento</button>' +
+          '<button type="button" class="event-btn" id="nuevo-cancelar">Cancelar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    var inp = modal.querySelector('#nuevo-fecha'), crear = modal.querySelector('#nuevo-crear');
+    inp.oninput = inp.onchange = function () { crear.disabled = !/^\d{4}-\d{2}-\d{2}$/.test(inp.value); };
+    modal.querySelector('#nuevo-cancelar').onclick = function () {
+      modal.remove();
+      toast('No se creó el evento: falta la fecha.', 'warning');
+      if (!_event) openStartChooser(); // sin evento abierto: de regreso al inicio
+    };
+    crear.onclick = function () { if (crear.disabled) return; modal.remove(); listo(inp.value); };
+    inp.focus();
+  }
+
   function createEvent() {
     if (!client()) { toast('No hay conexión con Supabase.', 'error'); return; }
+    pedirFechaEvento(crearEventoConFecha);
+  }
+
+  function crearEventoConFecha(fecha) {
     // Cada evento nuevo empieza en blanco: nunca hereda el plano ni los datos del evento que estaba abierto
     soltarEvento();
     var data = emptyData();
+    data.brief = Object.assign({}, data.brief, { fecha_evento: fecha });
     data.layout = { terrain: { w: 50, h: 60 }, elements: [], flows: [], layers: {}, venueId: null };
     if (window.App && window.App.loadLayout) window.App.loadLayout(data.layout);
     client().from(TABLE).insert({
       nombre: 'Nuevo evento',
+      fecha_evento: fecha,
       venue_id: data.layout && data.layout.venueId,
       data: data
     }).select('id').single().then(function (res) {
