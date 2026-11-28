@@ -2995,6 +2995,25 @@
         }).join('') + '</div>'
       : '<div class="plan-giro"><div class="plan">' + planSvg + '</div></div>') + '</section>';
 
+    // Invitados por mesa: justo después del croquis, para ubicar a cada invitado en el plano (la mesa principal primero)
+    var withGuests = tablesList.filter(function (t) { return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length; });
+    withGuests.sort(function (a, c) {
+      var pa = /^table_honor/.test(a.type) ? -1 : (parseInt(a.mesaConfig.mesaNum, 10) || 999);
+      var pc = /^table_honor/.test(c.type) ? -1 : (parseInt(c.mesaConfig.mesaNum, 10) || 999);
+      return pa - pc;
+    });
+    if (withGuests.length) {
+      html += '<section class="section page-break"><h2>Invitados por mesa</h2><div class="guests">';
+      withGuests.forEach(function (t) {
+        var inv = t.mesaConfig.invitados;
+        var total = inv.reduce(function (s, g) { return s + (parseInt(g.pases, 10) || 0); }, 0);
+        var nombreMesa = /^table_honor/.test(t.type) ? 'Mesa principal' : 'Mesa ' + esc(t.mesaConfig.mesaNum || '');
+        html += '<div class="guest-card"><h3><span>' + nombreMesa + '</span><span class="muted">' + total + ' pases</span></h3>' +
+          inv.map(function (g) { return '<div>' + esc(g.nombre) + ' <span class="muted">· ' + esc(g.pases) + '</span></div>'; }).join('') + '</div>';
+      });
+      html += '</div></section>';
+    }
+
     // Requisición de material: la plantilla de bodega, prellenada con lo sugerido (o con lo que ya llenaron).
     // La revisan y completan planner, capitán y coordinador.
     var req = window.PEGVale && window.PEGVale.datosFicha ? window.PEGVale.datosFicha() : { items: [], pendientes: [], calculada: true };
@@ -3015,20 +3034,6 @@
         'Planner, capitán y coordinador revisan las cantidades, eligen modelo y color donde se indica y completan lo que falte.</p>' +
         (req.pendientes.length ? '<div class="pendientes"><b>Falta definir</b><ul>' + req.pendientes.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '') +
         reqBody + '</section>';
-    }
-
-    // Invitados por mesa
-    var withGuests = tablesList.filter(function (t) { return t.mesaConfig && t.mesaConfig.invitados && t.mesaConfig.invitados.length; });
-    if (withGuests.length) {
-      html += '<section class="section page-break"><h2>Invitados por mesa</h2><div class="guests">';
-      withGuests.forEach(function (t) {
-        var inv = t.mesaConfig.invitados;
-        var total = inv.reduce(function (s, g) { return s + (parseInt(g.pases, 10) || 0); }, 0);
-        var nombreMesa = /^table_honor/.test(t.type) ? 'Mesa principal' : 'Mesa ' + esc(t.mesaConfig.mesaNum || '');
-        html += '<div class="guest-card"><h3><span>' + nombreMesa + '</span><span class="muted">' + total + ' pases</span></h3>' +
-          inv.map(function (g) { return '<div>' + esc(g.nombre) + ' <span class="muted">· ' + esc(g.pases) + '</span></div>'; }).join('') + '</div>';
-      });
-      html += '</div></section>';
     }
 
     if (isPlanner) {
