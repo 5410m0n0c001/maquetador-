@@ -13,7 +13,7 @@
 
   var MESAS_COCTEL = /^(table_periquera|lounge_set)/;
   var MESAS_PRINCIPALES = /^table_honor/;
-  var MESAS_SIN_LUGARES = /^(table_cake|table_gifts|table_candy|table_shots|table_buffet)$/;
+  var MESAS_SIN_LUGARES = /^(table_cake|table_gifts|table_candy|table_shots|table_buffet|table_photographers)$/;
 
   // Mesas, mesa principal y mesas del cóctel del plano; lugares contra invitados
   function lugares(elements, invitados) {
@@ -69,6 +69,8 @@
     'Silla metálica (Boss o Lotus)': ['Silla metálica Boss', 'Silla metálica Lotus'],
     'Sillón principal (elegir color)': ['Sillón principal beige', 'Sillón principal gris Oxford', 'Sillón principal palo de rosa (alita)'],
     'Periquera (madera o metal)': ['Periquera alta madera', 'Periquera alta metal'],
+    'Descanso (madera o metálico)': ['Descanso de madera', 'Descanso metálico'],
+    'Portería metálica (dorada o negra)': ['Portería metálica dorada', 'Portería metálica negra'],
     'Banco alto (elegir modelo)': ['Banco madera alto', 'Banco metálico alto', 'Banco alto tejido plástico negro'],
     'Números de mesa (acrílico o madera)': ['Números de mesa acrilicos', 'Números para mesa en madera'],
     'Letra gigante XV (1.10 o 1.80 m)': ['Letra gigante XV 1.10 mt', 'Letra gigante XV 1.80 mt']
@@ -188,6 +190,7 @@
       if (/carrito/.test(norm(e.name))) sumar('Carrito de snacks', 1, 'Snacks y estaciones');
       else if (e.type === 'table_gifts') sumar('Mesa de regalos — elegir mesa', 1, 'Mesas y periqueras');
       else if (e.type === 'table_cake') sumar('Mesa de pastel — elegir mesa', 1, 'Mesas y periqueras');
+      else if (e.type === 'table_photographers') sumar('Mesa para fotógrafos', 1, 'Mesas y periqueras', 'entre la barra y el DJ');
     });
 
     // Templete (por ejemplo, para dar altura a la mesa principal)
@@ -242,9 +245,78 @@
     }
     var hayBarra = barras.length || (b.tipo_barra && b.tipo_barra.length) || /barra/.test(norm(b.esquema_bebidas || ''));
     if (hayBarra) {
-      var k = Math.max(2, montables);
-      ['Exprimidor de limon', 'Cuchillo de barra', 'Pica hielo', 'Pinzas para hielo', 'Tarja para hielo'].forEach(function (p) { sumar(p, k, 'Barra y cocina', k + ' kits de barra'); });
+      // Un kit por barra (fija o montable)
+      var k = Math.max(1, barras.length);
+      ['Exprimidor de limon', 'Cuchillo de barra', 'Pica hielo', 'Pinzas para hielo', 'Tarja para hielo'].forEach(function (p) { sumar(p, k, 'Barra y cocina', k === 1 ? '1 kit de barra' : k + ' kits de barra (uno por barra)'); });
     }
+
+    // ── Lo que se arma desde el plano ──
+    var deTipo = function (re) { return elements.filter(function (e) { return re.test(e.type || ''); }); };
+    // Back: su estructura es una portería
+    var backs = elements.filter(function (e) { return /backdrop|back_/.test(e.type) || /\bback\b/i.test(e.name || ''); });
+    if (backs.length) sumar('Portería metálica (dorada o negra)', backs.length, 'Decoración y estructuras', 'estructura del back');
+    // Alfombra roja colocada en el plano
+    if (deTipo(/^red_carpet$/).length) sumar('Alfombra roja', deTipo(/^red_carpet$/).length, 'Decoración y estructuras');
+    // Letras gigantes del plano con su texto (p. ej. "M & E"): las que hay en bodega se piden; las que no, quedan pendientes
+    deTipo(/^giant_letters$/).forEach(function (e) {
+      var letras = String(e.letras || '').toUpperCase().replace(/\s+/g, '').split('');
+      if (!letras.length) { pendientes.push('Letras gigantes: indicar qué letras lleva "' + (e.name || 'Letras') + '".'); return; }
+      var hay = { E: 1, L: 1, O: 1, V: 1 }, faltan = [];
+      letras.forEach(function (l) { if (hay[l]) sumar('Letra gigante ' + l, 1, 'Letras gigantes', e.letras); else faltan.push(l === '&' ? '"&"' : l); });
+      if (faltan.length) pendientes.push('Letras gigantes "' + e.letras + '": en bodega solo hay E, L, O, V y XV; confirmar si van y quién consigue ' + faltan.join(', ') + '.');
+      ilumina = true;
+    });
+    if (ilumina && !items.some(function (i) { return i.nombre === 'Focos para letras gigantes'; })) {
+      sumar('Focos para letras gigantes', '', 'Iluminación y eléctrico', 'POR CONFIRMAR: cuántos focos lleva cada letra');
+      sumar('Extensión eléctrica', '', 'Iluminación y eléctrico', 'POR CONFIRMAR: cuántas');
+      pendientes.push('Letras gigantes: definir cuántos focos lleva cada letra y cuántas extensiones se ocupan.');
+    }
+    if (!ilumina) pendientes.push('Extensiones eléctricas: definir si se llevan y cuántas.');
+    // Chisperos colocados en el plano
+    var chisperos = deTipo(/^sparklers$/).length;
+    if (chisperos) pendientes.push('Chisperos: ' + chisperos + ' en el plano; confirmar proveedor, en qué momento se detonan y quién los detona.');
+    // Periqueras: cada una con su sombrilla; definir cuántas de madera y cuántas de metal
+    var nPeri = L.coctel.filter(function (e) { return e.type !== 'lounge_set'; }).length;
+    if (nPeri) {
+      var conSombrilla = L.coctel.filter(function (e) { return /umbrella/.test(e.type); }).length;
+      if (nPeri - conSombrilla > 0) sumar('Sombrilla', nPeri - conSombrilla, 'Salas y sombrillas', 'una por periquera');
+      pendientes.push('Periqueras: definir cuántas de las ' + nPeri + ' van de madera y cuántas de metal.');
+    }
+
+    // ── Por mesero: descanso, charola de bar y charola de grasa (1 de cada uno) ──
+    var meseros = (d.staff || []).filter(function (p) { return /mesero/i.test(p.rol || ''); }).length;
+    sumar('Descanso (madera o metálico)', meseros || '', 'Mesas y periqueras', '1 por mesero');
+    sumar('Charola de bar', meseros || '', 'Barra y cocina', '1 por mesero');
+    sumar('Charola de grasa', meseros || '', 'Barra y cocina', '1 por mesero');
+    if (!meseros) pendientes.push('Meseros: faltan en el staff; con ellos se calculan descansos (de madera o metálicos), charolas de bar y de grasa (1 de cada uno por mesero).');
+    // Jarras de plástico con tapa: una por mesa
+    var nMesas = L.banquete.length + L.principal.length;
+    if (nMesas) sumar('Jarra de plástico', nMesas, 'Barra y cocina', 'con tapa · 1 por mesa');
+    // Limpieza
+    ['Bolsas de basura', 'Esponja / fibra para trastes'].forEach(function (p) { sumar(p, '', 'Limpieza', 'POR CONFIRMAR: cuántas'); });
+    pendientes.push('Limpieza: definir cuántas bolsas de basura y fibras para trastes.');
+
+    // ── Bebidas, hielo e insumos ──
+    if (hayBarra || /cerveza|whisk|tequila|refresco|bebida/.test(textoBrief)) {
+      pendientes.push('Bebidas y mezcladores: definir cuántos de agua mineral, Coca-Cola, refresco de manzana y de toronja, jugo de limón y azúcar.');
+      pendientes.push('Garrafones: cuántos, si van llenos o vacíos y quién los surte.');
+      pendientes.push('Hielo: cuántas barras y cuántas bolsas de hielo en cubo, y quién las deja.');
+      pendientes.push('Fruta: si se manda, cuál y qué cantidad.');
+    }
+    // Copas: con vaso solamente, o con brindis en el minuto a minuto
+    var hayCopa = L.banquete.concat(L.principal).some(function (e) {
+      var c = e.mesaConfig || {};
+      return [c.cristal, c.cristal2].some(function (x) { return x && x !== 'ninguno' && !/cubero|old|vaso/.test(x); });
+    });
+    var hayBrindis = (d.minuto || []).some(function (m) { return /brindis/i.test(m.actividad || ''); });
+    if (!hayCopa) pendientes.push('Copas: falta definir qué copas llevan las mesas' + (hayBrindis ? ' (hay brindis en el minuto a minuto)' : '') + '.');
+    // Pétalos y conos para una dinámica
+    var textoMinuto = norm((d.minuto || []).map(function (m) { return m.actividad; }).join(' '));
+    if (/petalo|conos?\b/.test(textoBrief + ' ' + textoMinuto)) pendientes.push('Pétalos y conos: definir quién los surte y quién los reparte a los invitados.');
+    // Kit de fiesta
+    if (/infantil|xv|cumple/.test(norm(b.tipo_evento || '')) && !/kit de fiesta/.test(textoBrief)) pendientes.push('Kit de fiesta (pulseras, gorros, globos): definir si habrá y cuántos.');
+    // Fotos del montaje
+    if (!((d.montaje && d.montaje.fotos) || []).length) pendientes.push('Faltan las fotos del montaje (álbum del brief).');
 
     // Lugares contra invitados
     if (invitados && L.total !== invitados) {

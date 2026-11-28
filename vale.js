@@ -378,8 +378,11 @@
             return '<li>' + esc(x.texto) + (editar && x.agregar ? ' <button type="button" class="event-btn vale-agregar-plano" data-tipo="' + esc(x.agregar) + '">Agregar al plano</button>' : '') + '</li>';
           }).join('') + '</ul></div>' : '';
       })() +
-      ((v.pendientes || []).length ? '<div class="vale-pendientes"><b><i class="fa-solid fa-circle-exclamation"></i> Falta definir</b><ul>' +
-        v.pendientes.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '') +
+      (function () {
+        var pend = pendientesActuales(evento(), v);
+        return pend.length ? '<div class="vale-pendientes"><b><i class="fa-solid fa-circle-exclamation"></i> Falta definir</b><ul>' +
+          pend.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul></div>' : '';
+      })() +
       '<div class="vale-acciones">' +
         (editar && cuadre() ? '<button type="button" class="event-btn" id="vale-cuadrar" title="Quita o agrega sillas en las mesas del plano (empezando por la mesa 1, de 8 a 12 por mesa) para que los lugares sean exactamente los invitados"><i class="fa-solid fa-chair"></i> Cuadrar sillas con invitados (' + cuadre() + ')</button>' : '') +
         (editar ? '<button type="button" class="event-btn" id="vale-calcular" title="Calcula loza, cubiertos, cristalería, mantelería, sillas, mesas y arreglos desde el plano, el menú y las amenidades"><i class="fa-solid fa-calculator"></i> Calcular desde el evento</button>' : '') +
@@ -744,10 +747,20 @@
   }
 
   // Lista para la ficha técnica del coordinador
+  // "Falta definir" siempre al día: lo que el cálculo detecta ahora mismo (menú, back, copas, bebidas…)
+  // más los "elegir uno" que sigan sin resolverse en la requisición guardada
+  function pendientesActuales(ev, v) {
+    if (!ev || !window.PEGCalculo) return (v && v.pendientes) || [];
+    var r = window.PEGCalculo.calcular(ev);
+    var elegir = ((v && v.items) || []).filter(function (i) { return i.opciones && i.opciones.length; }).map(function (i) {
+      return 'Elegir uno: ' + i.nombre + ' — ' + (i.cant || 'cantidad por definir') + (i.cant ? ' pz' : '') + ' (' + i.opciones.map(function (o) { return o.nombre; }).join(' / ') + ').';
+    });
+    return r.pendientes.concat(elegir);
+  }
   function datosFicha() {
     var ev = evento();
     var v = ev && ev.data.vale;
-    if (v && v.items && v.items.length) return { items: v.items, pendientes: v.pendientes || [], calculada: false };
+    if (v && v.items && v.items.length) return { items: v.items, pendientes: pendientesActuales(ev, v), calculada: false };
     var r = ev ? calculoItems(ev) : { items: [], pendientes: [] };
     var elegir = r.items.filter(function (i) { return i.opciones && i.opciones.length; }).map(function (i) {
       return 'Elegir uno: ' + i.nombre + ' — ' + i.cant + ' pz (' + i.opciones.map(function (o) { return o.nombre; }).join(' / ') + ').';

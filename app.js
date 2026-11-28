@@ -591,7 +591,7 @@
       var t = elem.type;
       
       var isTable = t.startsWith('table_') || t === 'lounge_set';
-      var isDecorativeTable = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet'].indexOf(t) !== -1;
+      var isDecorativeTable = ['table_cake', 'table_gifts', 'table_candy', 'table_shots', 'table_buffet', 'table_photographers'].indexOf(t) !== -1;
       
       if (isTable && !isDecorativeTable) {
         if (elem.chairs) totalCapacity += elem.chairs;
@@ -2533,7 +2533,9 @@
     });
 
     var venueTpl = (window.VENUE_TEMPLATES || []).find(function (t) { return t.id === AppState.venueId; });
-    var venueName = b.venue_red || b.venue_externo || (venueTpl ? venueTpl.name : '');
+    // Si el plano es la plantilla del mismo venue, se usa su nombre completo (p. ej. "Rancho Los Potrillos")
+    var mismoVenue = venueTpl && (!b.venue_red || venueTpl.name.toLowerCase().split(/\s+/).some(function (w) { return w.length > 4 && String(b.venue_red).toLowerCase().indexOf(w) > -1; }));
+    var venueName = mismoVenue ? venueTpl.name : (b.venue_red || b.venue_externo || (venueTpl ? venueTpl.name : ''));
     var tipo = b.tipo_evento === 'Otro' ? (b.tipo_evento_otro || 'Otro') : b.tipo_evento;
     var h12 = window.PEGEventos && window.PEGEventos.hora12 ? window.PEGEventos.hora12 : function (h) { return h; };
     var horario = [b.hora_inicio, b.hora_cierre].filter(Boolean).map(h12).join(' – ');
@@ -2724,7 +2726,9 @@
 
     // Información del evento (al principio y sin repetir lo de arriba)
     var EN_TARJETAS = ['tipo_evento', 'tipo_evento_otro', 'fecha_evento', 'hora_inicio', 'hora_cierre', 'invitados', 'adultos', 'ninos',
-      'venue_red', 'venue_externo', 'formalidad', 'tematica', 'paletas', 'paleta', 'planner'];
+      'venue_red', 'venue_externo', 'formalidad', 'tematica', 'paletas', 'paleta', 'planner',
+      // Datos internos del brief que en la ficha solo hacen ruido (el venue ya va en las tarjetas)
+      'tiene_venue', 'plano_base'];
     // Brief: solo campos con respuesta; en la versión para personal sin lo interno
     var briefHtml = '';
     var FOTOS_MENU = ['1er tiempo', '2do tiempo', 'Plato fuerte', 'Postre', 'Plato'];

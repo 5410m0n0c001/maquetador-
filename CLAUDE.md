@@ -27,8 +27,16 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 ## Requisición (calculo-requisicion.js)
 - Cada mesa lleva arreglo floral BAJO o ALTO, nunca ambos. Por lo regular la mayoría bajo y unas cuantas alto;
   el alto lleva su estructura ("Base metálica alta (centro de mesa)").
-- Barras: la fija del venue se nombra "Barra fija…" y no se cuenta; cada montable lleva barra montable,
-  mesa tablón y bambalina. Kits de barra = máx(2, montables).
+- Barras: la fija del venue se nombra "Barra fija…" y no se cuenta como montable; cada montable lleva barra montable,
+  mesa tablón y bambalina. Kits de barra (exprimidor, cuchillo, pica hielo, pinzas, tarja): 1 por barra (fija o montable).
+- Back en el plano → su estructura es una portería metálica (elegir dorada o negra).
+- Cada periquera lleva sombrilla; pendiente: cuántas de madera y cuántas de metal.
+- Por mesero: 1 descanso (madera o metálico), 1 charola de bar y 1 de grasa. Jarra de plástico con tapa: 1 por mesa.
+- Letras gigantes del plano llevan su texto (campo `letras`, p. ej. "M&E"); en bodega solo hay E, L, O, V y XV.
+- Alfombra roja, chisperos, mesa de fotógrafos (`table_photographers`, no cuenta lugares) salen del plano.
+- "Falta definir" (en la requisición y en la ficha) se recalcula al momento: menú, back, copas (sobre todo si hay brindis),
+  bebidas y mezcladores, garrafones, hielo, fruta, limpieza, meseros, periqueras, chisperos, letras, pétalos y conos,
+  kit de fiesta y fotos del montaje.
 - Menú: si no hay menú registrado, "Falta definir" pide entrada, sopa o crema, plato fuerte y postre (de ahí salen loza y cubiertos).
 - Si hay mesa principal y el plano no tiene back, "Falta definir" pregunta si habrá back detrás de ella.
 - Servilletas de colores que no están en inventario van como "Servilleta de tela" con la cantidad de cada color y doblez en la nota.

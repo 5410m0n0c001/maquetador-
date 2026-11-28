@@ -3029,11 +3029,25 @@ window.Visualizer3D = (function () {
       // Lit Giant Letters "XV" / "LOVE"
       var lMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
       
-      // Let's create block shape letters procedural placeholder (4 boxes representing blocks)
-      var numChars = 4;
+      // Con texto (elem.letras, p. ej. "M&E"): cada letra se dibuja con su forma; sin texto, bloques genéricos
+      var textoL = String(elem.letras || '').replace(/\s+/g, '');
+      var numChars = textoL ? textoL.length : 4;
       var charW = w / numChars;
       for (var c = 0; c < numChars; c++) {
-        var charBox = new THREE.Mesh(new THREE.BoxGeometry(charW * 0.7, 1.5, 0.2), lMat);
+        var charBox;
+        if (textoL) {
+          var cvL = document.createElement('canvas'); cvL.width = 128; cvL.height = 192;
+          var gL = cvL.getContext('2d');
+          gL.fillStyle = '#ffffff'; gL.font = 'bold 170px Arial, sans-serif'; gL.textAlign = 'center'; gL.textBaseline = 'middle';
+          gL.fillText(textoL[c], 64, 104);
+          gL.fillStyle = '#ffe9a8';
+          for (var fy = 30; fy < 180; fy += 28) for (var fx = 24; fx < 110; fx += 28) { if (gL.getImageData(fx, fy, 1, 1).data[3] > 200) { gL.beginPath(); gL.arc(fx, fy, 5, 0, Math.PI * 2); gL.fill(); } }
+          var texL = new THREE.CanvasTexture(cvL);
+          charBox = new THREE.Mesh(new THREE.PlaneGeometry(charW * 0.95, 1.5),
+            new THREE.MeshStandardMaterial({ map: texL, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide, emissive: 0xffffff, emissiveMap: texL, emissiveIntensity: 0.25 }));
+        } else {
+          charBox = new THREE.Mesh(new THREE.BoxGeometry(charW * 0.7, 1.5, 0.2), lMat);
+        }
         charBox.position.set(-w/2 + charW * (c + 0.5), 0.75, 0);
         charBox.castShadow = true;
         group.add(charBox);

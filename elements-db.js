@@ -676,6 +676,20 @@ window.ELEMENTS_CATALOG = [
     planoOnly: false
   },
   {
+    type: 'table_photographers',
+    name: 'Mesa de fotógrafos',
+    category: 'mobiliario',
+    icon: 'fa-camera',
+    defaultW: 1.8,
+    defaultH: 0.6,
+    shape: 'rect',
+    color: '#475569',
+    defaultChairs: 0,
+    description: 'Mesa de trabajo para foto y video (equipo, cargadores). No cuenta como lugares del banquete.',
+    layer: 'mobiliario',
+    planoOnly: false
+  },
+  {
     type: 'table_shots',
     name: 'Carrito de Shots',
     category: 'mobiliario',
