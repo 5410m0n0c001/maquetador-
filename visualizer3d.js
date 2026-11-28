@@ -457,6 +457,34 @@ window.Visualizer3D = (function () {
 
   // Silla según el montaje de la mesa (cross back de madera con cruz, Tiffany, con funda…).
   // El respaldo queda hacia +z, igual que antes.
+  // Paleta de la decoración del evento (para el back): la del brief o, si no hay, los colores del montaje
+  // (caminos, servilletas y manteles de las mesas). Devuelve colores hex sin repetir.
+  function _paletaDecoracion() {
+    var HEX = { rojo: '#b91c1c', negro: '#111111', blanco: '#ffffff', dorado: '#c9a96e', plata: '#c0c0c0', plateado: '#c0c0c0',
+      champagne: '#e8d8b8', beige: '#e7d8c0', arena: '#d6c3a3', rosa: '#f9a8d4', palo_de_rosa: '#d8a7a7', fucsia: '#db2777', fuchsia: '#db2777',
+      azul: '#1d4ed8', azul_rey: '#1d4ed8', azul_marino: '#1e3a8a', azul_cielo: '#7dd3fc', turquesa: '#14b8a6', azul_turquesa: '#14b8a6',
+      verde: '#15803d', verde_olivo: '#6b7a2f', morado: '#7c3aed', lila: '#c4b5fd', amarillo: '#facc15', naranja: '#f97316',
+      durazno: '#fdba74', vino: '#7f1d1d', chocolate: '#5c3a21', caqui: '#a8956b', marfil: '#f3ead8', ivory: '#f3ead8' };
+    var nombres = [];
+    var ev = window.PEGEventos && window.PEGEventos.getEvent ? window.PEGEventos.getEvent() : null;
+    var b = (ev && ev.data && ev.data.brief) || {};
+    var txt = String([].concat(b.paleta || [], b.paletas || [], b.colores || []).join(' ')).toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/palo de rosa/g, 'palo_de_rosa').replace(/azul (rey|marino|cielo|turquesa)/g, 'azul_$1');
+    txt.split(/[^a-z_]+/).forEach(function (w) { if (HEX[w]) nombres.push(w); });
+    if (!nombres.length && _getState) {
+      (_getState().elements || []).forEach(function (e) {
+        var c = e.mesaConfig;
+        if (!c || !/^table_/.test(e.type)) return;
+        [c.caminoColor, c.servilletaColorCorazon, c.servilletaColorCorbata, c.servilletaColorOtros, c.mantelColor].forEach(function (x) {
+          x = String(x || '').toLowerCase();
+          if (HEX[x]) nombres.push(x);
+        });
+      });
+    }
+    var vistos = {};
+    return nombres.filter(function (n) { if (vistos[HEX[n]]) return false; vistos[HEX[n]] = 1; return true; }).map(function (n) { return HEX[n]; }).slice(0, 4);
+  }
+
   function _silla3D(cfg, inv) {
     cfg = cfg || {}; inv = inv || {};
     var g = new THREE.Group();
@@ -3565,7 +3593,8 @@ window.Visualizer3D = (function () {
         pliegue.castShadow = true; group.add(pliegue);
       }
       // Guirnalda de globos: a lo largo del travesaño y bajando por un costado
-      var colores = (elem.globosColores && elem.globosColores.length ? elem.globosColores : ['#F65C7A', '#C9A96E', '#ffffff']).map(function (c) {
+      var paletaEv = _paletaDecoracion();
+      var colores = (elem.globosColores && elem.globosColores.length ? elem.globosColores : (paletaEv.length ? paletaEv : ['#F65C7A', '#C9A96E', '#ffffff'])).map(function (c) {
         return new THREE.MeshStandardMaterial({ color: new THREE.Color(c).getHex(), roughness: 0.3, metalness: 0.1 });
       });
       var gGlobo = new THREE.SphereGeometry(1, 12, 10);

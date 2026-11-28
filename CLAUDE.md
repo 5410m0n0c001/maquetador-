@@ -30,7 +30,8 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Barras: la fija del venue se nombra "Barra fija…" y no se cuenta como montable; cada montable lleva barra montable,
   mesa tablón y bambalina. Kits de barra (exprimidor, cuchillo, pica hielo, pinzas, tarja): 1 por barra (fija o montable).
 - Back en el plano → su estructura es una portería metálica (elegir dorada o negra). En 3D: portería de 2.6 m,
-  cortinas plisadas (`cortinaColor`) y guirnalda de globos (`globosColores`), color de portería en `porteria`.
+  cortinas plisadas (`cortinaColor`) y guirnalda de globos con la PALETA DE LA DECORACIÓN del evento (brief
+  `paleta`/`paletas`, o si no hay, colores de caminos, servilletas y manteles); `globosColores` solo para forzar otros.
 - Cada periquera lleva sombrilla; pendiente: cuántas de madera y cuántas de metal.
 - Por mesero: 1 descanso (madera o metálico), 1 charola de bar y 1 de grasa. Jarra de plástico con tapa: 1 por mesa.
 - Letras gigantes del plano llevan su texto (campo `letras`, p. ej. "M&E"); en bodega solo hay E, L, O, V y XV.
