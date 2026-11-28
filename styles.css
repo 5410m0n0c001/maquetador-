@@ -2420,3 +2420,29 @@ body.plano-completo .pantalla-ctrl .pc-vista { display: inline-block; }
 .canvas-area:-webkit-full-screen { width: 100vw; height: 100vh; }
 .canvas-area.pantalla-completa { position: fixed !important; inset: 0; z-index: 45000; width: 100vw; height: 100dvh; }
 body.plano-completo .fab-group { display: none !important; }
+
+/* ── Perfil DJ: solo plano y minuto a minuto (solo lectura) ── */
+body.modo-dj #sidebar-left, body.modo-dj #sidebar-right, body.modo-dj #btn-toggle-menu,
+body.modo-dj #btn-brief, body.modo-dj #btn-vale, body.modo-dj #btn-staff, body.modo-dj #btn-coord,
+body.modo-dj #btn-share-event, body.modo-dj .fab-group, body.modo-dj .planner-only { display: none !important; }
+#dj-barra { display: none; }
+body.modo-dj #dj-barra { display: flex; position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 900;
+  gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; padding: 8px 12px; border-radius: 14px;
+  background: rgba(15, 12, 14, 0.92); border: 1px solid rgba(201, 169, 110, 0.35); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+#dj-barra .dj-titulo { color: #C9A96E; font-size: 12px; font-weight: 600; margin-right: 4px; }
+.dj-minuto { max-width: 900px; }
+.dj-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dj-tabla th { text-align: left; padding: 6px 8px; color: #C9A96E; border-bottom: 1px solid rgba(201,169,110,.4); }
+.dj-tabla td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,.08); vertical-align: top; }
+.dj-tabla td:first-child, .dj-tabla td:nth-child(2) { white-space: nowrap; font-weight: 600; }
+.dj-tabla tr.dj td { background: rgba(246, 92, 122, 0.16); }
+.dj-tabla tr.dj td:first-child { border-left: 4px solid #F65C7A; }
+
+/* Botones flotantes del plano: si no caben en una columna, se acomodan en otra (nunca debajo de "pantalla completa") */
+.fab-group { flex-direction: column; flex-wrap: wrap-reverse; max-height: calc(100% - 96px); align-content: flex-start; }
+/* La barra del DJ va arriba a la derecha para no tapar el selector de zonas */
+body.modo-dj #dj-barra { top: 120px; bottom: auto; left: auto; right: 14px; transform: none; }
+/* La barra del evento (Brief, Requisición, Staff, Coordinación, Eventos…) pasa a otra línea en lugar de quedar cortada */
+.topbar-right { flex-shrink: 1; min-width: 0; flex-wrap: wrap; }
+.event-bar { flex-wrap: wrap; justify-content: flex-start; }
+.event-bar .event-btn { white-space: nowrap; flex-shrink: 0; }

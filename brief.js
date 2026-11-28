@@ -311,7 +311,9 @@
   var _sb = null;
   var _event = null;          // { id, nombre, fecha_evento, venue_id, data: { brief, minuto, montaje, layout } }
   var _isPlanner = false;
-  var _capitan = null;         // nombre del capitán con sesión abierta (null = planner o solo lectura)
+  var _capitan = null;
+  var _dj = false;              // sesión de DJ: solo ve el plano y el minuto a minuto (solo lectura)
+  var DJ_PASSWORD = 'DJ';         // nombre del capitán con sesión abierta (null = planner o solo lectura)
   var _saveTimer = null;
   var _cambiosPendientes = false;
   var _planoGuardado = null; // el plano tal como está guardado en la base de datos
@@ -351,11 +353,13 @@
   function applyMode() {
     document.body.classList.toggle('peg-view-only', !_isPlanner);
     document.body.classList.toggle('modo-capitan', !!_capitan);
+    document.body.classList.toggle('modo-dj', _dj);
+    if (_dj && window.PEGDJ) window.PEGDJ.activar();
     var btn = $('btn-planner-mode');
     if (btn) {
       btn.innerHTML = _isPlanner
         ? '<i class="fa-solid fa-unlock"></i> <b>' + (_capitan ? 'Capitán: ' + esc(_capitan) : 'Modo planner') + '</b>'
-        : '<i class="fa-solid fa-lock"></i> <b>' + (_capitan ? 'Capitán: ' + esc(_capitan) + ' · solo ver' : 'Solo lectura') + '</b>';
+        : '<i class="fa-solid fa-lock"></i> <b>' + (_dj ? 'DJ · solo ver' : _capitan ? 'Capitán: ' + esc(_capitan) + ' · solo ver' : 'Solo lectura') + '</b>';
       btn.title = _isPlanner ? 'Modo planner activo (clic para salir)' : 'Solo lectura: clic para entrar como planner';
       btn.classList.toggle('active', _isPlanner);
     }
@@ -364,6 +368,7 @@
   }
 
   function togglePlanner() {
+    if (_dj) { _dj = false; applyMode(); }
     if (_isPlanner || _capitan) {
       if (!confirm(_capitan ? '¿Cerrar la sesión de capitán? Quedará en modo de solo lectura.' : '¿Salir del modo planner? Quedará en modo de solo lectura.')) return;
       _isPlanner = false;
@@ -401,7 +406,7 @@
         '<img src="assets/logo-primavera.png" alt="Primavera Events Group">' +
         '<h1>Maquetador de planos</h1>' +
         '<p class="acceso-sub">Primavera Events Group</p>' +
-        '<label class="form-label" for="acceso-clave">Contraseña de planner o de capitán</label>' +
+        '<label class="form-label" for="acceso-clave">Contraseña de planner, capitán o DJ</label>' +
         '<div class="acceso-clave-wrap">' +
           '<input type="password" id="acceso-clave" class="form-input" autocomplete="current-password" required>' +
           '<button type="button" id="acceso-ver" title="Ver contraseña" aria-label="Ver contraseña"><i class="fa-solid fa-eye"></i></button>' +
@@ -426,6 +431,17 @@
       e.preventDefault();
       var pwd = input.value;
       var cap = CAPITANES.find(function (c) { return c.clave === pwd; });
+      if (pwd === DJ_PASSWORD) {
+        // DJ: solo lectura del plano y del minuto a minuto
+        _dj = true; _capitan = null; _isPlanner = false;
+        applyMode();
+        _accesoListo = true;
+        gate.remove();
+        document.body.classList.remove('acceso-bloqueado');
+        toast('Sesión de DJ: plano y minuto a minuto (solo lectura).', 'success');
+        listo();
+        return;
+      }
       if (pwd === PLANNER_PASSWORD) { _capitan = null; }
       else if (cap) { _capitan = cap.nombre; }
       else {
@@ -803,6 +819,7 @@
 
   // ── Bienvenida al abrir el enlace de un evento: ¿qué quieres ver? ──
   function openEventWelcome() {
+    if (_dj) { yaEligio(); return; } // el DJ va directo al plano
     var b = _event.data.brief || {};
     var fecha = b.fecha_evento ? new Date(b.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
     var modal = document.createElement('div');
@@ -837,6 +854,7 @@
 
   // ── Pantalla de inicio: ¿brief o maquetar? ────────────────
   function openStartChooser() {
+    if (_dj) { yaEligio(); openEventsModal(); return; } // el DJ solo abre eventos
     var modal = document.createElement('div');
     modal.className = 'venue-picker-overlay';
     modal.innerHTML =
@@ -925,12 +943,19 @@
 
     client().from(TABLE).select('id,nombre,fecha_evento,venue_id,updated_at,modo:data->layout->>mode,' +
       'tipo:data->brief->>tipo_evento,tipoOtro:data->brief->>tipo_evento_otro,festejados:data->brief->>festejados,' +
-      'cliente:data->brief->>cliente_nombre,invitados:data->brief->>invitados,venueRed:data->brief->>venue_red,venueExt:data->brief->>venue_externo,staff:data->staff')
+      'cliente:data->brief->>cliente_nombre,invitados:data->brief->>invitados,venueRed:data->brief->>venue_red,venueExt:data->brief->>venue_externo,staff:data->staff,amen:data->brief->amenidades,provs:data->proveedores')
       .order('updated_at', { ascending: false }).limit(200)
       .then(function (res) {
         var grid = $('events-grid');
         if (!grid) return;
         if (res.error) { toast('No se pudieron cargar los eventos.', 'error'); return; }
+        if (_dj) {
+          // El DJ ve los eventos que llevan DJ (en amenidades o en proveedores)
+          res.data = res.data.filter(function (ev) {
+            return ev.modo !== 'bodega' && /(^|[^a-z])dj([^a-z]|$)/i.test(JSON.stringify(ev.amen || []) + ' ' + JSON.stringify((ev.provs || []).map(function (p) { return p.servicio; })));
+          });
+          Array.prototype.forEach.call(grid.querySelectorAll('#btn-new-event, #btn-new-bodega'), function (b) { b.remove(); });
+        }
         if (_capitan) {
           res.data = res.data.filter(function (ev) { return asignadoA(ev.staff, _capitan); });
           Array.prototype.forEach.call(grid.querySelectorAll('#btn-new-event, #btn-new-bodega'), function (b) { b.remove(); });
@@ -1917,6 +1942,7 @@
     // Presupuesto, pagos y datos internos: solo el planner
     verSensible: function () { return _isPlanner && !_capitan; },
     capitan: function () { return _capitan; },
+    esDJ: function () { return _dj; },
     capitanes: function () { return CAPITANES.map(function (c) { return c.nombre; }); },
     client: client,
     scheduleSave: scheduleSave,

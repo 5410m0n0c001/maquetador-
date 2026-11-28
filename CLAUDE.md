@@ -64,3 +64,9 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 
 ## Hoja del DJ
 - Croquis del salón con la cabina marcada ("AQUÍ VA EL DJ") + minuto a minuto con sus momentos en rosa.
+
+## Perfiles
+- Planner: todo. Capitán: solo sus eventos asignados (Staff). DJ (dj.js): solo lectura del plano (2D/3D) y del
+  minuto a minuto, e imprime su hoja (croquis del salón con la cabina marcada + minuto); ve solo eventos con DJ.
+- Al tocar la cabina del DJ en el plano se muestra el DJ (proveedor con servicio "DJ" del evento).
+- Al tocar una mesa se muestran sus invitados, también en pantalla completa.

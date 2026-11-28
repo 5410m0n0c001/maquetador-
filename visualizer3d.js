@@ -880,7 +880,7 @@ window.Visualizer3D = (function () {
       var id = ids[grupos.indexOf(o)];
       var el = _currentElements.find(function (x) { return x.id === id; });
       if (!el || el.type === 'terrain') continue; // el terreno no cuenta
-      if (el.mesaConfig) return id;               // una mesa gana aunque haya un área debajo
+      if (el.mesaConfig || el.type === 'dj_booth') return id; // una mesa (o la cabina del DJ) gana aunque haya un área debajo
       if (!primero) primero = id;
     }
     return primero;

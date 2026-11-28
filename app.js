@@ -3708,12 +3708,41 @@
     pop.addEventListener('click', function (e) {
       if (e.target === pop || e.target.closest('.mesa-pop-close')) _cerrarInvitadosMesa();
     });
-    document.body.appendChild(pop);
+    // En pantalla completa, la ventanita va dentro de lo que está en pantalla completa (si no, no se ve)
+    _contenedorPop().appendChild(pop);
+  }
+  // Dónde se abre la ventanita: dentro de la pantalla completa (real o simulada) para que se vea encima del plano
+  function _contenedorPop() {
+    return document.fullscreenElement || document.webkitFullscreenElement || document.querySelector('.canvas-area.pantalla-completa') || document.body;
+  }
+  // Cabina del DJ: muestra quién es el DJ (proveedor DJ del evento o el que tenga la cabina)
+  function _mostrarDJ(el) {
+    _cerrarInvitadosMesa();
+    var ev = window.PEGEventos && window.PEGEventos.getEvent ? window.PEGEventos.getEvent() : null;
+    var prov = ((ev && ev.data.proveedores) || []).find(function (p) { return /(^|[^a-z])dj([^a-z]|$)/i.test((p.servicio || '') + ' ' + (p.servicioOtro || '')); }) || {};
+    var nombre = el.proveedor || prov.nombre || '';
+    var pop = document.createElement('div');
+    pop.id = 'mesa-invitados-pop';
+    pop.className = 'mesa-pop';
+    pop.innerHTML =
+      '<div class="mesa-pop-card" role="dialog" aria-label="DJ">' +
+      '  <div class="mesa-pop-head"><span class="mesa-pop-title">' + _escHtml(el.name || 'Cabina de DJ') + '</span>' +
+      '    <button type="button" class="mesa-pop-close" aria-label="Cerrar">✕</button></div>' +
+      '  <ul class="mesa-pop-list"><li><span>DJ</span><b>' + _escHtml(nombre || 'Por definir') + '</b></li>' +
+      (prov.telefono ? '<li><span>Teléfono</span><b>' + _escHtml(prov.telefono) + '</b></li>' : '') +
+      (prov.llegada ? '<li><span>Llega / monta</span><b>' + _escHtml(prov.llegada) + '</b></li>' : '') +
+      '</ul></div>';
+    pop.addEventListener('click', function (e) {
+      if (e.target === pop || e.target.closest('.mesa-pop-close')) _cerrarInvitadosMesa();
+    });
+    _contenedorPop().appendChild(pop);
   }
   window.addEventListener('plano:tocar', function (ev) {
     var d = ev.detail || {};
     var el = d.id ? AppState.elements.find(function (x) { return x.id === d.id; }) : _mesaEnPunto(d.x, d.y);
-    if (el && el.mesaConfig) _mostrarInvitadosMesa(el);
+    if (!el && !d.id) el = AppState.elements.find(function (x) { return x.type === 'dj_booth' && Math.abs(x.x - d.x) <= Math.max(x.w, x.h) / 2 && Math.abs(x.y - d.y) <= Math.max(x.w, x.h) / 2; });
+    if (el && el.type === 'dj_booth') _mostrarDJ(el);
+    else if (el && el.mesaConfig) _mostrarInvitadosMesa(el);
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') _cerrarInvitadosMesa(); });
 
