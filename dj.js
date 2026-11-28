@@ -42,13 +42,47 @@
     return p ? (p.nombre || '') : '';
   }
 
-  // ── Ventana del minuto a minuto (solo lectura) ──
+  // Croquis del salón (2D) como SVG, con la cabina del DJ marcada; ancho/alto de la caja donde se mostrará
+  function croquisSVG(anchoPx, altoPx) {
+    var st = window.App.getLayout();
+    if (window.Editor2D) window.Editor2D.update(st.elements);
+    var S = 15;
+    var v = (st.vistas || []).find(function (x) { return /sal/i.test(x.nombre); }) || { x: st.terrain.w / 2, y: st.terrain.h / 2, w: st.terrain.w, h: st.terrain.h };
+    var vbx = [(v.x - v.w / 2) * S, (v.y - v.h / 2) * S, v.w * S, v.h * S];
+    var k = Math.min(anchoPx / vbx[2], altoPx / vbx[3]);
+    var c = document.getElementById('svg-canvas').cloneNode(true);
+    ['.active-selection', '#svg-ruler-h', '#svg-ruler-v', '#svg-terrain-border'].forEach(function (sel) { var n = c.querySelector(sel); if (n) n.remove(); });
+    Array.prototype.forEach.call(c.querySelectorAll('.resize-handle'), function (h) { h.remove(); });
+    var bg = c.querySelector('#svg-background'); if (bg) { bg.setAttribute('width', st.terrain.w * S); bg.setAttribute('height', st.terrain.h * S); }
+    var zg = c.querySelector('#svg-zoom-group'); if (zg) zg.removeAttribute('transform');
+    Array.prototype.forEach.call(c.querySelectorAll('.elem-label'), function (l) {
+      var fs = 9 / k; l.setAttribute('font-size', fs); l.setAttribute('font-weight', '700');
+      var bd = l.nextElementSibling;
+      if (bd && bd.classList.contains('elem-badge')) { bd.setAttribute('font-size', 7 / k); bd.setAttribute('y', parseFloat(l.getAttribute('y')) + fs * 1.1); }
+    });
+    c.removeAttribute('id');
+    c.setAttribute('viewBox', vbx.join(' '));
+    c.setAttribute('width', '100%'); c.setAttribute('height', '100%');
+    c.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    var dj = st.elements.find(function (e) { return e.type === 'dj_booth'; });
+    if (dj) {
+      var g = document.createElementNS('http://www.w3.org/2000/svg', 'g'), cx = dj.x * S, cy = dj.y * S, r = 2.6 * S;
+      g.innerHTML = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(246,92,122,0.18)" stroke="#F65C7A" stroke-width="' + (3 / k) + '" stroke-dasharray="' + (8 / k) + ' ' + (5 / k) + '"/>' +
+        '<rect x="' + (cx - 60 / k) + '" y="' + (cy - r - 30 / k) + '" width="' + (120 / k) + '" height="' + (22 / k) + '" rx="' + (11 / k) + '" fill="#F65C7A"/>' +
+        '<text x="' + cx + '" y="' + (cy - r - 15 / k) + '" text-anchor="middle" font-family="Arial" font-weight="700" font-size="' + (12 / k) + '" fill="#fff">' + (_rol === 'dj' ? 'AQUÍ VA EL DJ' : 'DJ') + '</text>';
+      (c.querySelector('#svg-zoom-group') || c).appendChild(g);
+    }
+    return new XMLSerializer().serializeToString(c);
+  }
+
+  // ── Ventana del minuto a minuto con el croquis (solo lectura) ──
   function verMinuto() {
     var filas = minuto();
     var m = document.createElement('div');
     m.className = 'venue-picker-overlay';
     m.innerHTML = '<div class="venue-picker dj-minuto">' +
-      '<div class="venue-picker-head"><h2>Minuto a minuto</h2><button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<div class="venue-picker-head"><h2>Croquis y minuto a minuto</h2><button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<div class="dj-croquis">' + croquisSVG(860, 620) + '</div>' +
       '<p>' + esc((evento() || {}).nombre || '') + '. En rosa, los momentos en que el DJ pone o acompaña la música.</p>' +
       '<table class="dj-tabla"><thead><tr><th>Inicia</th><th>Termina</th><th>Actividad</th><th>Responsable</th></tr></thead><tbody>' +
       filas.map(function (f) {
@@ -132,19 +166,49 @@
     w.document.open(); w.document.write(html); w.document.close();
   }
 
-  // ── Barra del DJ (sustituye a los botones del planner) ──
-  function activar() {
-    if (document.getElementById('dj-barra')) return;
+  // ── Plano en 3D en pantalla completa ──
+  function verPlano3D() {
+    var b3 = document.getElementById('btn-view-3d');
+    if (b3) b3.click();
+    var pc = document.getElementById('btn-pantalla-completa');
+    var area = document.querySelector('.canvas-area');
+    var yaCompleta = document.fullscreenElement || (area && area.classList.contains('pantalla-completa'));
+    if (pc && !yaCompleta) setTimeout(function () { pc.click(); }, 50);
+  }
+
+  // ── Perfiles de solo ver (DJ y cliente): dos opciones, plano 3D en pantalla completa o minuto a minuto ──
+  var _rol = 'dj';
+  function elegir() {
+    var ev = evento();
+    if (!ev) return;
+    var m = document.createElement('div');
+    m.className = 'venue-picker-overlay';
+    m.innerHTML = '<div class="venue-picker" style="max-width:560px">' +
+      '<div class="venue-picker-head"><h2>' + esc(ev.nombre) + '</h2></div>' +
+      '<p>' + (_rol === 'dj' ? 'Perfil DJ' : 'Bienvenida') + ' · solo ver. ¿Qué quieres ver?</p>' +
+      '<div class="venue-grid">' +
+        '<button class="venue-card" data-ver="plano"><i class="fa-solid fa-cube"></i><strong>Plano en 3D</strong><span>En pantalla completa. Gíralo y acércate con los dedos o el mouse.</span></button>' +
+        '<button class="venue-card" data-ver="minuto"><i class="fa-solid fa-clock"></i><strong>Minuto a minuto</strong><span>Horarios del evento.</span></button>' +
+      '</div></div>';
+    document.body.appendChild(m);
+    Array.prototype.forEach.call(m.querySelectorAll('[data-ver]'), function (b) {
+      b.onclick = function () { m.remove(); if (b.getAttribute('data-ver') === 'plano') verPlano3D(); else verMinuto(); };
+    });
+  }
+  function activar(rol) {
+    _rol = rol || 'dj';
+    var vieja = document.getElementById('dj-barra');
+    if (vieja) vieja.remove();
     var barra = document.createElement('div');
     barra.id = 'dj-barra';
     barra.innerHTML =
-      '<span class="dj-titulo"><i class="fa-solid fa-headphones"></i> Perfil DJ · solo lectura</span>' +
-      '<button type="button" class="event-btn" id="dj-minuto"><i class="fa-solid fa-clock"></i> Minuto a minuto</button>' +
-      '<button type="button" class="event-btn active" id="dj-imprimir"><i class="fa-solid fa-print"></i> Imprimir croquis y minuto (PDF)</button>';
+      '<span class="dj-titulo"><i class="fa-solid ' + (_rol === 'dj' ? 'fa-headphones' : 'fa-eye') + '"></i> ' + (_rol === 'dj' ? 'Perfil DJ' : 'Solo ver') + '</span>' +
+      '<button type="button" class="event-btn" id="dj-plano"><i class="fa-solid fa-cube"></i> Plano en 3D</button>' +
+      '<button type="button" class="event-btn" id="dj-minuto"><i class="fa-solid fa-clock"></i> Minuto a minuto</button>';
     document.body.appendChild(barra);
+    barra.querySelector('#dj-plano').onclick = function () { if (evento()) verPlano3D(); };
     barra.querySelector('#dj-minuto').onclick = function () { if (evento()) verMinuto(); };
-    barra.querySelector('#dj-imprimir').onclick = function () { if (evento()) imprimir(); };
   }
 
-  window.PEGDJ = { activar: activar, verMinuto: verMinuto, imprimir: imprimir, nombreDJ: nombreDJ };
+  window.PEGDJ = { activar: activar, elegir: elegir, verPlano3D: verPlano3D, verMinuto: verMinuto, imprimir: imprimir, nombreDJ: nombreDJ };
 })();

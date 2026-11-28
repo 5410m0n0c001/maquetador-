@@ -313,6 +313,7 @@
   var _isPlanner = false;
   var _capitan = null;
   var _dj = false;              // sesión de DJ: solo ve el plano y el minuto a minuto (solo lectura)
+  var _cliente = null;          // sesión del cliente (p. ej. la mamá): id del único evento que puede ver, solo lectura
   var DJ_PASSWORD = 'DJ';         // nombre del capitán con sesión abierta (null = planner o solo lectura)
   var _saveTimer = null;
   var _cambiosPendientes = false;
@@ -354,7 +355,8 @@
     document.body.classList.toggle('peg-view-only', !_isPlanner);
     document.body.classList.toggle('modo-capitan', !!_capitan);
     document.body.classList.toggle('modo-dj', _dj);
-    if (_dj && window.PEGDJ) window.PEGDJ.activar();
+    document.body.classList.toggle('modo-vista', _dj || !!_cliente);
+    if ((_dj || _cliente) && window.PEGDJ) window.PEGDJ.activar(_dj ? 'dj' : 'cliente');
     var btn = $('btn-planner-mode');
     if (btn) {
       btn.innerHTML = _isPlanner
@@ -368,7 +370,7 @@
   }
 
   function togglePlanner() {
-    if (_dj) { _dj = false; applyMode(); }
+    if (_dj || _cliente) { _dj = false; _cliente = null; applyMode(); }
     if (_isPlanner || _capitan) {
       if (!confirm(_capitan ? '¿Cerrar la sesión de capitán? Quedará en modo de solo lectura.' : '¿Salir del modo planner? Quedará en modo de solo lectura.')) return;
       _isPlanner = false;
@@ -445,8 +447,21 @@
       if (pwd === PLANNER_PASSWORD) { _capitan = null; }
       else if (cap) { _capitan = cap.nombre; }
       else {
-        gate.querySelector('#acceso-error').textContent = 'Contraseña incorrecta.';
-        input.select();
+        // ¿Es la contraseña de un cliente (p. ej. la mamá)? Se busca el evento que la tenga en sus accesos
+        var sb = client();
+        if (!sb || !pwd) { gate.querySelector('#acceso-error').textContent = 'Contraseña incorrecta.'; input.select(); return; }
+        sb.from(TABLE).select('id,nombre').filter('data->accesos', 'cs', JSON.stringify([{ clave: pwd }])).limit(1).then(function (res) {
+          var ev = res && !res.error && res.data && res.data[0];
+          if (!ev) { gate.querySelector('#acceso-error').textContent = 'Contraseña incorrecta.'; input.select(); return; }
+          _cliente = ev.id; _dj = false; _capitan = null; _isPlanner = false;
+          history.replaceState(null, '', eventUrl(ev.id));
+          applyMode();
+          _accesoListo = true;
+          gate.remove();
+          document.body.classList.remove('acceso-bloqueado');
+          toast('Bienvenida: ' + ev.nombre + ' (solo ver).', 'success');
+          listo();
+        });
         return;
       }
       _isPlanner = true;
@@ -699,6 +714,11 @@
         toast('No se encontró el evento.', 'error');
         return;
       }
+      if (_cliente && row.id !== _cliente) {
+        setStatus('', '');
+        toast('Solo puedes ver tu evento.', 'warning');
+        return null;
+      }
       if (_capitan && !asignadoA((row.data || {}).staff, _capitan)) {
         setStatus('', '');
         toast('Este evento no te está asignado.', 'warning');
@@ -865,7 +885,8 @@
 
   // ── Bienvenida al abrir el enlace de un evento: ¿qué quieres ver? ──
   function openEventWelcome() {
-    if (_dj) { yaEligio(); return; } // el DJ va directo al plano
+    // DJ y cliente: solo eligen entre el plano en 3D (pantalla completa) y el minuto a minuto
+    if (_dj || _cliente) { yaEligio(); if (window.PEGDJ) window.PEGDJ.elegir(); return; }
     var b = _event.data.brief || {};
     var fecha = b.fecha_evento ? new Date(b.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
     var modal = document.createElement('div');
@@ -901,6 +922,7 @@
   // ── Pantalla de inicio: ¿brief o maquetar? ────────────────
   function openStartChooser() {
     if (_dj) { yaEligio(); openEventsModal(); return; } // el DJ solo abre eventos
+    if (_cliente) { yaEligio(); goToEvent(_cliente, openEventWelcome); return; } // el cliente solo ve su evento
     var modal = document.createElement('div');
     modal.className = 'venue-picker-overlay';
     modal.innerHTML =
@@ -1989,6 +2011,7 @@
     verSensible: function () { return _isPlanner && !_capitan; },
     capitan: function () { return _capitan; },
     esDJ: function () { return _dj; },
+    esCliente: function () { return !!_cliente; },
     pedirClavePlanner: pedirClavePlanner,
     capitanes: function () { return CAPITANES.map(function (c) { return c.nombre; }); },
     client: client,

@@ -69,7 +69,9 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Croquis del salón con la cabina marcada ("AQUÍ VA EL DJ") + minuto a minuto con sus momentos en rosa.
 
 ## Perfiles
-- Planner: todo. Capitán: solo sus eventos asignados (Staff). DJ (dj.js): solo lectura del plano (2D/3D) y del
-  minuto a minuto, e imprime su hoja (croquis del salón con la cabina marcada + minuto); ve solo eventos con DJ.
+- Planner: todo. Capitán: solo sus eventos asignados (Staff). Perfiles de SOLO VER (dj.js, sin ningún otro botón):
+  DJ (contraseña fija, ve los eventos con DJ) y cliente (p. ej. la mamá: contraseña guardada en el evento,
+  `data.accesos = [{rol, nombre, clave}]`, solo ve SU evento). Ambos solo tienen dos opciones: "Plano en 3D"
+  (pantalla completa) y "Minuto a minuto" (con el croquis del salón arriba).
 - Al tocar la cabina del DJ en el plano se muestra el DJ (proveedor con servicio "DJ" del evento).
 - Al tocar una mesa se muestran sus invitados, también en pantalla completa.

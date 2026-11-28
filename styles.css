@@ -2446,3 +2446,15 @@ body.modo-dj #dj-barra { top: 120px; bottom: auto; left: auto; right: 14px; tran
 .topbar-right { flex-shrink: 1; min-width: 0; flex-wrap: wrap; }
 .event-bar { flex-wrap: wrap; justify-content: flex-start; }
 .event-bar .event-btn { white-space: nowrap; flex-shrink: 0; }
+
+/* ── Perfiles de solo ver (DJ y cliente): únicamente "Plano en 3D" y "Minuto a minuto" ── */
+body.modo-vista .topbar, body.modo-vista #sidebar-left, body.modo-vista #sidebar-right, body.modo-vista #btn-toggle-menu,
+body.modo-vista .fab-group, body.modo-vista .pantalla-ctrl .pc-vista, body.modo-vista #vista-selector,
+body.modo-vista .canvas-hint, body.modo-vista .planner-only { display: none !important; }
+body.modo-vista #dj-barra { display: flex; position: fixed; z-index: 900; top: 14px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%);
+  gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; padding: 8px 12px; border-radius: 14px;
+  background: rgba(15, 12, 14, 0.92); border: 1px solid rgba(201, 169, 110, 0.35); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+body.modo-vista .canvas-area.pantalla-completa #dj-barra, body.modo-vista:fullscreen #dj-barra { display: none; }
+.dj-croquis { height: 62vh; max-height: 640px; border-radius: 10px; overflow: hidden; background: #fff; margin-bottom: 10px; }
+.venue-picker.dj-minuto { background: #151113 !important; backdrop-filter: none; max-width: 960px; width: calc(100vw - 32px); }
+body.modo-vista .venue-picker-overlay { background: rgba(10, 8, 9, 0.92); }
