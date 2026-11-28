@@ -70,7 +70,7 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 
 ## Perfiles
 - Planner: todo. Capitán: solo sus eventos asignados (Staff). Perfiles de SOLO VER (dj.js, sin ningún otro botón):
-  DJ (contraseña fija, ve los eventos con DJ) y cliente (p. ej. la mamá: contraseña guardada en el evento,
+  DJ (contraseña fija; solo eventos PRÓXIMOS con DJ registrado como proveedor; si hay uno, entra directo) y cliente (p. ej. la mamá: contraseña guardada en el evento,
   `data.accesos = [{rol, nombre, clave}]`, solo ve SU evento). Ambos solo tienen dos opciones: "Plano en 3D"
   (pantalla completa, con el selector de zonas Todo/Salón/Cóctel/Áreas verdes) y "Minuto a minuto" (con el croquis arriba).
 - Al tocar la cabina del DJ en el plano se muestra el DJ (proveedor con servicio "DJ" del evento).

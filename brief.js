@@ -1018,11 +1018,16 @@
         if (!grid) return;
         if (res.error) { toast('No se pudieron cargar los eventos.', 'error'); return; }
         if (_dj) {
-          // El DJ ve los eventos que llevan DJ (en amenidades o en proveedores)
+          // El DJ solo ve los eventos PRÓXIMOS (de hoy en adelante) que tienen un DJ registrado como proveedor
+          var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
           res.data = res.data.filter(function (ev) {
-            return ev.modo !== 'bodega' && /(^|[^a-z])dj([^a-z]|$)/i.test(JSON.stringify(ev.amen || []) + ' ' + JSON.stringify((ev.provs || []).map(function (p) { return p.servicio; })));
-          });
+            var conDJ = (ev.provs || []).some(function (p) { return /(^|[^a-z])dj([^a-z]|$)/i.test((p.servicio || '') + ' ' + (p.servicioOtro || '')); });
+            return ev.modo !== 'bodega' && conDJ && ev.fecha_evento && new Date(ev.fecha_evento + 'T23:59:59') >= hoy;
+          }).sort(function (a, b) { return String(a.fecha_evento).localeCompare(String(b.fecha_evento)); });
           Array.prototype.forEach.call(grid.querySelectorAll('#btn-new-event, #btn-new-bodega'), function (b) { b.remove(); });
+          // Un solo evento: directo a su vista de DJ, sin lista
+          if (res.data.length === 1) { closeModals(); yaEligio(); goToEvent(res.data[0].id, openEventWelcome); return; }
+          if (!res.data.length) grid.insertAdjacentHTML('beforeend', '<p class="vale-vacio">No hay eventos próximos con DJ registrado. El planner debe registrar al DJ en los proveedores del evento.</p>');
         }
         if (_capitan) {
           res.data = res.data.filter(function (ev) { return asignadoA(ev.staff, _capitan); });
