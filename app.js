@@ -586,6 +586,9 @@
     var totalGuests = 0;
     var totalCapacity = 0;
     var tableCounts = {};
+    // Leyenda "Toca una mesa para ver sus invitados": solo si hay mesas con invitados
+    var hint = document.getElementById('hint-mesas');
+    if (hint) hint.classList.toggle('hidden', !AppState.elements.some(function (e) { return e.mesaConfig && (e.mesaConfig.invitados || []).length; }));
 
     AppState.elements.forEach(function (elem) {
       var t = elem.type;

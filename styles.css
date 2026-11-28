@@ -2460,3 +2460,12 @@ body.modo-vista .canvas-area.pantalla-completa #dj-barra, body.modo-vista:fullsc
 body.modo-vista .venue-picker-overlay { background: rgba(10, 8, 9, 0.92); }
 /* Perfiles de solo ver: el selector de zonas (Todo, Salón, Cóctel, Áreas verdes) sí se ve, también en pantalla completa */
 body.modo-vista #vista-selector:not(.hidden) { display: flex !important; bottom: 24px; z-index: 40; }
+/* Leyenda junto al selector de zonas */
+.hint-mesas { position: absolute; left: 50%; transform: translateX(-50%); bottom: 152px; z-index: 36; pointer-events: none;
+  padding: 5px 12px; border-radius: 999px; font: 600 12px Poppins, sans-serif; color: #f5e6c8; white-space: nowrap;
+  background: rgba(31, 31, 31, 0.85); border: 1px solid rgba(201, 169, 110, 0.45); box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.hint-mesas i { color: #F65C7A; margin-right: 4px; }
+.hint-mesas.hidden { display: none; }
+body.modo-vista .hint-mesas { bottom: 72px; }
+.canvas-area.pantalla-completa .hint-mesas, .canvas-area:fullscreen .hint-mesas { bottom: 72px; }
+@media (max-width: 768px) { .hint-mesas { font-size: 11px; } }
