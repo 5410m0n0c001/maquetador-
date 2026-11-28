@@ -2822,6 +2822,12 @@
     html += '<section class="section"><h2>Minuto a minuto</h2><table class="grid minuto"><thead><tr><th style="width:10%">Inicia</th><th style="width:10%">Termina</th><th>Actividad</th><th style="width:27%">Responsable</th></tr></thead><tbody>';
     minuto.forEach(function (r, i) {
       var termina = r.fin || '', deducida = false;
+      // Si la actividad trae su rango escrito, p. ej. "(6:50 PM – 10:30 PM)", el término sale de ahí
+      var rango = /\((\d{1,2}:\d{2})\s*([AP]M)?\s*[–-]\s*(\d{1,2}:\d{2})\s*([AP]M)/i.exec(r.actividad || '');
+      if (!termina && rango) {
+        var hh = parseInt(rango[3], 10) % 12 + (/p/i.test(rango[4]) ? 12 : 0);
+        termina = (hh < 10 ? '0' : '') + hh + ':' + rango[3].split(':')[1];
+      }
       if (!termina && r.hora) {
         var sig = minuto.slice(i + 1).find(function (x) { return x.hora && minDelEvento(x.hora) > minDelEvento(r.hora); });
         if (sig) { termina = sig.hora; deducida = hayDeducidas = true; }

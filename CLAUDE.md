@@ -1,0 +1,50 @@
+# Maquetador universal PEG — criterios de negocio
+
+App web (vanilla JS, Three.js, SVG) de Primavera Events Group. `main` se publica en
+https://5410m0n0c001.github.io/maquetador-/ · datos en Supabase `fwqvkyeydykzleqowgqb`, tabla `maquetador_eventos`
+(historial automático en `maquetador_eventos_versiones`). Al cambiar un .js, sube su `?v=` en `index.html`.
+
+Estos criterios los definió la dirección de PEG. Valen para eventos pasados y futuros: si cambias lógica,
+respétalos; si un evento no los cumple, avisa antes de corregirlo.
+
+## Eventos y guardado
+- Ningún evento se crea sin fecha (`pedirFechaEvento` en brief.js).
+- Antes de guardar un cambio grande del plano (otro salón/plantilla, otro terreno, −5 elementos o −5 invitados)
+  se pide confirmación; al cancelar, el plano regresa a como estaba guardado (`perdidasDelPlano`).
+- Al ir al inicio / crear otro evento / maquetar un salón, el evento abierto se suelta (`soltarEvento`):
+  nunca guardar una plantilla encima de otro evento.
+- Si un plano exportado (JSON) viene de una pestaña vieja, fusiona: posiciones del archivo + invitados,
+  numeración y sillas de la base. Nunca sobrescribas invitados con listas vacías.
+
+## Mesas, lugares e invitados
+- Lugares del banquete (mesas + mesa principal) = invitados. La mesa principal cuenta dentro de los invitados.
+- Con lista de invitados, cada mesa lleva tantas sillas como personas.
+- Numeración: la mesa principal es "Mesa principal" (mesaNum 0); las de invitados van de 1 en adelante,
+  como las numere el cliente en su croquis.
+- Un invitado puede estar en dos mesas si es la misma familia repartida (confirmarlo, no borrarlo).
+- Mesas de 8 a 12 personas. Cóctel (salas lounge, periqueras) no cuenta para el banquete.
+
+## Requisición (calculo-requisicion.js)
+- Cada mesa lleva arreglo floral BAJO o ALTO, nunca ambos. Por lo regular la mayoría bajo y unas cuantas alto;
+  el alto lleva su estructura ("Base metálica alta (centro de mesa)").
+- Barras: la fija del venue se nombra "Barra fija…" y no se cuenta; cada montable lleva barra montable,
+  mesa tablón y bambalina. Kits de barra = máx(2, montables).
+- Vitroleros: uno por sabor de agua. Si falta un dato, se deja como pendiente ("Falta definir"), no se inventa.
+- Recalcular no pisa lo que el planner eligió a mano (origen manual/kit); quita los "elegir uno" ya resueltos.
+
+## Ficha técnica (PDF)
+- Orden: datos → mesas y lugares → minuto a minuto → staff → proveedores → montaje → croquis →
+  INVITADOS POR MESA (mesa principal primero) → requisición.
+- Hora de término del minuto: la escrita en la actividad "(H:MM PM – H:MM PM)"; si no hay, se deduce (en gris).
+- Planos con zonas (Rancho Los Potrillos): vista Salón solo el salón (sin puente ni cóctel), vista Cóctel aparte;
+  Áreas verdes solo si hay ceremonia en el jardín.
+
+## Rancho Los Potrillos (rancho.js)
+- Salón abierto con arcos; palapa de concreto ABIERTA con arcos en los 4 lados, con 2 mesas metálicas
+  rectangulares de 10 sillas metálicas y una barrita en la esquina del lado del puente (mobiliario del venue,
+  no cuenta en lugares ni requisición).
+- Cascada = canal de agua horizontal entre salón y palapa, bajo el puente; puente recto con medio arco.
+- Alberca azul.
+
+## Hoja del DJ
+- Croquis del salón con la cabina marcada ("AQUÍ VA EL DJ") + minuto a minuto con sus momentos en rosa.
