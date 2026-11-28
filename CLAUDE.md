@@ -29,6 +29,9 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
   el alto lleva su estructura ("Base metálica alta (centro de mesa)").
 - Barras: la fija del venue se nombra "Barra fija…" y no se cuenta; cada montable lleva barra montable,
   mesa tablón y bambalina. Kits de barra = máx(2, montables).
+- Menú: si no hay menú registrado, "Falta definir" pide entrada, sopa o crema, plato fuerte y postre (de ahí salen loza y cubiertos).
+- Si hay mesa principal y el plano no tiene back, "Falta definir" pregunta si habrá back detrás de ella.
+- Servilletas de colores que no están en inventario van como "Servilleta de tela" con la cantidad de cada color y doblez en la nota.
 - Vitroleros: uno por sabor de agua. Si falta un dato, se deja como pendiente ("Falta definir"), no se inventa.
 - Recalcular no pisa lo que el planner eligió a mano (origen manual/kit); quita los "elegir uno" ya resueltos.
 

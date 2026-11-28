@@ -96,7 +96,13 @@
     var hayEnsalada = hay('Ensalada') || hay('Entrada');
     var hayPostre = hay('Postre');
     if (!hayPostre && /postre/.test(norm((b.observaciones || '') + ' ' + (b.menu_notas || '')))) pendientes.push('Postre por confirmar: si se sirve, agregar plato de postre y cucharita por invitado.');
-    if (!hayFuerte) pendientes.push('No hay plato fuerte en el menú: confirmar cuchillo y tenedor.');
+    var sinMenu = !Object.keys(tm).some(function (k) { return hay(k); }) && !b.proteina && !String(b.menu_notas || '').trim();
+    if (sinMenu) pendientes.push('No hay menú registrado: falta definir entrada, sopa o crema, plato fuerte y postre (de ahí salen la loza y los cubiertos por invitado).');
+    else if (!hayFuerte) pendientes.push('No hay plato fuerte en el menú: confirmar cuchillo y tenedor.');
+    // Back detrás de la mesa principal: si el plano no tiene uno, se pregunta
+    var hayPrincipal = elements.some(function (e) { return /^table_honor/.test(e.type); });
+    var hayBack = elements.some(function (e) { return /backdrop|arch|back_/.test(e.type) || /\bback\b/i.test(e.name || ''); });
+    if (hayPrincipal && !hayBack) pendientes.push('Falta definir si habrá back detrás de la mesa principal (si sí, agrégalo al plano).');
 
     // Todo lo escrito en el brief (para detectar lo que se va a ocupar aunque no esté en el plano)
     var textoBrief = norm(JSON.stringify(b));

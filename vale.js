@@ -241,7 +241,8 @@
       var art = [i.nombre].concat(i.alt || []).map(buscarArticulo).find(Boolean) || (opciones[0] ? buscarArticulo(opciones[0].nombre) : null);
       var nota = i.nota || '';
       // Servilleta de un color que no está en el inventario: va como servilleta de tela con el color en la nota
-      if (!art && /^Servilleta /.test(i.nombre)) { art = buscarArticulo('Servilleta de tela'); nota = i.nombre.replace(/^Servilleta /, 'color ') + (nota ? ' · ' + nota : ''); }
+      // (con la cantidad de cada color, para que bodega sepa cuántas de cada una)
+      if (!art && /^Servilleta /.test(i.nombre)) { art = buscarArticulo('Servilleta de tela'); nota = i.cant + ' ' + i.nombre.replace(/^Servilleta /, '') + (nota ? ' (' + nota + ')' : ''); }
       var it = { id: art ? art.id : null, nombre: art ? art.nombre : i.nombre, categoria: art ? art.categoria : i.categoria, cant: i.cant, nota: nota, origen: 'calculo' };
       var ya = it.id && porId[it.id];
       if (ya) { ya.cant = (parseInt(ya.cant, 10) || 0) + (parseInt(it.cant, 10) || 0); ya.nota = [ya.nota, it.nota].filter(Boolean).join(' · '); return lista; }
