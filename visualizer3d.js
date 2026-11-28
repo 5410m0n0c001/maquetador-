@@ -1612,15 +1612,38 @@ window.Visualizer3D = (function () {
       // Pool basin
       var border = new THREE.Mesh(
         new THREE.BoxGeometry(w, 0.2, h),
-        new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 })
+        new THREE.MeshStandardMaterial({ color: 0xe7e2d8, roughness: 0.6 }) // borde de concreto claro
       );
       border.position.y = 0.1;
       group.add(border);
 
-      // Water surface (sin metalness: sin reflejos en la escena, lo metálico se veía gris)
+      // Water surface (sin metalness: sin reflejos en la escena, lo metálico se veía gris).
+      // Textura dibujada: azul profundo al centro, más claro en la orilla y destellos de luz como ondas.
+      var cv = document.createElement('canvas');
+      cv.width = 512; cv.height = 512;
+      var cx2 = cv.getContext('2d');
+      var grad = cx2.createRadialGradient(256, 256, 40, 256, 256, 360);
+      grad.addColorStop(0, '#0b6fb8');
+      grad.addColorStop(0.65, '#1a9ad6');
+      grad.addColorStop(1, '#5fd0f0');
+      cx2.fillStyle = grad;
+      cx2.fillRect(0, 0, 512, 512);
+      cx2.strokeStyle = 'rgba(255,255,255,0.28)';
+      cx2.lineWidth = 3;
+      for (var li = 0; li < 26; li++) {
+        var yy = 10 + li * 19;
+        cx2.beginPath();
+        for (var xx = 0; xx <= 512; xx += 16) {
+          var yv = yy + Math.sin(xx / 38 + li * 1.7) * 6 + Math.sin(xx / 13 + li) * 2;
+          if (xx === 0) cx2.moveTo(xx, yv); else cx2.lineTo(xx, yv);
+        }
+        cx2.stroke();
+      }
+      var texAgua = new THREE.CanvasTexture(cv);
       var water = new THREE.Mesh(
         new THREE.BoxGeometry(w - 0.4, 0.02, h - 0.4),
-        new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x075985, emissiveIntensity: 0.35, roughness: 0.15, metalness: 0 })
+        // emissiveMap: la alberca "iluminada" se distingue también de noche y en gala
+        new THREE.MeshStandardMaterial({ map: texAgua, color: 0xffffff, emissiveMap: texAgua, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.1, metalness: 0 })
       );
       water.position.y = 0.21; // arriba del borde (que llega a 0.2); antes quedaba tapada y se veía gris
       group.add(water);
