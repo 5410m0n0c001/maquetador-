@@ -1005,6 +1005,7 @@
       renderNapkinSlots(elem);
       setVal('mesa-cubiertos', elem.mesaConfig.cubiertos || 'plateado');
       setVal('mesa-plato-base', elem.mesaConfig.platoBase || 'ninguno');
+      setVal('mesa-plato-base2', elem.mesaConfig.platoBase2 || 'ninguno');
       setVal('mesa-plato-trinche', elem.mesaConfig.platoTrinche || 'redondo_blanco');
       setVal('mesa-cristal', elem.mesaConfig.cristal || 'standard');
       setVal('mesa-copas-color', elem.mesaConfig.copasColor || 'transparente');
@@ -1234,6 +1235,7 @@
     mesaInp('mesa-camino-acomodo', 'caminoAcomodo');
     mesaInp('mesa-cubiertos', 'cubiertos');
     mesaInp('mesa-plato-base', 'platoBase');
+    mesaInp('mesa-plato-base2', 'platoBase2');
     mesaInp('mesa-plato-trinche', 'platoTrinche');
     mesaInp('mesa-cristal', 'cristal');
     mesaInp('mesa-copas-color', 'copasColor');
@@ -2919,7 +2921,8 @@
         var color = c['servilletaColor_' + f] || (f === 'corazon' ? c.servilletaColorCorazon : f === 'corbata' ? c.servilletaColorCorbata : c.servilletaColorOtros) || 'blanco';
         return (foldLabels[f] || cap(f)) + ' (' + cap(color) + ')';
       }).join(', ')]);
-      if (c.platoBase && c.platoBase !== 'ninguno') items.push(['Plato base', plateBaseLabels[c.platoBase] || cap(c.platoBase)]);
+      if (c.platoBase && c.platoBase !== 'ninguno') items.push(['Plato base', (plateBaseLabels[c.platoBase] || cap(c.platoBase)) +
+        (c.platoBase2 && c.platoBase2 !== 'ninguno' ? ' y ' + (plateBaseLabels[c.platoBase2] || cap(c.platoBase2)) + ' (alternados)' : '')]);
       if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push(['Plato trinche', cap(c.platoTrinche)]);
       if (c.cubiertos) items.push(['Cubiertos', cap(c.cubiertos)]);
       if (inv.silla || c.tipoSilla) items.push(['Silla', (inv.silla || sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? ' con funda completa ' + c.sillaFunda : '')]);

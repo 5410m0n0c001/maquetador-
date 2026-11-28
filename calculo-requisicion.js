@@ -39,7 +39,8 @@
   }
 
   var PLATO_BASE = { vintage: 'Plato base vintage', romano: 'Plato base romano', plateado: 'Plato base plateado', gotico: 'Plato base gótico',
-    chocolate: 'Plato base chocolate', concha_dorado: 'Plato base concha dorado', espiral: 'Plato base tipo espiral', cristal_aperlado: 'Plato base cristal aperlado' };
+    chocolate: 'Plato base chocolate', concha_dorado: 'Plato base concha dorado', espiral: 'Plato base tipo espiral', cristal_aperlado: 'Plato base cristal aperlado',
+    hacienda: 'Plato base hacienda' };
   var TRINCHE = { redondo_blanco: 'Plato trinche 27cm', entremes_blanco: 'Plato entremés blanco', negro: 'Plato sopero negro' };
   // Color de cubiertos como se llama en el inventario: [masculino, femenino] (cuchillo plateado, cucharita plateada)
   var CUBIERTO = { plateado: ['plateado', 'plateada'], dorado: ['dorado', 'dorada'], gold_rose: ['gold rose', 'gold rose'], negro: ['negro', 'negra'] };
@@ -132,7 +133,16 @@
       } else if (inv.silla) sumar(inv.silla, n, 'Sillas y bancos');
       else if (c.tipoSilla) sumar(SILLA[c.tipoSilla] || ('Silla ' + cap(c.tipoSilla)), n, 'Sillas y bancos');
       if (c.sillaFunda && c.sillaFunda !== 'ninguna') sumar('Funda completa para silla Tiffany color ' + norm(c.sillaFunda), n, 'Sillas y bancos');
-      if (c.platoBase && c.platoBase !== 'ninguno') sumar(PLATO_BASE[c.platoBase] || ('Plato base ' + cap(c.platoBase)), n, 'Loza');
+      // Plato base: uno, o dos alternados (la mitad de los lugares cada uno; el mismo reparto que las copas)
+      if (c.platoBase && c.platoBase !== 'ninguno') {
+        var pb1 = PLATO_BASE[c.platoBase] || ('Plato base ' + cap(c.platoBase));
+        if (c.platoBase2 && c.platoBase2 !== 'ninguno' && c.platoBase2 !== c.platoBase) {
+          var repPb = parseInt(c.copasReparto, 10);
+          var nPb1 = isNaN(repPb) ? Math.ceil(n / 2) : Math.max(0, Math.min(n, repPb));
+          if (nPb1) sumar(pb1, nPb1, 'Loza', 'alternado');
+          if (n - nPb1) sumar(PLATO_BASE[c.platoBase2] || ('Plato base ' + cap(c.platoBase2)), n - nPb1, 'Loza', 'alternado');
+        } else sumar(pb1, n, 'Loza');
+      }
       if (hayFuerte && c.platoTrinche && c.platoTrinche !== 'ninguno') sumar(TRINCHE[c.platoTrinche] || ('Plato trinche ' + cap(c.platoTrinche)), n, 'Loza');
       if (haySopa) sumar('Plato sopero redondo blanco', n, 'Loza', 'Sopa / crema en el menú');
       if (hayPostre) sumar('Plato postre', n, 'Loza');

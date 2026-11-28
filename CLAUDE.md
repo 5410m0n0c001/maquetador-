@@ -46,6 +46,7 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Menú: si no hay menú registrado, "Falta definir" pide entrada, sopa o crema, plato fuerte y postre (de ahí salen loza y cubiertos).
 - Si hay mesa principal y el plano no tiene back, "Falta definir" pregunta si habrá back detrás de ella.
 - Servilletas de colores que no están en inventario van como "Servilleta de tela" con la cantidad de cada color y doblez en la nota.
+- Plato base: uno, o dos alternados (`platoBase` y `platoBase2`), mitad y mitad con el mismo reparto que las copas.
 - Vitroleros: uno por sabor de agua. Si falta un dato, se deja como pendiente ("Falta definir"), no se inventa.
 - Recalcular no pisa lo que el planner eligió a mano (origen manual/kit); quita los "elegir uno" ya resueltos.
 
