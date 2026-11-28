@@ -3204,7 +3204,18 @@
       Array.prototype.forEach.call(modal.querySelectorAll('[data-reset]'), function (b) {
         b.onclick = function () {
           close();
-          applyReset(b.getAttribute('data-reset') === 'total');
+          var total = b.getAttribute('data-reset') === 'total';
+          // Un plano no se puede vaciar sin la contraseña de planner (si hay algo que perder)
+          var quedarian = total ? 0 : AppState.elements.filter(function (e) { return e.bg2d || VENUE_CATEGORIES.indexOf(e.category) > -1; }).length;
+          var seQuitan = AppState.elements.filter(function (e) { return !e.bg2d; }).length - quedarian;
+          var PE = window.PEGEventos;
+          if (seQuitan >= 5 && PE && PE.pedirClavePlanner) {
+            PE.pedirClavePlanner(total ? 'Reinicio total del plano' : 'Reinicio parcial del plano',
+              '<p>Se quitarían <b>' + seQuitan + ' elementos</b> del plano' + (total ? ' y quedaría vacío' : '') + '. Solo el planner puede autorizarlo.</p>',
+              function (ok) { if (ok) applyReset(total); });
+            return;
+          }
+          applyReset(total);
         };
       });
     };

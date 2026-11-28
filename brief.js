@@ -544,24 +544,63 @@
     return r;
   }
 
-  function saveNow() {
+  // Ventana que pide la contraseña de planner para autorizar algo delicado (borrar mucho del plano, reiniciarlo…)
+  var _pidiendoClave = false;
+  function pedirClavePlanner(titulo, mensajeHtml, listo) {
+    var m = document.createElement('div');
+    m.className = 'venue-picker-overlay';
+    m.style.zIndex = 60000;
+    m.innerHTML = '<form class="venue-picker clave-planner" style="max-width:460px">' +
+      '<div class="venue-picker-head"><h2><i class="fa-solid fa-shield-halved"></i> ' + esc(titulo) + '</h2></div>' + mensajeHtml +
+      '<label class="form-label" for="clave-planner-input">Contraseña de planner</label>' +
+      '<input type="password" id="clave-planner-input" class="form-input" style="width:100%;margin:6px 0 4px" autocomplete="off">' +
+      '<p class="acceso-error" id="clave-planner-error" role="alert"></p>' +
+      '<div class="vale-acciones"><button type="submit" class="event-btn active">Autorizar</button>' +
+      '<button type="button" class="event-btn" id="clave-planner-cancelar">Cancelar</button></div></form>';
+    document.body.appendChild(m);
+    var inp = m.querySelector('#clave-planner-input');
+    setTimeout(function () { inp.focus(); }, 50);
+    m.querySelector('#clave-planner-cancelar').onclick = function () { m.remove(); listo(false); };
+    m.querySelector('form').onsubmit = function (e) {
+      e.preventDefault();
+      if (inp.value !== PLANNER_PASSWORD) { m.querySelector('#clave-planner-error').textContent = 'Contraseña incorrecta. Solo el planner puede autorizarlo.'; inp.select(); return; }
+      m.remove();
+      _autorizadoHasta = Date.now() + 60000; // la autorización vale un minuto (no se vuelve a pedir al guardar lo autorizado)
+      listo(true);
+    };
+  }
+  var _autorizadoHasta = 0;
+  function regresarPlanoGuardado(aviso) {
+    clearTimeout(_saveTimer);
+    _cambiosPendientes = false;
+    _event.data.layout = JSON.parse(JSON.stringify(_planoGuardado));
+    if (window.App && window.App.loadLayout) window.App.loadLayout(_event.data.layout);
+    _lastLayoutJson = window.App && window.App.getLayout ? JSON.stringify(window.App.getLayout()) : '';
+    setStatus('Guardado', 'ok');
+    toast(aviso || 'No se guardó: el plano regresó a como estaba guardado.', 'warning');
+  }
+
+  function saveNow(autorizado) {
     if (!_event || !_isPlanner || !client()) return;
+    if (autorizado !== true) autorizado = Date.now() < _autorizadoHasta; // setTimeout no manda argumentos; solo "true" o una autorización reciente
     var ev = _event;
-    // Validación: un cambio grande en el plano se confirma antes de guardarlo; si no, el plano regresa a como estaba guardado
+    // Un plano no se pierde: borrar mucho, vaciarlo o cambiarlo por otra plantilla requiere la contraseña de planner.
+    // Sin ella no se guarda y el plano regresa a como estaba guardado.
     var perdidas = perdidasDelPlano(_planoGuardado, _event.data.layout);
-    if (perdidas.length) {
-      var ok = confirm('ATENCIÓN: vas a guardar un cambio grande en el plano de "' + _event.nombre + '":\n\n• ' + perdidas.join('\n• ') +
-        '\n\n¿Seguro que quieres guardar estos cambios?\n\nAceptar = guardar.\nCancelar = no guardar y regresar el plano a como estaba guardado.');
-      if (!ok) {
-        clearTimeout(_saveTimer);
-        _cambiosPendientes = false;
-        _event.data.layout = JSON.parse(JSON.stringify(_planoGuardado));
-        if (window.App && window.App.loadLayout) window.App.loadLayout(_event.data.layout);
-        _lastLayoutJson = window.App && window.App.getLayout ? JSON.stringify(window.App.getLayout()) : '';
-        setStatus('Guardado', 'ok');
-        toast('No se guardó: el plano regresó a como estaba guardado.', 'warning');
-        return Promise.resolve('cancelado');
-      }
+    if (perdidas.length && !autorizado) {
+      if (_pidiendoClave) return Promise.resolve('esperando');
+      _pidiendoClave = true;
+      clearTimeout(_saveTimer);
+      return new Promise(function (resolver) {
+        pedirClavePlanner('Cambio grande en el plano',
+          '<p>Vas a guardar en <b>' + esc(_event.nombre) + '</b>:</p><ul>' + perdidas.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>' +
+          '<p>Para que un plano no se pierda, esto solo lo autoriza el planner. Si cancelas, el plano regresa a como estaba guardado.</p>',
+          function (ok) {
+            _pidiendoClave = false;
+            if (ok) resolver(saveNow(true));
+            else { regresarPlanoGuardado(); resolver('cancelado'); }
+          });
+      });
     }
     _cambiosPendientes = false;
     syncMinuto(_event.data);
@@ -572,14 +611,21 @@
     saveLocalCopy();
     updateEventBar();
     // Solo se guarda si nadie más lo modificó desde que se abrió (si no, se sobrescribirían sus cambios)
+    // Con autorización del planner se manda una marca que la base de datos exige para aceptar un borrado grande
+    var datos = autorizado && perdidas.length ? Object.assign({}, _event.data, { _autorizaBorrado: new Date().toISOString() }) : _event.data;
     var q = client().from(TABLE).update({
       nombre: _event.nombre,
       fecha_evento: _event.fecha_evento,
       venue_id: _event.venue_id,
-      data: _event.data
+      data: datos
     }).eq('id', _event.id);
     if (_event.updated_at) q = q.eq('updated_at', _event.updated_at);
     return q.select('updated_at').then(function (res) {
+      if (res.error && /borrado masivo/i.test(res.error.message || '')) {
+        // La base de datos rechazó un borrado grande sin autorización: el plano guardado sigue intacto
+        regresarPlanoGuardado('La base de datos no permitió borrar gran parte del plano sin la contraseña de planner. El plano regresó a como estaba guardado.');
+        return 'bloqueado';
+      }
       if (res.error) {
         setStatus('Sin conexión · guardado en este equipo', 'error');
         console.warn('[Eventos] Error al guardar:', res.error);
@@ -1943,6 +1989,7 @@
     verSensible: function () { return _isPlanner && !_capitan; },
     capitan: function () { return _capitan; },
     esDJ: function () { return _dj; },
+    pedirClavePlanner: pedirClavePlanner,
     capitanes: function () { return CAPITANES.map(function (c) { return c.nombre; }); },
     client: client,
     scheduleSave: scheduleSave,

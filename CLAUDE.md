@@ -9,8 +9,11 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 
 ## Eventos y guardado
 - Ningún evento se crea sin fecha (`pedirFechaEvento` en brief.js).
-- Antes de guardar un cambio grande del plano (otro salón/plantilla, otro terreno, −5 elementos o −5 invitados)
-  se pide confirmación; al cancelar, el plano regresa a como estaba guardado (`perdidasDelPlano`).
+- Un plano no se puede perder: quitar 5+ elementos (o 5+ invitados), cambiarlo por otra plantilla/terreno o vaciarlo
+  con "Reiniciar" pide la CONTRASEÑA DE PLANNER (`pedirClavePlanner`); sin ella no se guarda y el plano regresa a como
+  estaba guardado. La base de datos (trigger `maquetador_guardar_version`) también rechaza un borrado masivo sin la marca
+  `_autorizaBorrado` (que la app manda solo tras la contraseña y que nunca se guarda). Los eventos no se pueden borrar
+  desde la app (sin política DELETE) y todo cambio grande deja copia en `maquetador_eventos_versiones`.
 - Al ir al inicio / crear otro evento / maquetar un salón, el evento abierto se suelta (`soltarEvento`):
   nunca guardar una plantilla encima de otro evento.
 - Si un plano exportado (JSON) viene de una pestaña vieja, fusiona: posiciones del archivo + invitados,
