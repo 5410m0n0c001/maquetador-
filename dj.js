@@ -75,14 +75,30 @@
     return new XMLSerializer().serializeToString(c);
   }
 
+  // Relación de invitados por mesa (para el perfil del cliente: por si no logra verlos tocando las mesas en 3D)
+  function invitadosHtml() {
+    var st = window.App.getLayout();
+    var mesas = st.elements.filter(function (e) { return e.mesaConfig && (e.mesaConfig.invitados || []).length; });
+    if (!mesas.length) return '';
+    var orden = function (e) { return /^table_honor/.test(e.type) ? -1 : (parseInt(e.mesaConfig.mesaNum, 10) || 999); };
+    mesas.sort(function (a, b) { return orden(a) - orden(b); });
+    return '<h3 class="dj-subtitulo">Invitados por mesa</h3><div class="dj-invitados">' + mesas.map(function (e) {
+      var inv = e.mesaConfig.invitados, total = inv.reduce(function (s, g) { return s + (parseInt(g.pases, 10) || 1); }, 0);
+      var nombre = /^table_honor/.test(e.type) ? 'Mesa principal' : 'Mesa ' + e.mesaConfig.mesaNum;
+      return '<div class="dj-mesa"><b>' + esc(nombre) + '<span>' + total + ' personas</span></b>' +
+        inv.map(function (g) { return '<div>' + esc(g.nombre) + ' <em>· ' + esc(g.pases || 1) + '</em></div>'; }).join('') + '</div>';
+    }).join('') + '</div><h3 class="dj-subtitulo">Minuto a minuto</h3>';
+  }
+
   // ── Ventana del minuto a minuto con el croquis (solo lectura) ──
   function verMinuto() {
     var filas = minuto();
     var m = document.createElement('div');
     m.className = 'venue-picker-overlay';
     m.innerHTML = '<div class="venue-picker dj-minuto">' +
-      '<div class="venue-picker-head"><h2>Croquis y minuto a minuto</h2><button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<div class="venue-picker-head"><h2>' + (_rol === 'cliente' ? 'Croquis, invitados y minuto a minuto' : 'Croquis y minuto a minuto') + '</h2><button class="venue-picker-close" title="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>' +
       '<div class="dj-croquis">' + croquisSVG(860, 620) + '</div>' +
+      (_rol === 'cliente' ? invitadosHtml() : '') +
       '<p>' + esc((evento() || {}).nombre || '') + '. En rosa, los momentos en que el DJ pone o acompaña la música.</p>' +
       '<table class="dj-tabla"><thead><tr><th>Inicia</th><th>Termina</th><th>Actividad</th><th>Responsable</th></tr></thead><tbody>' +
       filas.map(function (f) {

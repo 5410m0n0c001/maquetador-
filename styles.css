@@ -2491,3 +2491,10 @@ body.modo-vista .hint-mesas { bottom: 72px; }
   body.modo-vista #dj-barra .event-btn { padding: 6px 10px; font-size: 12px; }
   .hint-mesas { white-space: normal; text-align: center; max-width: calc(100vw - 32px); }
 }
+/* Invitados por mesa en la vista del cliente */
+.dj-subtitulo { margin: 14px 0 8px; font-size: 16px; color: #C9A96E; font-family: 'Playfair Display', Georgia, serif; }
+.dj-invitados { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.dj-mesa { padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(201,169,110,0.25); font-size: 13px; }
+.dj-mesa b { display: flex; justify-content: space-between; color: #F65C7A; margin-bottom: 4px; }
+.dj-mesa b span { color: #94a3b8; font-weight: 500; font-size: 12px; }
+.dj-mesa em { color: #94a3b8; font-style: normal; }

@@ -406,7 +406,7 @@
     gate.innerHTML =
       '<form class="acceso-caja" autocomplete="on">' +
         '<img src="assets/logo-primavera.png" alt="Primavera Events Group">' +
-        '<h1>Maquetador de planos</h1>' +
+        '<h1>Virtual Planner</h1>' +
         '<p class="acceso-sub">Primavera Events Group</p>' +
         '<label class="form-label" for="acceso-clave">Contraseña de planner, capitán o DJ</label>' +
         '<div class="acceso-clave-wrap">' +
