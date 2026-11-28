@@ -2498,3 +2498,11 @@ body.modo-vista .hint-mesas { bottom: 72px; }
 .dj-mesa b { display: flex; justify-content: space-between; color: #F65C7A; margin-bottom: 4px; }
 .dj-mesa b span { color: #94a3b8; font-weight: 500; font-size: 12px; }
 .dj-mesa em { color: #94a3b8; font-style: normal; }
+/* Requisición: repartir piezas entre opciones */
+.vale-reparto { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 6px; padding: 6px 8px; border-radius: 8px; background: rgba(201,169,110,0.08); border: 1px dashed rgba(201,169,110,0.35); font-size: 12px; }
+.vale-reparto-tit { color: #C9A96E; font-weight: 600; }
+.vale-reparto-op { display: inline-flex; align-items: center; gap: 4px; }
+.vale-reparto-op .vale-rep { width: 64px; padding: 4px 6px; }
+.vale-rep-suma { color: #94a3b8; }
+.vale-rep-suma.cuadra { color: #86efac; } .vale-rep-suma.no-cuadra { color: #fda4af; }
+.vale-reparto .vale-rep-ok { padding: 4px 10px; font-size: 12px; }

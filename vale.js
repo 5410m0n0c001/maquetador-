@@ -317,8 +317,15 @@
           return editar
             ? '<tr data-i="' + idx + '"><td><input type="number" min="0" class="form-input vale-cant" placeholder="¿?" value="' + esc(i.cant) + '"></td>' +
               '<td>' + (i.opciones && i.opciones.length
-                ? '<select class="form-input vale-elegir" title="Elige cuál se va a ocupar"><option value="">' + esc(i.nombre) + ' — elegir uno…</option>' +
-                  i.opciones.map(function (o, k) { return '<option value="' + k + '">' + esc(o.nombre) + '</option>'; }).join('') + '</select>'
+                ? '<select class="form-input vale-elegir" title="Todas las piezas de una sola opción"><option value="">' + esc(i.nombre) + ' — todas de una opción…</option>' +
+                  i.opciones.map(function (o, k) { return '<option value="' + k + '">' + esc(o.nombre) + '</option>'; }).join('') + '</select>' +
+                  // O repartir: cuántas piezas de cada opción (p. ej. 60 cross back miel y 39 nogal)
+                  '<div class="vale-reparto"><span class="vale-reparto-tit">O reparte las piezas:</span>' +
+                  i.opciones.map(function (o, k) {
+                    return '<label class="vale-reparto-op"><input type="number" min="0" class="form-input vale-rep" data-k="' + k + '" placeholder="0"> ' + esc(o.nombre) + '</label>';
+                  }).join('') +
+                  '<span class="vale-rep-suma">' + (i.cant ? 'Faltan ' + i.cant + ' de ' + i.cant : '') + '</span>' +
+                  '<button type="button" class="event-btn vale-rep-ok" disabled>Aplicar reparto</button></div>'
                 : esc(i.nombre)) +
                 (i.origen === 'plano' ? ' <span class="vale-tag">plano</span>' : i.origen === 'calculo' ? ' <span class="vale-tag">calculado</span>' : '') + '</td>' +
               '<td><input class="form-input vale-nota" placeholder="Color, medida…" value="' + esc(i.nota) + '"></td>' +
@@ -490,6 +497,34 @@
         guardar(); pintar();
         if (enPlano) toast(o.nombre + ': se guardó en ' + enPlano + (enPlano === 1 ? ' elemento' : ' elementos') + ' del plano.', 'success');
       };
+      // Repartir las piezas entre las opciones: el renglón se convierte en un renglón por opción con su cantidad
+      var reps = tr.querySelectorAll('.vale-rep');
+      if (reps.length) {
+        var okRep = tr.querySelector('.vale-rep-ok'), sumaEl = tr.querySelector('.vale-rep-suma');
+        var total = parseInt(item.cant, 10) || 0;
+        var revisar = function () {
+          var suma = Array.prototype.reduce.call(reps, function (s, x) { return s + (parseInt(x.value, 10) || 0); }, 0);
+          okRep.disabled = suma <= 0;
+          sumaEl.className = 'vale-rep-suma' + (total && suma !== total ? ' no-cuadra' : suma ? ' cuadra' : '');
+          sumaEl.textContent = !total ? (suma ? suma + ' piezas' : '') : suma === total ? 'Cuadra: ' + suma + ' de ' + total : suma < total ? 'Faltan ' + (total - suma) + ' de ' + total : 'Sobran ' + (suma - total) + ' (son ' + total + ')';
+        };
+        Array.prototype.forEach.call(reps, function (x) { x.oninput = revisar; });
+        okRep.onclick = function () {
+          var suma = Array.prototype.reduce.call(reps, function (s, x) { return s + (parseInt(x.value, 10) || 0); }, 0);
+          if (total && suma !== total && !confirm('El reparto suma ' + suma + ' y se calcularon ' + total + '. ¿Aplicarlo así?')) return;
+          var nuevos = [];
+          Array.prototype.forEach.call(reps, function (x) {
+            var n = parseInt(x.value, 10) || 0;
+            if (!n) return;
+            var o = item.opciones[parseInt(x.getAttribute('data-k'), 10)];
+            var art = (_inventario || []).find(function (a) { return a.id === o.id; }) || o;
+            nuevos.push({ id: o.id, nombre: o.nombre, categoria: art.categoria || item.categoria, cant: n, nota: item.nota || '', origen: 'ajustado', surte: item.surte || '' });
+          });
+          v.items.splice.apply(v.items, [v.items.indexOf(item), 1].concat(nuevos));
+          guardar(); pintar();
+          toast('Reparto aplicado: ' + nuevos.map(function (n) { return n.cant + ' ' + n.nombre; }).join(' y ') + '.', 'success');
+        };
+      }
       tr.querySelector('.vale-nota').onchange = function (e) { if (item.origen === 'calculo') item.origen = 'ajustado'; item.nota = e.target.value; guardar(); };
       tr.querySelector('.vale-quitar').onclick = function () { v.items.splice(v.items.indexOf(item), 1); guardar(); pintar(); };
       tr.querySelector('.vale-surte').onchange = function (e) {
@@ -660,8 +695,9 @@
       return '<section class="grupo"><h3>' + esc(g.categoria) + '</h3>' + cabeza + g.items.map(function (a) {
         var it = v.items.find(function (i) { return i.id === a.id; });
         var op = !it && v.items.find(function (i) { return i.opciones && i.opciones.some(function (o) { return o.id === a.id; }); });
-        if (op) return '<div class="art elegir"><span class="caja"></span><span class="nom">' + esc(a.nombre) + ' <em>elegir uno</em></span>' +
-          '<span class="cant">' + esc(op.cant) + '</span><span class="surte">' + cajasSurte(null) + '</span></div>';
+        // Elegir una opción o repartir las piezas: la cantidad de cada una se escribe a mano (el total va en la etiqueta)
+        if (op) return '<div class="art elegir"><span class="caja"></span><span class="nom">' + esc(a.nombre) + ' <em>elegir o repartir' + (op.cant ? ' · total ' + esc(op.cant) : '') + '</em></span>' +
+          '<span class="cant"></span><span class="surte">' + cajasSurte(null) + '</span></div>';
         return '<div class="art"><span class="caja">' + (it ? '✓' : '') + '</span><span class="nom">' + esc(a.nombre) + '</span>' +
           '<span class="cant">' + (it ? esc(it.cant) : '') + '</span><span class="surte">' + cajasSurte(it ? it.surte || '' : null) + '</span></div>';
       }).join('') + '</section>';
@@ -761,7 +797,7 @@
     if (!ev || !window.PEGCalculo) return (v && v.pendientes) || [];
     var r = window.PEGCalculo.calcular(ev);
     var elegir = ((v && v.items) || []).filter(function (i) { return i.opciones && i.opciones.length; }).map(function (i) {
-      return 'Elegir uno: ' + i.nombre + ' — ' + (i.cant || 'cantidad por definir') + (i.cant ? ' pz' : '') + ' (' + i.opciones.map(function (o) { return o.nombre; }).join(' / ') + ').';
+      return 'Elegir o repartir: ' + i.nombre + ' — ' + (i.cant || 'cantidad por definir') + (i.cant ? ' pz' : '') + ' entre ' + i.opciones.map(function (o) { return o.nombre; }).join(' / ') + ' (cuántas de cada una).';
     });
     return r.pendientes.concat(elegir);
   }

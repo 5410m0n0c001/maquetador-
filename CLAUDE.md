@@ -49,6 +49,8 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Cojín de silla: opción de la mesa (`sillaCojin`), 1 cojín por silla (cross back, Tiffany o Boss).
 - Plato base: uno, o dos alternados (`platoBase` y `platoBase2`), mitad y mitad con el mismo reparto que las copas.
 - Vitroleros: uno por sabor de agua. Si falta un dato, se deja como pendiente ("Falta definir"), no se inventa.
+- Artículos con opciones (miel o nogal, madera o metal…): se elige una o se REPARTEN las piezas entre las opciones
+  ("O reparte las piezas" en la requisición; la plantilla impresa deja la cantidad de cada opción para escribirla).
 - Recalcular no pisa lo que el planner eligió a mano (origen manual/kit); quita los "elegir uno" ya resueltos.
 
 ## Ficha técnica (PDF)
