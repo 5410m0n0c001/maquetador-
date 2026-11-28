@@ -311,10 +311,10 @@
   var _sb = null;
   var _event = null;          // { id, nombre, fecha_evento, venue_id, data: { brief, minuto, montaje, layout } }
   var _isPlanner = false;
-  var _capitan = null;
+  var _capitan = null;          // nombre del capitán con sesión abierta (null = planner o solo lectura)
   var _dj = false;              // sesión de DJ: solo ve el plano y el minuto a minuto (solo lectura)
-  var _cliente = null;          // sesión del cliente (p. ej. la mamá): id del único evento que puede ver, solo lectura
-  var DJ_PASSWORD = 'DJ';         // nombre del capitán con sesión abierta (null = planner o solo lectura)
+  var _cliente = null;          // sesión de solo ver (DJ o anfitrión): id del evento abierto por su contraseña
+  var _permitidos = [];         // eventos a los que da acceso esa contraseña (como los capitanes: solo esos)
   var _saveTimer = null;
   var _cambiosPendientes = false;
   var _planoGuardado = null; // el plano tal como está guardado en la base de datos
@@ -355,8 +355,8 @@
     document.body.classList.toggle('peg-view-only', !_isPlanner);
     document.body.classList.toggle('modo-capitan', !!_capitan);
     document.body.classList.toggle('modo-dj', _dj);
-    document.body.classList.toggle('modo-vista', _dj || !!_cliente);
-    if ((_dj || _cliente) && window.PEGDJ) window.PEGDJ.activar(_dj ? 'dj' : 'cliente');
+    document.body.classList.toggle('modo-vista', _dj || _permitidos.length > 0);
+    if ((_dj || _permitidos.length) && window.PEGDJ) window.PEGDJ.activar(_dj ? 'dj' : 'cliente');
     var btn = $('btn-planner-mode');
     if (btn) {
       btn.innerHTML = _isPlanner
@@ -370,7 +370,7 @@
   }
 
   function togglePlanner() {
-    if (_dj || _cliente) { _dj = false; _cliente = null; applyMode(); }
+    if (_dj || _cliente) { _dj = false; _cliente = null; _permitidos = []; applyMode(); }
     if (_isPlanner || _capitan) {
       if (!confirm(_capitan ? '¿Cerrar la sesión de capitán? Quedará en modo de solo lectura.' : '¿Salir del modo planner? Quedará en modo de solo lectura.')) return;
       _isPlanner = false;
@@ -433,33 +433,32 @@
       e.preventDefault();
       var pwd = input.value;
       var cap = CAPITANES.find(function (c) { return c.clave === pwd; });
-      if (pwd === DJ_PASSWORD) {
-        // DJ: solo lectura del plano y del minuto a minuto
-        _dj = true; _capitan = null; _isPlanner = false;
-        applyMode();
-        _accesoListo = true;
-        gate.remove();
-        document.body.classList.remove('acceso-bloqueado');
-        toast('Sesión de DJ: plano y minuto a minuto (solo lectura).', 'success');
-        listo();
-        return;
-      }
       if (pwd === PLANNER_PASSWORD) { _capitan = null; }
       else if (cap) { _capitan = cap.nombre; }
       else {
-        // ¿Es la contraseña de un cliente (p. ej. la mamá)? Se busca el evento que la tenga en sus accesos
+        // Accesos de solo ver (DJ, mamá/anfitrión…): LA CONTRASEÑA IDENTIFICA EL EVENTO, sin importar la URL.
+        // Cada evento guarda sus accesos en data.accesos = [{ rol: 'dj' | 'cliente', nombre, clave }]
         var sb = client();
         if (!sb || !pwd) { gate.querySelector('#acceso-error').textContent = 'Contraseña incorrecta.'; input.select(); return; }
-        sb.from(TABLE).select('id,nombre').filter('data->accesos', 'cs', JSON.stringify([{ clave: pwd }])).limit(1).then(function (res) {
-          var ev = res && !res.error && res.data && res.data[0];
-          if (!ev) { gate.querySelector('#acceso-error').textContent = 'Contraseña incorrecta.'; input.select(); return; }
-          _cliente = ev.id; _dj = false; _capitan = null; _isPlanner = false;
-          history.replaceState(null, '', eventUrl(ev.id));
+        sb.from(TABLE).select('id,nombre,fecha_evento,accesos:data->accesos').filter('data->accesos', 'cs', JSON.stringify([{ clave: pwd }])).limit(50).then(function (res) {
+          var lista = (res && !res.error && res.data) || [];
+          if (!lista.length) { gate.querySelector('#acceso-error').textContent = 'Contraseña incorrecta.'; input.select(); return; }
+          // Si la misma contraseña está en varios eventos: el próximo por fecha (si ya pasaron todos, el más reciente)
+          var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+          var fechaDe = function (e) { return e.fecha_evento ? new Date(e.fecha_evento + 'T12:00:00') : new Date(0); };
+          var proximos = lista.filter(function (e) { return fechaDe(e) >= hoy; }).sort(function (a, b) { return fechaDe(a) - fechaDe(b); });
+          var ev = proximos[0] || lista.sort(function (a, b) { return fechaDe(b) - fechaDe(a); })[0];
+          var acceso = (ev.accesos || []).find(function (a) { return a.clave === pwd; }) || {};
+          _cliente = ev.id; _dj = acceso.rol === 'dj'; _capitan = null; _isPlanner = false;
+          _permitidos = lista.map(function (e) { return e.id; });
+          // Un solo evento: se abre directo. Varios (p. ej. un DJ en varias fiestas): se muestra la lista de SUS eventos
+          if (lista.length === 1) history.replaceState(null, '', eventUrl(ev.id));
+          else { _cliente = null; history.replaceState(null, '', location.pathname); }
           applyMode();
           _accesoListo = true;
           gate.remove();
           document.body.classList.remove('acceso-bloqueado');
-          toast('Bienvenida: ' + ev.nombre + ' (solo ver).', 'success');
+          toast((_dj ? 'Perfil DJ: ' : 'Bienvenida: ') + ev.nombre + ' (solo ver).', 'success');
           listo();
         });
         return;
@@ -714,7 +713,7 @@
         toast('No se encontró el evento.', 'error');
         return;
       }
-      if (_cliente && row.id !== _cliente) {
+      if (_permitidos.length && _permitidos.indexOf(row.id) < 0) {
         setStatus('', '');
         toast('Solo puedes ver tu evento.', 'warning');
         return null;
@@ -886,7 +885,7 @@
   // ── Bienvenida al abrir el enlace de un evento: ¿qué quieres ver? ──
   function openEventWelcome() {
     // DJ y cliente: solo eligen entre el plano en 3D (pantalla completa) y el minuto a minuto
-    if (_dj || _cliente) { yaEligio(); if (window.PEGDJ) window.PEGDJ.elegir(); return; }
+    if (_dj || _permitidos.length) { yaEligio(); if (window.PEGDJ) window.PEGDJ.elegir(); return; }
     var b = _event.data.brief || {};
     var fecha = b.fecha_evento ? new Date(b.fecha_evento + 'T12:00:00').toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
     var modal = document.createElement('div');
@@ -921,8 +920,8 @@
 
   // ── Pantalla de inicio: ¿brief o maquetar? ────────────────
   function openStartChooser() {
-    if (_dj) { yaEligio(); openEventsModal(); return; } // el DJ solo abre eventos
-    if (_cliente) { yaEligio(); goToEvent(_cliente, openEventWelcome); return; } // el cliente solo ve su evento
+    // (DJ y cliente: su evento lo decide la contraseña; abajo se abre directo)
+    if (_permitidos.length) { yaEligio(); if (_permitidos.length === 1) goToEvent(_permitidos[0], openEventWelcome); else openEventsModal(); return; } // DJ y anfitrión: solo SUS eventos
     var modal = document.createElement('div');
     modal.className = 'venue-picker-overlay';
     modal.innerHTML =
@@ -1017,17 +1016,13 @@
         var grid = $('events-grid');
         if (!grid) return;
         if (res.error) { toast('No se pudieron cargar los eventos.', 'error'); return; }
-        if (_dj) {
-          // El DJ solo ve los eventos PRÓXIMOS (de hoy en adelante) que tienen un DJ registrado como proveedor
-          var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-          res.data = res.data.filter(function (ev) {
-            var conDJ = (ev.provs || []).some(function (p) { return /(^|[^a-z])dj([^a-z]|$)/i.test((p.servicio || '') + ' ' + (p.servicioOtro || '')); });
-            return ev.modo !== 'bodega' && conDJ && ev.fecha_evento && new Date(ev.fecha_evento + 'T23:59:59') >= hoy;
-          }).sort(function (a, b) { return String(a.fecha_evento).localeCompare(String(b.fecha_evento)); });
+        if (_dj || _permitidos.length) {
+          // DJ y anfitrión: como los capitanes, solo los eventos a los que da acceso su contraseña (próximos primero)
+          res.data = res.data.filter(function (ev) { return _permitidos.indexOf(ev.id) > -1; })
+            .sort(function (a, b) { return String(a.fecha_evento || '').localeCompare(String(b.fecha_evento || '')); });
           Array.prototype.forEach.call(grid.querySelectorAll('#btn-new-event, #btn-new-bodega'), function (b) { b.remove(); });
-          // Un solo evento: directo a su vista de DJ, sin lista
           if (res.data.length === 1) { closeModals(); yaEligio(); goToEvent(res.data[0].id, openEventWelcome); return; }
-          if (!res.data.length) grid.insertAdjacentHTML('beforeend', '<p class="vale-vacio">No hay eventos próximos con DJ registrado. El planner debe registrar al DJ en los proveedores del evento.</p>');
+          if (!res.data.length) grid.insertAdjacentHTML('beforeend', '<p class="vale-vacio">Esta contraseña no tiene eventos asignados.</p>');
         }
         if (_capitan) {
           res.data = res.data.filter(function (ev) { return asignadoA(ev.staff, _capitan); });
