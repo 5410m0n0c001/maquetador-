@@ -36,7 +36,8 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Alfombra roja, chisperos, mesa de fotógrafos (`table_photographers`, no cuenta lugares) salen del plano.
 - "Falta definir" (en la requisición y en la ficha) se recalcula al momento: menú, back, copas (sobre todo si hay brindis),
   bebidas y mezcladores, garrafones, hielo, fruta, limpieza, meseros, periqueras, chisperos, letras, pétalos y conos,
-  kit de fiesta y fotos del montaje.
+  kit de fiesta, fotos del montaje y pastel (quién lo provee y a qué hora llega).
+- Servicios de la ficha: lo nuevo del plano o del minuto (chisperos, pastel…) se agrega solo sin borrar lo ya capturado.
 - Menú: si no hay menú registrado, "Falta definir" pide entrada, sopa o crema, plato fuerte y postre (de ahí salen loza y cubiertos).
 - Si hay mesa principal y el plano no tiene back, "Falta definir" pregunta si habrá back detrás de ella.
 - Servilletas de colores que no están en inventario van como "Servilleta de tela" con la cantidad de cada color y doblez en la nota.

@@ -62,7 +62,7 @@
     ['DJ', /(^|\W)dj(\W|$)|dj_booth/], ['Pista de baile', /pista|dancefloor/], ['Cabina inflable', /inflable|photobooth_inflatable/],
     ['Cabina 360°', /360/], ['Espejo selfie', /espejo|photobooth_mirror/], ['Magazine Cover Booth', /magazine/], ['Robot LED', /robot/],
     ['Show men (cabezones)', /show ?men|cabezones|showmen/], ['Chisperos', /chispero|sparklers|detonacion/], ['Mariachi', /mariachi/],
-    ['Saxofonista', /saxo/], ['Grupo norteño', /norteno/], ['Grupo versátil', /versatil/], ['Chinelos', /chinelo/], ['Banda', /(^| )banda( |$)|vendor_banda/], ['Fotografía y video', /fotografia|foto y video/], ['Pantalla / proyección', /pantalla|projector|laser/]
+    ['Saxofonista', /saxo/], ['Grupo norteño', /norteno/], ['Grupo versátil', /versatil/], ['Chinelos', /chinelo/], ['Banda', /(^| )banda( |$)|vendor_banda/], ['Fotografía y video', /fotografia|foto y video/], ['Pantalla / proyección', /pantalla|projector|laser/], ['Pastel', /pastel/]
   ];
   function canon(texto) {
     var t = norm(texto);
@@ -100,12 +100,20 @@
     (b.servicios || []).forEach(function (s) { if (SERVICIOS_CON_PROVEEDOR.indexOf(s) > -1) sumar(s); });
     // 3) Lo que está dibujado en el plano
     ((d.layout && d.layout.elements) || []).forEach(function (e) { if (TIPOS_SERVICIO.test(e.type || '')) sumar(canon(e.type) || e.name, /^vendor_|^limo/.test(e.type) ? null : { surte: '' }); });
+    // 4) Pastel en el minuto a minuto o en el brief: falta quién lo provee y a qué hora llega
+    if (/pastel/.test(norm(JSON.stringify(b) + ' ' + (d.minuto || []).map(function (m) { return m.actividad; }).join(' ')))) sumar('Pastel');
     return lista.map(function (s) { delete s._key; return s; });
   }
   function servicios() {
     var v = vale();
     if (!v) return [];
     if (!Array.isArray(v.servicios)) v.servicios = sugerirServicios(evento());
+    else {
+      // Lo nuevo que aparezca después (chisperos en el plano, pastel en el minuto…) se agrega sin tocar lo ya capturado
+      sugerirServicios(evento()).forEach(function (s) {
+        if (!v.servicios.some(function (x) { return norm(x.nombre) === norm(s.nombre); })) v.servicios.push(s);
+      });
+    }
     return v.servicios;
   }
 

@@ -313,6 +313,14 @@
     // Pétalos y conos para una dinámica
     var textoMinuto = norm((d.minuto || []).map(function (m) { return m.actividad; }).join(' '));
     if (/petalo|conos?\b/.test(textoBrief + ' ' + textoMinuto)) pendientes.push('Pétalos y conos: definir quién los surte y quién los reparte a los invitados.');
+    // Pastel: si hay pastel en el minuto o el brief, falta saber quién lo provee y a qué hora llega
+    var provs = d.proveedores || [];
+    var provPastel = provs.find(function (p) { return /pastel/.test(norm((p.servicio || '') + ' ' + (p.nombre || '') + ' ' + (p.servicioOtro || ''))); });
+    if (/pastel/.test(textoMinuto + ' ' + textoBrief)) {
+      var llega = provPastel && (provPastel.llegada || provPastel.llega || provPastel.hora);
+      if (!provPastel) pendientes.push('Pastel: definir quién lo provee y a qué hora llega.');
+      else if (!llega) pendientes.push('Pastel: definir a qué hora llega (lo provee ' + (provPastel.nombre || provPastel.servicio) + ').');
+    }
     // Kit de fiesta
     if (/infantil|xv|cumple/.test(norm(b.tipo_evento || '')) && !/kit de fiesta/.test(textoBrief)) pendientes.push('Kit de fiesta (pulseras, gorros, globos): definir si habrá y cuántos.');
     // Fotos del montaje
