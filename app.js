@@ -3298,7 +3298,12 @@
     Array.prototype.forEach.call(modal.querySelectorAll('.venue-card'), function (btn) {
       btn.onclick = function () {
         var hasWork = AppState.elements.some(function (e) { return !e.bg2d; });
-        if (!isStart && hasWork && !confirm('Se reemplazará el plano actual. Puedes deshacer con Ctrl+Z. ¿Continuar?')) return;
+        // Con un evento abierto, la plantilla se guarda EN ese evento: se avisa con su nombre
+        var evAbierto = window.PEGEventos && window.PEGEventos.getEvent ? window.PEGEventos.getEvent() : null;
+        var aviso = evAbierto
+          ? 'OJO: se reemplazará el plano del evento "' + evAbierto.nombre + '" por esta plantilla y se guardará en ese evento.\n\nSi quieres un plano para OTRO evento, cancela y usa Eventos → Nuevo evento.\n\n¿Reemplazar el plano de "' + evAbierto.nombre + '"?'
+          : 'Se reemplazará el plano actual. Puedes deshacer con Ctrl+Z. ¿Continuar?';
+        if ((evAbierto || (!isStart && hasWork)) && !confirm(aviso)) return;
         _loadVenueTemplate(opts[parseInt(btn.getAttribute('data-idx'), 10)]);
         close();
       };

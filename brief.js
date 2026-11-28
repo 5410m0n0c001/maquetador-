@@ -492,8 +492,23 @@
     saveNow();
   }
 
+  // Al salir de un evento (ir al inicio, crear otro, maquetar un salón): se guarda lo pendiente y se suelta,
+  // para que el plano que se arme después NO se guarde encima de este evento
+  function soltarEvento() {
+    if (!_event) return;
+    if (_isPlanner && window.App && window.App.getLayout) {
+      var json = JSON.stringify(window.App.getLayout());
+      if (json !== _lastLayoutJson) { _event.data.layout = JSON.parse(json); _cambiosPendientes = true; }
+    }
+    guardarPendiente();
+    _event = null;
+    _lastLayoutJson = '';
+    updateEventBar();
+  }
+
   function saveNow() {
     if (!_event || !_isPlanner || !client()) return;
+    var ev = _event;
     _cambiosPendientes = false;
     syncMinuto(_event.data);
     var b = _event.data.brief || {};
@@ -523,8 +538,8 @@
         }
         return 'conflicto';
       } else {
-        _event.updated_at = res.data[0].updated_at;
-        setStatus('Guardado', 'ok');
+        ev.updated_at = res.data[0].updated_at;
+        if (_event === ev) setStatus('Guardado', 'ok');
         return 'ok';
       }
     });
@@ -608,6 +623,7 @@
   function createEvent() {
     if (!client()) { toast('No hay conexión con Supabase.', 'error'); return; }
     // Cada evento nuevo empieza en blanco: nunca hereda el plano ni los datos del evento que estaba abierto
+    soltarEvento();
     var data = emptyData();
     data.layout = { terrain: { w: 50, h: 60 }, elements: [], flows: [], layers: {}, venueId: null };
     if (window.App && window.App.loadLayout) window.App.loadLayout(data.layout);
@@ -627,6 +643,7 @@
 
   function createBodega() {
     if (!client()) { toast('No hay conexión con Supabase.', 'error'); return; }
+    soltarEvento();
     var data = emptyData();
     data.layout = { terrain: Object.assign({}, window.BODEGA.TERRENO), elements: [], flows: [], layers: {}, venueId: null, mode: 'bodega' };
     if (window.App && window.App.loadLayout) window.App.loadLayout(data.layout);
@@ -737,7 +754,7 @@
     Array.prototype.forEach.call(modal.querySelectorAll('[data-w]'), function (btn) {
       btn.onclick = function () {
         var w = btn.getAttribute('data-w');
-        if (w === 'inicio') { close(); history.replaceState(null, '', location.pathname); openStartChooser(); return; }
+        if (w === 'inicio') { close(); soltarEvento(); history.replaceState(null, '', location.pathname); openStartChooser(); return; }
         if (w === 'editar') { ensurePlanner(function () { close(); yaEligio(); openPanel(); }); return; }
         close();
         yaEligio();
@@ -777,7 +794,7 @@
           yaEligio();
           if (go === 'brief') createEvent();
           else if (go === 'bodega') createBodega();
-          else if (go === 'maquetar') { if (window.App && window.App.openVenuePicker) window.App.openVenuePicker(); }
+          else if (go === 'maquetar') { soltarEvento(); history.replaceState(null, '', location.pathname); if (window.App && window.App.openVenuePicker) window.App.openVenuePicker(); }
           else openEventsModal();
         }, true);
       };
