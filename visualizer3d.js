@@ -3033,25 +3033,90 @@ window.Visualizer3D = (function () {
       }
 
     } else if (elem.type === 'dj_booth') {
-      // DJ table / facade
-      var facade = new THREE.Mesh(
-        new THREE.BoxGeometry(w, 1.0, h),
-        new THREE.MeshStandardMaterial({ color: colorNum, roughness: 0.5 })
-      );
-      facade.position.y = 0.5;
-      facade.castShadow = true;
-      group.add(facade);
-
-      // DJ controllers
-      var mixer = new THREE.Mesh(new THREE.BoxGeometry(w*0.5, 0.05, h*0.6), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
-      mixer.position.set(0, 1.025, 0);
-      group.add(mixer);
-
-      // DJ laptop
-      var laptop = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 0.3), new THREE.MeshStandardMaterial({ color: 0xd1d5db }));
-      laptop.position.set(w * 0.25, 1.15, 0);
-      laptop.rotation.x = -Math.PI / 6;
-      group.add(laptop);
+      // Cabina de DJ: mesa con frente de luz LED, 2 tornamesas (CDJ) y mezcladora, laptop,
+      // 2 bocinas en tripié, pantalla detrás y truss con luces robóticas. El público queda del lado +z
+      // (al final se voltea si la pista de baile está del otro lado).
+      var n0Cabina = group.children.length;
+      var negro = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5, metalness: 0.2 });
+      var gris = new THREE.MeshStandardMaterial({ color: 0x2b2b2b, roughness: 0.4, metalness: 0.5 });
+      var metalT = new THREE.MeshStandardMaterial({ color: 0xb8bcc4, roughness: 0.3, metalness: 0.8 });
+      var pieza = function (gw, gh, gd, mat, x, y, z) { var m = new THREE.Mesh(new THREE.BoxGeometry(gw, gh, gd), mat); m.position.set(x, y, z); m.castShadow = true; group.add(m); return m; };
+      // Frente de luz LED (degradado rosa-morado-azul)
+      var cvF = document.createElement('canvas'); cvF.width = 256; cvF.height = 64;
+      var gF = cvF.getContext('2d'), grF = gF.createLinearGradient(0, 0, 256, 0);
+      grF.addColorStop(0, '#F65C7A'); grF.addColorStop(0.5, '#7c3aed'); grF.addColorStop(1, '#0ea5e9');
+      gF.fillStyle = grF; gF.fillRect(0, 0, 256, 64);
+      gF.fillStyle = 'rgba(255,255,255,0.25)'; for (var lx = 8; lx < 256; lx += 16) for (var ly = 8; ly < 64; ly += 16) gF.fillRect(lx, ly, 4, 4);
+      var texF = new THREE.CanvasTexture(cvF);
+      pieza(w, 1.0, 0.08, new THREE.MeshStandardMaterial({ map: texF, emissive: 0xffffff, emissiveMap: texF, emissiveIntensity: 0.55 }), 0, 0.5, h / 2 - 0.04);
+      pieza(w, 1.0, h - 0.1, negro, 0, 0.5, -0.05);                 // cuerpo de la mesa
+      pieza(w + 0.06, 0.05, h + 0.06, gris, 0, 1.02, 0);              // cubierta
+      // Tornamesas (CDJ) con su plato y mezcladora al centro
+      [-1, 1].forEach(function (s) {
+        pieza(0.34, 0.08, 0.42, gris, s * 0.5, 1.09, 0.05);
+        var plato = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.02, 24), metalT);
+        plato.position.set(s * 0.5, 1.14, 0.08); group.add(plato);
+        var luzPlato = new THREE.Mesh(new THREE.TorusGeometry(0.115, 0.008, 6, 24), new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8, emissiveIntensity: 0.8 }));
+        luzPlato.rotation.x = Math.PI / 2; luzPlato.position.set(s * 0.5, 1.15, 0.08); group.add(luzPlato);
+      });
+      pieza(0.36, 0.09, 0.42, negro, 0, 1.095, 0.05);
+      for (var kn = 0; kn < 4; kn++) { var perilla = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.03, 8), metalT); perilla.position.set(-0.12 + kn * 0.08, 1.155, -0.05); group.add(perilla); }
+      // Laptop abierta a un lado
+      var lapX = Math.min(w / 2 - 0.25, 1.05);
+      pieza(0.34, 0.015, 0.24, metalT, lapX, 1.06, 0.05);
+      var pantallaLap = pieza(0.34, 0.22, 0.012, new THREE.MeshStandardMaterial({ color: 0x0f172a, emissive: 0x1e3a8a, emissiveIntensity: 0.6 }), lapX, 1.17, -0.07);
+      pantallaLap.rotation.x = -0.25;
+      // Bocinas en tripié a los lados
+      [-1, 1].forEach(function (s) {
+        var bx = s * (w / 2 + 0.55), bz = h / 2 - 0.2;
+        for (var p = 0; p < 3; p++) {
+          var a = p * Math.PI * 2 / 3;
+          var pata = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.1, 6), metalT);
+          pata.position.set(bx + Math.cos(a) * 0.2, 0.5, bz + Math.sin(a) * 0.2);
+          pata.rotation.set(Math.sin(a) * 0.35, 0, -Math.cos(a) * 0.35); group.add(pata);
+        }
+        pieza(0.03, 0.8, 0.03, metalT, bx, 1.2, bz);
+        var caja = pieza(0.45, 0.72, 0.38, negro, bx, 1.95, bz);
+        caja.rotation.y = -s * 0.25;
+        [0.12, -0.17].forEach(function (dy, i) {
+          var cono = new THREE.Mesh(new THREE.CircleGeometry(i ? 0.14 : 0.07, 20), gris);
+          cono.position.set(bx, 1.95 + dy, bz + 0.195); cono.rotation.y = -s * 0.25; group.add(cono);
+        });
+      });
+      // Pantalla detrás del DJ
+      var cvP = document.createElement('canvas'); cvP.width = 256; cvP.height = 144;
+      var gP = cvP.getContext('2d'), grP = gP.createLinearGradient(0, 0, 256, 144);
+      grP.addColorStop(0, '#1e1b4b'); grP.addColorStop(0.5, '#7c3aed'); grP.addColorStop(1, '#F65C7A');
+      gP.fillStyle = grP; gP.fillRect(0, 0, 256, 144);
+      gP.fillStyle = '#ffffff'; gP.font = 'bold 56px Arial'; gP.textAlign = 'center'; gP.textBaseline = 'middle'; gP.fillText('DJ', 128, 74);
+      var texP = new THREE.CanvasTexture(cvP);
+      var zFondo = -h / 2 - 0.45;
+      pieza(Math.min(w, 2.6) + 0.1, 1.45, 0.06, negro, 0, 2.15, zFondo - 0.04);
+      var pantallaDJ = new THREE.Mesh(new THREE.PlaneGeometry(Math.min(w, 2.6), 1.35), new THREE.MeshStandardMaterial({ map: texP, emissive: 0xffffff, emissiveMap: texP, emissiveIntensity: 0.6 }));
+      pantallaDJ.position.set(0, 2.15, zFondo); group.add(pantallaDJ);
+      [-1, 1].forEach(function (s) { pieza(0.05, 1.5, 0.05, metalT, s * Math.min(w, 2.6) * 0.45, 0.75, zFondo - 0.05); });
+      // Truss con luces robóticas
+      var tx = w / 2 + 0.25, alto = 3.2;
+      [-1, 1].forEach(function (s) { pieza(0.18, alto, 0.18, metalT, s * tx, alto / 2, zFondo - 0.3); });
+      pieza(2 * tx + 0.18, 0.18, 0.18, metalT, 0, alto, zFondo - 0.3);
+      [-0.6, 0, 0.6].forEach(function (f, i) {
+        var cab = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.22, 12), negro);
+        cab.position.set(f * tx, alto - 0.22, zFondo - 0.3); group.add(cab);
+        var cono = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.2, 16, 1, true),
+          new THREE.MeshBasicMaterial({ color: [0xF65C7A, 0x38bdf8, 0xa78bfa][i], transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide }));
+        cono.position.set(f * tx, alto - 1.35, zFondo + 0.4); cono.rotation.x = 0.45; group.add(cono);
+      });
+      // El frente (LED y DJ viendo al público) mira hacia la pista de baile más cercana
+      var cabina = new THREE.Group();
+      group.children.slice(n0Cabina).forEach(function (o) { group.remove(o); cabina.add(o); });
+      group.add(cabina);
+      var pistas = (_currentElements || []).filter(function (e) { return e.type === 'dancefloor'; });
+      if (pistas.length) {
+        var pc = pistas.reduce(function (a, b) { return Math.hypot(b.x - elem.x, b.y - elem.y) < Math.hypot(a.x - elem.x, a.y - elem.y) ? b : a; });
+        var th = (elem.rotation || 0) * Math.PI / 180;
+        // Eje +z local de la cabina en el plano: (-sen θ, cos θ)
+        if ((pc.x - elem.x) * -Math.sin(th) + (pc.y - elem.y) * Math.cos(th) < 0) cabina.rotation.y = Math.PI;
+      }
 
     } else if (elem.type === 'giant_letters') {
       // Lit Giant Letters "XV" / "LOVE"
@@ -3967,7 +4032,7 @@ window.Visualizer3D = (function () {
         case 'entretenimiento':
           heightOffset = 4.0;
           if (type === 'stage') { heightOffset = 4.5; subtitle = 'Escenario'; }
-          else if (type === 'dj_booth') { subtitle = 'Cabina DJ'; }
+          else if (type === 'dj_booth') { subtitle = 'Cabina DJ'; heightOffset = 4.2; } // arriba del truss de luces
           else { subtitle = 'Entretenimiento'; }
           break;
         case 'accesos':
