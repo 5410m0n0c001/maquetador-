@@ -126,6 +126,7 @@
         var nSillones = Math.min(n, parseInt(c.sillonesPrincesa, 10));
         sumar(c.sillonPrincesaNombre || 'Sillón de princesa', nSillones, 'Sillas y bancos', 'mesa principal');
         if (n > nSillones) sumar(SILLA[c.sillaAcompanantes || 'tiffany'], n - nSillones, 'Sillas y bancos', 'mesa principal, a los lados de los sillones');
+        if (n > nSillones && c.sillaCojin && c.sillaAcompanantes === 'crossback') sumar('Cojín para silla cross back', n - nSillones, 'Sillas y bancos', 'mesa principal');
       } else if (principal && sillonPrincesa) {
         // Mesa principal de XV: sillón de princesa para la festejada; los demás lugares (chambelanes) con otra silla
         sumar('Sillón de princesa', 1, 'Sillas y bancos', 'mesa principal');
@@ -133,6 +134,11 @@
       } else if (inv.silla) sumar(inv.silla, n, 'Sillas y bancos');
       else if (c.tipoSilla) sumar(SILLA[c.tipoSilla] || ('Silla ' + cap(c.tipoSilla)), n, 'Sillas y bancos');
       if (c.sillaFunda && c.sillaFunda !== 'ninguna') sumar('Funda completa para silla Tiffany color ' + norm(c.sillaFunda), n, 'Sillas y bancos');
+      // Cojín por silla (opción de la mesa): cross back, Tiffany, Boss o Lotus
+      if (c.sillaCojin && !principal) {
+        var COJIN = { crossback: 'Cojín para silla cross back', tiffany: 'Cojín para silla tiffany', metalica: 'Cojín para silla boss' };
+        if (COJIN[c.tipoSilla]) sumar(COJIN[c.tipoSilla], n, 'Sillas y bancos', c.sillaCojin === true ? '' : 'color ' + c.sillaCojin);
+      }
       // Plato base: uno, o dos alternados (la mitad de los lugares cada uno; el mismo reparto que las copas)
       if (c.platoBase && c.platoBase !== 'ninguno') {
         var pb1 = PLATO_BASE[c.platoBase] || ('Plato base ' + cap(c.platoBase));

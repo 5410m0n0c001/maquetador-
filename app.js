@@ -1014,6 +1014,7 @@
       setVal('mesa-copas-reparto', elem.mesaConfig.copasReparto != null ? elem.mesaConfig.copasReparto : '');
       setVal('mesa-silla-tipo', elem.mesaConfig.tipoSilla || 'tiffany');
       setVal('mesa-silla-funda', elem.mesaConfig.sillaFunda || 'ninguna');
+      setVal('mesa-silla-cojin', elem.mesaConfig.sillaCojin || '');
       setVal('mesa-menu', elem.mesaConfig.menu || '');
       setVal('mesa-floral-tipo', elem.mesaConfig.arregloFloralTipo || 'ninguno');
       setVal('mesa-floral-acomodo', elem.mesaConfig.arregloFloralAcomodo || 'ninguno');
@@ -1244,6 +1245,7 @@
     mesaInp('mesa-copas-reparto', 'copasReparto');
     mesaInp('mesa-silla-tipo', 'tipoSilla');
     mesaInp('mesa-silla-funda', 'sillaFunda');
+    mesaInp('mesa-silla-cojin', 'sillaCojin');
     mesaInp('mesa-menu', 'menu');
     mesaInp('mesa-floral-tipo', 'arregloFloralTipo');
     mesaInp('mesa-floral-acomodo', 'arregloFloralAcomodo');
@@ -2925,7 +2927,7 @@
         (c.platoBase2 && c.platoBase2 !== 'ninguno' ? ' y ' + (plateBaseLabels[c.platoBase2] || cap(c.platoBase2)) + ' (alternados)' : '')]);
       if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push(['Plato trinche', cap(c.platoTrinche)]);
       if (c.cubiertos) items.push(['Cubiertos', cap(c.cubiertos)]);
-      if (inv.silla || c.tipoSilla) items.push(['Silla', (inv.silla || sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? ' con funda completa ' + c.sillaFunda : '')]);
+      if (inv.silla || c.tipoSilla) items.push(['Silla', (inv.silla || sillaLabels[c.tipoSilla] || cap(c.tipoSilla)) + (c.sillaFunda && c.sillaFunda !== 'ninguna' ? ' con funda completa ' + c.sillaFunda : '') + (c.sillaCojin ? ' con cojín ' + (c.sillaCojin === true ? '' : c.sillaCojin) : '')]);
       if (inv.numero) items.push(['Número de mesa', inv.numero]);
       var glass = [];
       if (c.cristal && c.cristal !== 'ninguno') glass.push((glassLabels[c.cristal] || cap(c.cristal)) + ' (' + (c.copasColor || 'transparente') + ')');
