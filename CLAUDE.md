@@ -60,6 +60,7 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
   no cuenta en lugares ni requisición).
 - Cascada = canal de agua horizontal entre salón y palapa, bajo el puente; puente recto con medio arco.
 - Alberca azul.
+- Jardín de habitaciones: juegos infantiles del rancho (`rancho_playground`: columpio, resbaladilla, sube y baja), no van en requisición.
 
 ## Hoja del DJ
 - Croquis del salón con la cabina marcada ("AQUÍ VA EL DJ") + minuto a minuto con sus momentos en rosa.

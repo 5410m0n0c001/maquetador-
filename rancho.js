@@ -140,6 +140,18 @@
           fill: m.barra ? '#6b4423' : (m.silla ? '#cbd5e1' : '#94a3b8'), stroke: m.silla ? 'none' : '#334155', 'stroke-width': 0.8 }, NP)));
       });
     },
+    // Juegos infantiles del rancho: área de arena con columpio, resbaladilla y sube y baja
+    rancho_playground: function (svgEl, g, e, o) {
+      base(svgEl, g, o, { fill: '#e7d3a8', opacity: 0.9, stroke: '#a8916b', rx: 6 });
+      var m = o.mToPx;
+      // Columpio (arriba a la izquierda)
+      g.appendChild(svgEl('rect', Object.assign({ x: o.px - o.pw / 2 + m(1), y: o.py - o.ph / 2 + m(1), width: m(3.5), height: m(1.6), fill: 'none', stroke: '#b91c1c', 'stroke-width': 2 }, NP)));
+      [1.9, 3.6].forEach(function (dx) { g.appendChild(svgEl('rect', Object.assign({ x: o.px - o.pw / 2 + m(dx), y: o.py - o.ph / 2 + m(1.6), width: m(0.5), height: m(0.3), fill: '#1d4ed8' }, NP))); });
+      // Resbaladilla (derecha)
+      g.appendChild(svgEl('rect', Object.assign({ x: o.px + o.pw / 2 - m(2.2), y: o.py - o.ph / 2 + m(1), width: m(1), height: m(4), fill: '#facc15', stroke: '#a16207' }, NP)));
+      // Sube y baja (abajo)
+      g.appendChild(svgEl('rect', Object.assign({ x: o.px - m(1.8), y: o.py + o.ph / 2 - m(1.8), width: m(3.6), height: m(0.35), fill: '#15803d' }, NP)));
+    },
     rancho_cascade: function (svgEl, g, e, o) {
       base(svgEl, g, o, { fill: '#1b6fa8', opacity: 0.85, stroke: '#7dd3fc' });
       for (var i = 1; i <= 3; i++) {
@@ -354,6 +366,36 @@
         }
       });
     },
+    rancho_playground: function (T, g, e) {
+      var w = e.w, d = e.h, x0 = -w / 2, z0 = -d / 2, metal = { metal: 0.5, rough: 0.4 };
+      caja(T, g, w, 0.04, d, 0, 0, 0, 0xe7d3a8, { sinSombra: true }); // arena
+      // Columpio: marco en A con travesaño y 2 asientos
+      var cx = x0 + 2.75, cz = z0 + 1.8;
+      [-1.6, 1.6].forEach(function (s) {
+        [-0.5, 0.5].forEach(function (k) {
+          var pata = caja(T, g, 0.08, 2.4, 0.08, cx + s, 0, cz + k * 0.6, 0xb91c1c, metal);
+          pata.rotation.x = k * 0.4;
+        });
+      });
+      var trav = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 3.4, 8), new T.MeshStandardMaterial({ color: 0xb91c1c, metalness: 0.5, roughness: 0.4 }));
+      trav.rotation.z = Math.PI / 2; trav.position.set(cx, 2.2, cz); g.add(trav);
+      [-0.8, 0.8].forEach(function (s) {
+        [-0.22, 0.22].forEach(function (k) { caja(T, g, 0.02, 1.7, 0.02, cx + s + k, 0.5, cz, 0x6b7280); });
+        caja(T, g, 0.55, 0.05, 0.25, cx + s, 0.45, cz, 0x1d4ed8);
+      });
+      // Resbaladilla: escalera, plataforma y rampa
+      var rx = w / 2 - 1.7, rz = z0 + 1.5;
+      caja(T, g, 0.9, 0.08, 0.9, rx, 1.5, rz, 0xfacc15);
+      [-0.4, 0.4].forEach(function (k) { caja(T, g, 0.06, 1.5, 0.06, rx + k, 0, rz - 0.4, 0x6b7280, metal); caja(T, g, 0.06, 1.5, 0.06, rx + k, 0, rz + 0.4, 0x6b7280, metal); });
+      for (var p = 1; p <= 4; p++) caja(T, g, 0.8, 0.04, 0.06, rx, p * 0.33, rz - 0.55, 0x6b7280, metal);
+      var rampa = caja(T, g, 0.7, 0.06, 2.8, rx, 0.75, rz + 1.55, 0xfacc15);
+      rampa.rotation.x = 0.5;
+      // Sube y baja
+      var sx = 0, sz = d / 2 - 1.6;
+      caja(T, g, 0.25, 0.45, 0.25, sx, 0, sz, 0x15803d);
+      var tabla = caja(T, g, 3.4, 0.07, 0.3, sx, 0.45, sz, 0x15803d);
+      tabla.rotation.z = 0.15;
+    },
     // Cascada horizontal: canal de agua plano entre el salón y la palapa (pasa por debajo del puente), con piedras en las orillas
     rancho_cascade: function (T, g, e) {
       var largo = Math.max(e.w, e.h), ancho = Math.min(e.w, e.h), alongX = e.w >= e.h;
@@ -396,6 +438,7 @@
   tipo('rancho_salon', 'Salón abierto con arcos', 'fa-archway', 28, 34, '#2a2420', 'rect', { techoDinamico: true });
   tipo('rancho_room', 'Construcción de una planta', 'fa-house', 10, 10, '#475569', 'rect', { techoDinamico: true });
   tipo('rancho_palapa', 'Palapa abierta con arcos', 'fa-archway', 8, 13, '#9c958a', 'rect', { techoDinamico: true });
+  tipo('rancho_playground', 'Juegos infantiles', 'fa-child', 10, 9, '#e7d3a8', 'rect');
   tipo('rancho_path', 'Camino de terracería', 'fa-road', 5, 30, '#a8916b', 'rect', { sinEtiqueta: true });
   tipo('rancho_arena', 'Picadero', 'fa-horse', 25, 25, '#c2a878', 'circle');
   tipo('rancho_stables', 'Caballerizas', 'fa-horse-head', 24, 7, '#8b6b4a');
@@ -454,6 +497,8 @@
    [575, 470], [590, 530], [530, 540], [950, 260], [940, 380], [930, 470]].forEach(function (t) {
     elementos.push(el('rancho_tree', 'Árbol', t[0], t[1], 7, 7));
   });
+  // Juegos infantiles en el jardín de habitaciones (al final para no mover los id de lo anterior)
+  elementos.push(el('rancho_playground', 'Juegos infantiles', 555, 502, 10, 9));
 
   window.VENUE_TEMPLATES = window.VENUE_TEMPLATES || [];
   window.VENUE_TEMPLATES.push({
