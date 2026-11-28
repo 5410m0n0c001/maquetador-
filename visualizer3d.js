@@ -1617,12 +1617,12 @@ window.Visualizer3D = (function () {
       border.position.y = 0.1;
       group.add(border);
 
-      // Water surface
+      // Water surface (sin metalness: sin reflejos en la escena, lo metálico se veía gris)
       var water = new THREE.Mesh(
         new THREE.BoxGeometry(w - 0.4, 0.02, h - 0.4),
-        new THREE.MeshStandardMaterial({ color: COLORS.water, roughness: 0.1, metalness: 0.8 })
+        new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x075985, emissiveIntensity: 0.35, roughness: 0.15, metalness: 0 })
       );
-      water.position.y = 0.18;
+      water.position.y = 0.21; // arriba del borde (que llega a 0.2); antes quedaba tapada y se veía gris
       group.add(water);
 
     } else if (elem.type === 'fountain') {

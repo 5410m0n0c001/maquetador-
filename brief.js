@@ -314,6 +314,7 @@
   var _capitan = null;         // nombre del capitán con sesión abierta (null = planner o solo lectura)
   var _saveTimer = null;
   var _cambiosPendientes = false;
+  var _planoGuardado = null; // el plano tal como está guardado en la base de datos
   var _lastLayoutJson = '';
   var _panel = null;
 
@@ -506,9 +507,46 @@
     updateEventBar();
   }
 
+  // Qué se perdería del plano guardado si se guarda el actual (cambio de salón o terreno, muchos elementos
+  // o invitados de menos). Vacío si el cambio es normal.
+  function perdidasDelPlano(antes, ahora) {
+    if (!antes || !ahora) return [];
+    var r = [];
+    var els = function (l) { return (l.elements || []).filter(function (e) { return !e.bg2d; }); };
+    if (!els(antes).length) return r; // plano vacío (evento nuevo): no hay nada que perder
+    var pases = function (l) {
+      return (l.elements || []).reduce(function (s, e) {
+        return s + ((e.mesaConfig && e.mesaConfig.invitados) || []).reduce(function (t, i) { return t + (parseInt(i.pases, 10) || 1); }, 0);
+      }, 0);
+    };
+    if ((antes.venueId || null) !== (ahora.venueId || null)) r.push('el plano se cambia por otro salón o plantilla');
+    else if (JSON.stringify(antes.terrain || {}) !== JSON.stringify(ahora.terrain || {})) r.push('cambia el tamaño del terreno');
+    var menos = els(antes).length - els(ahora).length;
+    if (menos >= 5) r.push('se quitan ' + menos + ' elementos del plano');
+    var sinInv = pases(antes) - pases(ahora);
+    if (sinInv >= 5) r.push('se quitan ' + sinInv + ' invitados de las mesas');
+    return r;
+  }
+
   function saveNow() {
     if (!_event || !_isPlanner || !client()) return;
     var ev = _event;
+    // Validación: un cambio grande en el plano se confirma antes de guardarlo; si no, el plano regresa a como estaba guardado
+    var perdidas = perdidasDelPlano(_planoGuardado, _event.data.layout);
+    if (perdidas.length) {
+      var ok = confirm('ATENCIÓN: vas a guardar un cambio grande en el plano de "' + _event.nombre + '":\n\n• ' + perdidas.join('\n• ') +
+        '\n\n¿Seguro que quieres guardar estos cambios?\n\nAceptar = guardar.\nCancelar = no guardar y regresar el plano a como estaba guardado.');
+      if (!ok) {
+        clearTimeout(_saveTimer);
+        _cambiosPendientes = false;
+        _event.data.layout = JSON.parse(JSON.stringify(_planoGuardado));
+        if (window.App && window.App.loadLayout) window.App.loadLayout(_event.data.layout);
+        _lastLayoutJson = window.App && window.App.getLayout ? JSON.stringify(window.App.getLayout()) : '';
+        setStatus('Guardado', 'ok');
+        toast('No se guardó: el plano regresó a como estaba guardado.', 'warning');
+        return Promise.resolve('cancelado');
+      }
+    }
     _cambiosPendientes = false;
     syncMinuto(_event.data);
     var b = _event.data.brief || {};
@@ -539,7 +577,7 @@
         return 'conflicto';
       } else {
         ev.updated_at = res.data[0].updated_at;
-        if (_event === ev) setStatus('Guardado', 'ok');
+        if (_event === ev) { setStatus('Guardado', 'ok'); _planoGuardado = JSON.parse(JSON.stringify(ev.data.layout || null)); }
         return 'ok';
       }
     });
@@ -608,6 +646,7 @@
       row.data.montaje = Object.assign({ fotos: [] }, row.data.montaje || {});
       if (!Array.isArray(row.data.proveedores)) row.data.proveedores = [];
       _event = row;
+      _planoGuardado = JSON.parse(JSON.stringify(row.data.layout || null)); // como está en la base: contra esto se valida al guardar
       if (_capitan) { ajustarPermisoCapitan(); applyMode(); }
       if (row.data.layout && window.App && window.App.loadLayout) {
         window.App.loadLayout(row.data.layout);
