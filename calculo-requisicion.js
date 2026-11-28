@@ -71,12 +71,19 @@
     'Sillón principal (elegir color)': ['Sillón principal beige', 'Sillón principal gris Oxford', 'Sillón principal palo de rosa (alita)'],
     'Periquera (madera o metal)': ['Periquera alta madera', 'Periquera alta metal'],
     'Descanso (madera o metálico)': ['Descanso de madera', 'Descanso metálico'],
+    'Vitrolero (cristal pequeño o plástico grande)': ['Vitrolero de cristal pequeño', 'Vitrolero de plástico grande'],
     'Portería metálica (dorada o negra)': ['Portería metálica dorada', 'Portería metálica negra'],
     'Banco alto (elegir modelo)': ['Banco madera alto', 'Banco metálico alto', 'Banco alto tejido plástico negro'],
     'Números de mesa (acrílico o madera)': ['Números de mesa acrilicos', 'Números para mesa en madera'],
     'Letra gigante XV (1.10 o 1.80 m)': ['Letra gigante XV 1.10 mt', 'Letra gigante XV 1.80 mt']
   };
 
+  // Mesas físicas que forman una mesa del plano: tablón imperial = sus tablones; campirana cuadrada (≥1.5 m por lado) = 2 rectangulares de madera
+  function piezasMesa(e) {
+    if (e.type === 'table_imperial') return parseInt(e.tablones, 10) || 1;
+    if (e.type === 'table_campirana') return parseInt(e.tablones, 10) || (Math.min(parseFloat(e.w) || 0, parseFloat(e.h) || 0) >= 1.5 ? 2 : 1);
+    return 1;
+  }
   function calcular(ev) {
     var d = ev.data || {}, b = d.brief || {};
     var elements = (d.layout && d.layout.elements) || [];
@@ -97,7 +104,9 @@
     var hayFuerte = hay('Plato fuerte') || !!b.proteina;
     var haySopa = hay('Sopa / Crema') || /\b(sopa|crema de|consome|caldo)\b/.test(textoMenu);
     var hayEnsalada = hay('Ensalada') || hay('Entrada');
-    var hayPostre = hay('Postre');
+    // El pastel que se parte y se sirve en el minuto a minuto también es postre (plato y cucharita por invitado)
+    var hayPastel = /pastel/.test(norm(JSON.stringify((d.minuto || []).map(function (r) { return r.actividad; }))));
+    var hayPostre = hay('Postre') || hayPastel;
     if (!hayPostre && /postre/.test(norm((b.observaciones || '') + ' ' + (b.menu_notas || '')))) pendientes.push('Postre por confirmar: si se sirve, agregar plato de postre y cucharita por invitado.');
     var sinMenu = !Object.keys(tm).some(function (k) { return hay(k); }) && !b.proteina && !String(b.menu_notas || '').trim();
     if (sinMenu) pendientes.push('No hay menú registrado: falta definir entrada, sopa o crema, plato fuerte y postre (de ahí salen la loza y los cubiertos por invitado).');
@@ -119,7 +128,7 @@
       var principal = MESAS_PRINCIPALES.test(e.type);
       var inv = e.inventario || {};
       var mesa = inv.mesa ? inv.mesa : principal ? (principalMarmol ? 'Mesa rectangular tipo marmol' : 'Mesa principal — tipo por confirmar') : (e.type === 'table_imperial' ? 'Mesa tablón' : MESA[e.type] || ('Mesa — ' + (e.name || e.type)));
-      sumar(mesa, e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mesas y periqueras', principal ? '1 es la mesa principal' : '');
+      sumar(mesa, piezasMesa(e), 'Mesas y periqueras', principal ? '1 es la mesa principal' : (e.type === 'table_campirana' && piezasMesa(e) > 1 ? 'cada mesa cuadrada son ' + piezasMesa(e) + ' rectangulares juntas' : ''));
       if (!n) return;
       if (principal && c.tipoSilla === 'princesa' && parseInt(c.sillonesPrincesa, 10) > 0) {
         // Sillones de princesa al centro y sillas normales a los lados (p. ej. para las mamás)
@@ -151,12 +160,12 @@
       }
       if (hayFuerte && c.platoTrinche && c.platoTrinche !== 'ninguno') sumar(TRINCHE[c.platoTrinche] || ('Plato trinche ' + cap(c.platoTrinche)), n, 'Loza');
       if (haySopa) sumar('Plato sopero redondo blanco', n, 'Loza', 'Sopa / crema en el menú');
-      if (hayPostre) sumar('Plato postre', n, 'Loza');
+      if (hayPostre) sumar('Plato postre', n, 'Loza', hay('Postre') ? '' : 'para el pastel');
       var col = CUBIERTO[c.cubiertos] || CUBIERTO.plateado;
       if (hayFuerte) { sumar('Cuchillo ' + col[0], n, 'Cubiertos'); sumar('Tenedor ' + col[0] + ' carne', n, 'Cubiertos'); }
       if (hayEnsalada) sumar('Tenedor ' + col[0] + ' ensalada', n, 'Cubiertos', '1er / 2do tiempo');
-      if (haySopa) sumar('Cuchara sopera ' + col[1], n, 'Cubiertos');
-      if (hayPostre) sumar('Cucharita ' + col[1], n, 'Cubiertos');
+      if (haySopa || hayFuerte) sumar('Cuchara sopera ' + col[1], n, 'Cubiertos', 'el servicio lleva cuchara, tenedor y cuchillo');
+      if (hayPostre) sumar('Cucharita ' + col[1], n, 'Cubiertos', hay('Postre') ? 'postre' : 'postre (pastel)');
       var c1 = c.cristal && c.cristal !== 'ninguno' ? copa(c.cristal, c.copasColor) : null;
       var c2 = c.cristal2 && c.cristal2 !== 'ninguno' ? copa(c.cristal2, c.copasColor2) : null;
       // Una copa por lugar: con dos copas se reparten (copasReparto llevan la 1; si no se indica, mitad y mitad)
@@ -183,7 +192,7 @@
         sumar('Servilleta ' + tono, piezas, 'Mantelería', 'doblez ' + f, ['Servilleta corrugada ' + tono]);
       });
       if (c.mantelColor && c.mantelColor !== 'sin_mantel') sumar('Mantel ' + cap(c.mantelColor).toLowerCase(), e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mantelería', 'confirmar forma (redondo / cuadrado / tablón)');
-      if (c.caminoColor && c.caminoColor !== 'ninguno') sumar('Camino ' + cap(c.caminoColor).toLowerCase(), e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mantelería');
+      if (c.caminoColor && c.caminoColor !== 'ninguno') sumar('Camino ' + cap(c.caminoColor).toLowerCase(), piezasMesa(e), 'Mantelería', '1 por mesa (rectangular o tablón)');
       if (principal) sumar('Arreglo floral para mesa principal', 1, 'Arreglos florales');
       else if (c.arregloFloralTipo === 'alto') { sumar('Arreglo floral alto (redondo)', 1, 'Arreglos florales'); sumar('Base metálica alta (centro de mesa)', 1, 'Arreglos florales'); }
       else if (c.arregloFloralTipo === 'bajo') sumar('Arreglo floral bajo (largo, rectangular)', 1, 'Arreglos florales');
@@ -216,16 +225,23 @@
     });
 
     // Templete (por ejemplo, para dar altura a la mesa principal)
-    if (/templete/.test(textoBrief)) {
-      sumar('Pieza de templete de madera', '', 'Decoración y estructuras', 'POR CONFIRMAR: cuántas piezas');
-      pendientes.push('Templete: definir cuántas piezas de templete se ocupan.');
+    // La mesa principal va sobre templete de madera (templetePiezas en la mesa principal; si no, queda pendiente)
+    var princT = elements.filter(function (e) { return MESAS_PRINCIPALES.test(e.type); });
+    var piezasT = princT.reduce(function (s, e) { return s + (parseInt(e.templetePiezas, 10) || 0); }, 0);
+    if (piezasT) sumar('Pieza de templete de madera', piezasT, 'Decoración y estructuras', 'templete de la mesa principal');
+    else if (princT.length || /templete/.test(textoBrief)) {
+      sumar('Pieza de templete de madera', '', 'Decoración y estructuras', 'POR CONFIRMAR: cuántas piezas' + (princT.length ? ' (mesa principal de ' + princT.map(function (e) { return e.w + ' × ' + e.h + ' m'; }).join(', ') + ')' : ''));
+      pendientes.push('Templete: definir cuántas piezas de templete de madera se ocupan' + (princT.length ? ' para la mesa principal' : '') + '.');
     }
     // Aguas y bebidas que se sirven en vitrolero: uno por cada sabor
     var SABORES = [['agua fresca', /agua(s)? fresca/], ['margaritas', /margarita/], ['piñadas', /pinada/], ['limonada', /limonada/], ['naranjada', /naranjada/],
       ['jamaica', /jamaica/], ['horchata', /horchata/], ['tamarindo', /tamarindo/], ['agua de sabor', /agua(s)? de (sabor|frutas?)/]];
     var sabores = SABORES.filter(function (x) { return x[1].test(textoBrief); }).map(function (x) { return x[0]; });
     if (sabores.indexOf('agua fresca') > -1 && sabores.indexOf('agua de sabor') > -1) sabores.splice(sabores.indexOf('agua de sabor'), 1);
-    if (sabores.length) {
+    if (parseInt(b.vitroleros, 10) > 0) {
+      sumar('Vitrolero (cristal pequeño o plástico grande)', parseInt(b.vitroleros, 10), 'Barra y cocina', sabores.length ? 'sabores: ' + sabores.join(', ') : '');
+      if (!sabores.length) pendientes.push('Aguas: ' + b.vitroleros + ' vitroleros; definir de qué sabores.');
+    } else if (sabores.length) {
       sumar('Vitrolero de cristal pequeño', sabores.length, 'Barra y cocina', 'uno por sabor: ' + sabores.join(', ') + ' (o vitrolero de plástico grande)');
       pendientes.push('Aguas: se sugiere 1 vitrolero por sabor (' + sabores.join(', ') + '). Si hay más sabores, uno más por cada sabor.');
     }
@@ -269,6 +285,8 @@
     if (hayBarra) {
       // Un kit por barra (fija o montable)
       var k = Math.max(1, barras.length);
+      sumar('Tapete de bar cuadrado', k, 'Barra y cocina', '1 por barra');
+      sumar('Tapete de bar largo', k, 'Barra y cocina', '1 por barra');
       ['Exprimidor de limon', 'Cuchillo de barra', 'Pica hielo', 'Pinzas para hielo', 'Tarja para hielo'].forEach(function (p) { sumar(p, k, 'Barra y cocina', k === 1 ? '1 kit de barra' : k + ' kits de barra (uno por barra)'); });
     }
 
@@ -320,7 +338,11 @@
     if (!meseros) pendientes.push('Meseros: faltan en el staff; con ellos se calculan descansos (de madera o metálicos), charolas de bar y de grasa (1 de cada uno por mesero).');
     // Jarras de plástico con tapa: una por mesa
     var nMesas = L.banquete.length + L.principal.length;
-    if (nMesas) sumar('Jarra de plástico', nMesas, 'Barra y cocina', 'con tapa · 1 por mesa');
+    if (nMesas) {
+      var nJarras = parseInt(b.jarras, 10) || '';
+      sumar('Jarra de plástico', nJarras, 'Barra y cocina', nJarras ? 'con tapa' : 'con tapa · POR CONFIRMAR cuántas (hay ' + nMesas + ' mesas)');
+      if (!nJarras) pendientes.push('Jarras de plástico con tapa: definir cuántas se envían (hay ' + nMesas + ' mesas con la principal).');
+    }
     // Limpieza
     ['Bolsas de basura', 'Esponja / fibra para trastes'].forEach(function (p) { sumar(p, '', 'Limpieza', 'POR CONFIRMAR: cuántas'); });
     pendientes.push('Limpieza: definir cuántas bolsas de basura y fibras para trastes.');

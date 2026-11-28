@@ -36,7 +36,14 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
   cortinas plisadas (`cortinaColor`) y guirnalda de globos con la PALETA DE LA DECORACIÓN del evento (brief
   `paleta`/`paletas`, o si no hay, colores de caminos, servilletas y manteles); `globosColores` solo para forzar otros.
 - Cada periquera lleva sombrilla; pendiente: cuántas de madera y cuántas de metal.
-- Por mesero: 1 descanso (madera o metálico), 1 charola de bar y 1 de grasa. Jarra de plástico con tapa: 1 por mesa.
+- Mesa campirana cuadrada (≥1.5 m por lado, p. ej. 1.6×1.6) = 2 mesas rectangulares de madera juntas (o su campo `tablones`);
+  caminos: 1 por mesa rectangular/tablón (10 campiranas + principal = 21 caminos).
+- Cubiertos: el servicio siempre lleva cuchara, tenedor y cuchillo por invitado; si hay postre (en el menú o pastel en el minuto) se agregan plato de postre y cucharita.
+- Mesa principal sobre templete de madera: piezas en `templetePiezas` de la mesa principal; si no, "Falta definir" las pide (no se inventa).
+- Barra: 1 tapete de bar cuadrado y 1 largo por barra (fija o montable), además del kit.
+- Jarras de plástico con tapa: cuántas se envían es pendiente (`brief.jarras`); no se supone 1 por mesa.
+- Vitroleros: `brief.vitroleros` (cantidad fija, elegir cristal pequeño o plástico grande) o uno por sabor de agua.
+- Por mesero: 1 descanso (madera o metálico), 1 charola de bar y 1 de grasa.
 - Letras gigantes del plano llevan su texto (campo `letras`, p. ej. "M&E"); en bodega solo hay E, L, O, V y XV.
   `letrasPorConfirmar` = aún no se sabe si van (queda en "Falta definir"); `letrasSinFocos` = van sin focos (no se piden focos ni extensiones).
 - Alfombra roja y chisperos salen del plano. Si un proveedor tiene servicio "Chisperos", "Falta definir" solo pregunta momento y quién los detona.
@@ -50,7 +57,7 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Si hay mesa principal y el plano no tiene back, "Falta definir" pregunta si habrá back detrás de ella.
 - Servilletas: UNA por lugar. Con dos dobleces (p. ej. corbata negra y corazón rojo) se alternan con el mismo reparto que las copas
   (el 1er doblez con la copa 1); nunca dos en el mismo lugar. Corbata = franja que cruza el plato de lado a lado (no moño).
-- Servilletas de colores que no están en inventario van como "Servilleta de tela" con la cantidad de cada color y doblez en la nota.
+- Servilletas de colores que no están en inventario van como "Servilleta de tela <color>", UN RENGLÓN POR COLOR (roja, negra…) con su doblez en la nota.
 - Cojín de silla: opción de la mesa (`sillaCojin`), 1 cojín por silla (cross back, Tiffany o Boss).
 - Plato base: uno, o dos alternados (`platoBase` y `platoBase2`), mitad y mitad con el mismo reparto que las copas.
 - Vitroleros: uno por sabor de agua. Si falta un dato, se deja como pendiente ("Falta definir"), no se inventa.

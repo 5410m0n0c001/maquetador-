@@ -223,6 +223,8 @@
         return _inventario;
       });
   }
+  // Color en femenino para "Servilleta de tela …": rojo → roja, negro → negra, blanco → blanca
+  function femenino(color) { return String(color).replace(/\b(roj|negr|blanc|amarill|morad|dorad|platead)o\b/g, '$1a'); }
   function buscarArticulo(nombre) {
     var n = norm(nombre);
     return (_inventario || []).find(function (a) { return norm(a.nombre) === n; }) || null;
@@ -250,11 +252,14 @@
       var nota = i.nota || '';
       // Servilleta de un color que no está en el inventario: va como servilleta de tela con el color en la nota
       // (con la cantidad de cada color, para que bodega sepa cuántas de cada una)
-      if (!art && /^Servilleta /.test(i.nombre)) { art = buscarArticulo('Servilleta de tela'); nota = i.cant + ' ' + i.nombre.replace(/^Servilleta /, '') + (nota ? ' (' + nota + ')' : ''); }
-      var it = { id: art ? art.id : null, nombre: art ? art.nombre : i.nombre, categoria: art ? art.categoria : i.categoria, cant: i.cant, nota: nota, origen: 'calculo' };
-      var ya = it.id && porId[it.id];
+      // (un renglón por color: "Servilleta de tela roja", "Servilleta de tela negra", con su doblez en la nota)
+      var porColor = false;
+      if (!art && /^Servilleta /.test(i.nombre)) { art = buscarArticulo('Servilleta de tela'); porColor = !!art; }
+      var it = { id: art ? art.id : null, nombre: porColor ? 'Servilleta de tela ' + femenino(i.nombre.replace(/^Servilleta /, '')) : art ? art.nombre : i.nombre, categoria: art ? art.categoria : i.categoria, cant: i.cant, nota: nota, origen: 'calculo' };
+      if (porColor) it.porColor = true;
+      var ya = it.id && !porColor && porId[it.id];
       if (ya) { ya.cant = (parseInt(ya.cant, 10) || 0) + (parseInt(it.cant, 10) || 0); ya.nota = [ya.nota, it.nota].filter(Boolean).join(' · '); return lista; }
-      if (it.id) porId[it.id] = it;
+      if (it.id && !porColor) porId[it.id] = it;
       lista.push(it);
       return lista;
     }, []);
@@ -265,7 +270,7 @@
     var r = calculoItems(ev);
     v.items = v.items.filter(function (i) { return i.origen !== 'calculo'; });
     r.items.forEach(function (it) {
-      var ya = v.items.some(function (i) { return it.id ? i.id === it.id : norm(i.nombre) === norm(it.nombre); });
+      var ya = v.items.some(function (i) { return it.id && !it.porColor ? i.id === it.id : norm(i.nombre) === norm(it.nombre); });
       // "Elegir uno" ya resuelto a mano: si lo capturado de sus opciones cubre la cantidad, no se vuelve a pedir
       if (!ya && it.opciones && it.opciones.length) {
         var cubiertas = v.items.filter(function (i) { return it.opciones.some(function (o) { return o.id === i.id; }); })
@@ -699,13 +704,15 @@
     var cabeza = '<div class="art rot"><span class="ok">✓</span><span class="nom">Artículo</span><span class="cant">Cant.</span><span class="surte">Surte</span></div>';
     var grupos = agrupar(_inventario || []).map(function (g) {
       return '<section class="grupo"><h3>' + esc(g.categoria) + '</h3>' + cabeza + g.items.map(function (a) {
-        var it = v.items.find(function (i) { return i.id === a.id; });
+        var its = v.items.filter(function (i) { return i.id === a.id; }), it = its[0];
+        // Mismo artículo en varios renglones (p. ej. servilleta de tela roja y negra): cantidad de cada uno
+        var cantTxt = its.length > 1 ? its.map(function (i) { return i.cant + " " + i.nombre.replace(a.nombre, "").trim(); }).join(" · ") : (it ? it.cant : "");
         var op = !it && v.items.find(function (i) { return i.opciones && i.opciones.some(function (o) { return o.id === a.id; }); });
         // Elegir una opción o repartir las piezas: la cantidad de cada una se escribe a mano (el total va en la etiqueta)
         if (op) return '<div class="art elegir"><span class="caja"></span><span class="nom">' + esc(a.nombre) + ' <em>elegir o repartir' + (op.cant ? ' · total ' + esc(op.cant) : '') + '</em></span>' +
           '<span class="cant"></span><span class="surte">' + cajasSurte(null) + '</span></div>';
         return '<div class="art"><span class="caja">' + (it ? '✓' : '') + '</span><span class="nom">' + esc(a.nombre) + '</span>' +
-          '<span class="cant">' + (it ? esc(it.cant) : '') + '</span><span class="surte">' + cajasSurte(it ? it.surte || '' : null) + '</span></div>';
+          '<span class="cant">' + esc(cantTxt) + '</span><span class="surte">' + cajasSurte(it ? it.surte || '' : null) + '</span></div>';
       }).join('') + '</section>';
     }).join('');
 
