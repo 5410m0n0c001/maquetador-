@@ -53,7 +53,8 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 
 ## Rancho Los Potrillos (rancho.js)
 - Salón abierto con arcos; palapa de concreto ABIERTA con arcos en los 4 lados, con 2 mesas metálicas
-  rectangulares de 10 sillas metálicas y una barrita en la esquina del lado del puente (mobiliario del venue,
+  rectangulares de 10 sillas metálicas al centro, una tras otra a lo largo, y una barrita en la esquina del puente
+  y del camino a la entrada (noreste) (mobiliario del venue,
   no cuenta en lugares ni requisición).
 - Cascada = canal de agua horizontal entre salón y palapa, bajo el puente; puente recto con medio arco.
 - Alberca azul.

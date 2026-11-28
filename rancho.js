@@ -21,20 +21,22 @@
   }
 
   // Mobiliario fijo del rancho dentro de la palapa (en metros, desde el centro): mesas metálicas
-  // rectangulares con sus sillas y una barrita en la esquina del lado del puente (noroeste).
+  // rectangulares con sus sillas (al centro, a lo largo) y una barrita en la esquina del puente y del camino (noreste).
   // Es parte de la palapa: no cuenta como lugares del banquete ni va en la requisición.
   function mobiliarioPalapa(e) {
     var w = e.w, d = e.h, piezas = [];
     var nMesas = e.mesasMetalicas == null ? 2 : e.mesasMetalicas, porMesa = e.sillasMesa || 10, porLado = Math.ceil(porMesa / 2);
+    // Mesas al centro, una tras otra a lo largo de la palapa, repartidas en todo el largo
     for (var i = 0; i < nMesas; i++) {
-      var mx = -w / 2 + (i + 1) * w / (nMesas + 1), mz = 1.2, largo = 2.4;
+      var mx = 0, mz = -d / 2 + (i + 1) * d / (nMesas + 1), largo = 2.4;
       piezas.push({ x: mx, z: mz, w: 0.8, d: largo, mesa: true });
       for (var k = 0; k < porMesa; k++) {
         var lado = k < porLado ? -1 : 1, j = k < porLado ? k : k - porLado, cuantos = k < porLado ? porLado : porMesa - porLado;
         piezas.push({ x: mx + lado * 0.72, z: mz - largo / 2 + (j + 0.5) * largo / cuantos, w: 0.42, d: 0.42, silla: true, mira: -lado });
       }
     }
-    if (e.barra !== false) piezas.push({ x: -w / 2 + 1.4, z: -d / 2 + 0.75, w: 2, d: 0.6, barra: true });
+    // Barrita: esquina del lado del puente (norte) y del camino a la entrada del rancho (oriente)
+    if (e.barra !== false) piezas.push({ x: (e.barraLado === 'poniente' ? -1 : 1) * (w / 2 - 1.4), z: -d / 2 + 0.75, w: 2, d: 0.6, barra: true });
     return piezas;
   }
 
