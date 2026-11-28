@@ -359,7 +359,11 @@ window.Visualizer3D = (function () {
     } else if (f === 'conito') {
       m = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.13, 12), mat);
       m.position.y = 0.065; g.add(m);
-    } else if (f === 'corbata' || f === 'monito') {
+    } else if (f === 'corbata') {
+      // Corbata: franja que cruza el plato de lado a lado y se mete por debajo (solo se ve la banda)
+      m = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.004, 0.06), mat);
+      m.position.y = 0.002; g.add(m);
+    } else if (f === 'monito') {
       // Moñito: dos alas y nudo al centro
       [-1, 1].forEach(function (sx) {
         var ala = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.055, 8), mat);
@@ -383,18 +387,28 @@ window.Visualizer3D = (function () {
     g.traverse(function (o) { if (o.isMesh) o.castShadow = true; });
     return g;
   }
-  function _servilletas3D(tw, config, y) {
+  // Una sola servilleta por lugar. Con dos dobleces se reparten como las copas (copasReparto o mitad y mitad):
+  // el primer doblez va con la copa 1 y el segundo con la copa 2; nunca dos servilletas en el mismo lugar.
+  function _servilletas3D(tableGroup, tw, config, y) {
     var folds = Array.isArray(config.servilletaDoblez) ? config.servilletaDoblez : (config.servilletaDoblez ? [config.servilletaDoblez] : []);
     if (!folds.length) { if (!config.servilletaColor) return; folds = ['plana']; }
-    // Primero lo plano (cartera) y encima lo que va parado o sobrepuesto
-    var orden = folds.slice().sort(function (a, b) { return (a === 'cartera' ? 0 : 1) - (b === 'cartera' ? 0 : 1); });
-    var yy = y;
-    orden.forEach(function (f) {
-      var forma = _formaServilleta(f, _getNapkinMaterial(_colorServilleta(config, f)));
-      forma.position.y = yy;
-      tw.add(forma);
-      yy += f === 'cartera' ? 0.014 : 0.004;
-    });
+    var f = folds[0];
+    if (folds.length > 1) {
+      var u = tableGroup.userData;
+      var k = u.asiento || 0;
+      var n = u.numAsientos || 1;
+      if (folds.length === 2) {
+        var r = parseInt(config.copasReparto, 10);
+        var n1 = isNaN(r) ? Math.ceil(n / 2) : Math.max(0, Math.min(n, r));
+        var n2 = n - n1;
+        f = Math.floor((k + 1) * n2 / n) > Math.floor(k * n2 / n) ? folds[1] : folds[0];
+      } else {
+        f = folds[k % folds.length];
+      }
+    }
+    var forma = _formaServilleta(f, _getNapkinMaterial(_colorServilleta(config, f)));
+    forma.position.y = y;
+    tw.add(forma);
   }
 
   // Arreglo floral de la mesa: bajo (alargado, sobre el centro) o alto (base metálica con esfera de flores)
@@ -598,7 +612,7 @@ window.Visualizer3D = (function () {
         currentY += 0.006;
       }
 
-      _servilletas3D(tablewareGroup, config, currentY);
+      _servilletas3D(group, tablewareGroup, config, currentY);
 
       var forkGeom = new THREE.BoxGeometry(0.012, 0.003, 0.14);
       var fork = new THREE.Mesh(forkGeom, cutleryMat);
@@ -660,7 +674,7 @@ window.Visualizer3D = (function () {
         currentY += 0.006;
       }
 
-      _servilletas3D(tablewareGroup, config, currentY);
+      _servilletas3D(group, tablewareGroup, config, currentY);
 
       var forkGeom = new THREE.BoxGeometry(0.012, 0.003, 0.14);
       var fork = new THREE.Mesh(forkGeom, cutleryMat);
@@ -739,7 +753,7 @@ window.Visualizer3D = (function () {
         currentY += 0.006;
       }
 
-      _servilletas3D(tablewareGroup, config, currentY);
+      _servilletas3D(group, tablewareGroup, config, currentY);
 
       var forkGeom = new THREE.BoxGeometry(0.012, 0.003, 0.14);
       var fork = new THREE.Mesh(forkGeom, cutleryMat);

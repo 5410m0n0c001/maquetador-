@@ -266,6 +266,12 @@
     v.items = v.items.filter(function (i) { return i.origen !== 'calculo'; });
     r.items.forEach(function (it) {
       var ya = v.items.some(function (i) { return it.id ? i.id === it.id : norm(i.nombre) === norm(it.nombre); });
+      // "Elegir uno" ya resuelto a mano: si lo capturado de sus opciones cubre la cantidad, no se vuelve a pedir
+      if (!ya && it.opciones && it.opciones.length) {
+        var cubiertas = v.items.filter(function (i) { return it.opciones.some(function (o) { return o.id === i.id; }); })
+          .reduce(function (s, i) { return s + (parseInt(i.cant, 10) || 0); }, 0);
+        ya = cubiertas > 0 && cubiertas >= (parseInt(it.cant, 10) || 0);
+      }
       if (!ya) v.items.push(it);
     });
     var porElegir = v.items.filter(function (i) { return i.opciones && i.opciones.length; });

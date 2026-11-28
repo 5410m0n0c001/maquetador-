@@ -2922,7 +2922,7 @@
       if (folds.length) items.push(['Servilleta', folds.map(function (f) {
         var color = c['servilletaColor_' + f] || (f === 'corazon' ? c.servilletaColorCorazon : f === 'corbata' ? c.servilletaColorCorbata : c.servilletaColorOtros) || 'blanco';
         return (foldLabels[f] || cap(f)) + ' (' + cap(color) + ')';
-      }).join(', ')]);
+      }).join(folds.length > 1 ? ' o ' : ', ') + (folds.length > 1 ? ' · una por lugar, alternadas' : '')]);
       if (c.platoBase && c.platoBase !== 'ninguno') items.push(['Plato base', (plateBaseLabels[c.platoBase] || cap(c.platoBase)) +
         (c.platoBase2 && c.platoBase2 !== 'ninguno' ? ' y ' + (plateBaseLabels[c.platoBase2] || cap(c.platoBase2)) + ' (alternados)' : '')]);
       if (c.platoTrinche && c.platoTrinche !== 'ninguno') items.push(['Plato trinche', cap(c.platoTrinche)]);
@@ -2932,7 +2932,7 @@
       var glass = [];
       if (c.cristal && c.cristal !== 'ninguno') glass.push((glassLabels[c.cristal] || cap(c.cristal)) + ' (' + (c.copasColor || 'transparente') + ')');
       if (c.cristal2 && c.cristal2 !== 'ninguno') glass.push((glassLabels[c.cristal2] || cap(c.cristal2)) + ' (' + (c.copasColor2 || 'transparente') + ')');
-      if (glass.length) items.push(['Cristalería', glass.join(', ')]);
+      if (glass.length) items.push(['Cristalería', glass.join(glass.length > 1 ? ' o ' : ', ') + (glass.length > 1 ? ' · una por lugar, alternadas' : '')]);
       if (c.arregloFloralTipo && c.arregloFloralTipo !== 'ninguno') items.push(['Centro / floral', cap(c.arregloFloralTipo) + (c.arregloFloralAcomodo ? ' (' + c.arregloFloralAcomodo + ')' : '')]);
       return items;
     };
@@ -2957,16 +2957,44 @@
     });
     // El menú por mesa solo se muestra si no es igual en todas
     var menusDistintos = gruposMesa.filter(function (g) { return !g.principal; }).map(function (g) { return g.menu; }).filter(function (v, i, arr) { return arr.indexOf(v) === i; }).length > 1;
-    // Foto "Montaje 1", "Montaje 2"… para el 1er, 2do… grupo de mesas del banquete
+    // Las mesas de invitados van todas en UN solo montaje: lo que es igual en todas se escribe una vez y lo que
+    // cambia (centro alto o bajo, menú, tipo de mesa…) se anota como variación con sus mesas
+    var invitadosG = gruposMesa.filter(function (g) { return !g.principal; });
+    if (invitadosG.length > 1) {
+      var etiquetas = [];
+      invitadosG.forEach(function (g) {
+        if (menusDistintos) g.items = g.items.concat([['Menú', g.menu || '—']]);
+        g.items.unshift(['Tipo de mesa', typeLabels[g.t.type] || g.t.name || g.t.type]);
+        g.items.forEach(function (it) { if (etiquetas.indexOf(it[0]) < 0) etiquetas.push(it[0]); });
+      });
+      var itemsUnidos = [];
+      etiquetas.forEach(function (et) {
+        var porValor = {}, orden = [];
+        invitadosG.forEach(function (g) {
+          var it = g.items.find(function (x) { return x[0] === et; });
+          var v = it ? it[1] : 'Sin ' + et.toLowerCase();
+          if (!porValor[v]) { porValor[v] = []; orden.push(v); }
+          porValor[v] = porValor[v].concat(g.nums.filter(Boolean));
+        });
+        if (orden.length === 1) { if (et !== 'Tipo de mesa') itemsUnidos.push([et, orden[0]]); return; }
+        itemsUnidos.push([et, orden.map(function (v) {
+          var ns = porValor[v];
+          return v + (ns.length ? ' (' + (ns.length === 1 ? 'mesa ' : 'mesas ') + rangos(ns) + ')' : '');
+        }).join(' · ')]);
+      });
+      var tipos = invitadosG.map(function (g) { return typeLabels[g.t.type] || g.t.name || g.t.type; }).filter(function (v, i, a) { return a.indexOf(v) === i; });
+      var unido = { t: invitadosG[0].t, tipoTexto: tipos.join(' y '), items: itemsUnidos, menu: '', principal: false,
+        nums: [].concat.apply([], invitadosG.map(function (g) { return g.nums; })),
+        sillas: [].concat.apply([], invitadosG.map(function (g) { return g.sillas; })) };
+      gruposMesa = gruposMesa.filter(function (g) { return g.principal; }).concat([unido]);
+    }
+    // Foto "Montaje" (o "Montaje 1") para el montaje de las mesas de invitados
     var fotosLibres = fotosMontaje.slice();
-    var nMontaje = 0;
     gruposMesa.forEach(function (g) {
       if (g.principal) return;
-      nMontaje++;
-      var foto = fotosLibres.find(function (f) { return f.etiqueta === 'Montaje ' + nMontaje; }) ||
-        (gruposMesa.filter(function (x) { return !x.principal; }).length === 1 ? fotosLibres.find(function (f) { return f.etiqueta === 'Montaje'; }) : null);
+      var foto = fotosLibres.find(function (f) { return f.etiqueta === 'Montaje'; }) || fotosLibres.find(function (f) { return f.etiqueta === 'Montaje 1'; });
       if (foto) { g.foto = foto; fotosLibres.splice(fotosLibres.indexOf(foto), 1); }
-      g.titulo = 'Montaje ' + nMontaje;
+      g.titulo = 'Montaje';
     });
     var sillasTexto = function (lista) {
       var cuenta = {};
@@ -2983,7 +3011,7 @@
         var mesas = g.principal ? 'Mesa principal' : (nums.length ? (nums.length === 1 ? 'Mesa ' : 'Mesas ') + rangos(nums) : '');
         return '<article class="mcard">' + (g.foto ? '<img src="' + esc(g.foto.url) + '" alt="' + esc(g.titulo || 'Mesa principal') + '">' : '') +
           '<div class="cuerpo"><h3>' + esc(g.principal ? 'Mesa principal' : g.titulo + ' · ' + mesas) + '</h3>' +
-          '<div class="sub">' + esc((g.principal ? '' : g.nums.length + ' mesas · ') + (typeLabels[g.t.type] || g.t.name || g.t.type) + ' · ' + sillasTexto(g.sillas)) + '</div>' +
+          '<div class="sub">' + esc((g.principal ? '' : g.nums.length + ' mesas · ') + (g.tipoTexto || typeLabels[g.t.type] || g.t.name || g.t.type) + ' · ' + sillasTexto(g.sillas)) + '</div>' +
           (g.foto && g.foto.descripcion ? '<p class="desc">' + esc(g.foto.descripcion) + '</p>' : '') +
           '<div class="lleva">' + g.items.map(function (it) { return '<div><b>' + esc(it[0]) + '</b>' + esc(it[1]) + '</div>'; }).join('') +
             (menusDistintos && g.menu ? '<div><b>Menú</b>' + esc(g.menu) + '</div>' : '') + '</div>' +

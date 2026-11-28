@@ -38,13 +38,18 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Cada periquera lleva sombrilla; pendiente: cuántas de madera y cuántas de metal.
 - Por mesero: 1 descanso (madera o metálico), 1 charola de bar y 1 de grasa. Jarra de plástico con tapa: 1 por mesa.
 - Letras gigantes del plano llevan su texto (campo `letras`, p. ej. "M&E"); en bodega solo hay E, L, O, V y XV.
-- Alfombra roja, chisperos, mesa de fotógrafos (`table_photographers`, no cuenta lugares) salen del plano.
+  `letrasPorConfirmar` = aún no se sabe si van (queda en "Falta definir"); `letrasSinFocos` = van sin focos (no se piden focos ni extensiones).
+- Alfombra roja y chisperos salen del plano. Si un proveedor tiene servicio "Chisperos", "Falta definir" solo pregunta momento y quién los detona.
+- Mesa de fotógrafos (`table_photographers`): la llevan los fotógrafos; solo va en el croquis (no cuenta lugares ni va en la requisición).
+- Back: `porteria` del elemento ("negra" | "dorada") define la portería en requisición y 3D; sin ella queda "elegir uno".
 - "Falta definir" (en la requisición y en la ficha) se recalcula al momento: menú, back, copas (sobre todo si hay brindis),
   bebidas y mezcladores, garrafones, hielo, fruta, limpieza, meseros, periqueras, chisperos, letras, pétalos y conos,
   kit de fiesta, fotos del montaje y pastel (quién lo provee y a qué hora llega).
 - Servicios de la ficha: lo nuevo del plano o del minuto (chisperos, pastel…) se agrega solo sin borrar lo ya capturado.
 - Menú: si no hay menú registrado, "Falta definir" pide entrada, sopa o crema, plato fuerte y postre (de ahí salen loza y cubiertos).
 - Si hay mesa principal y el plano no tiene back, "Falta definir" pregunta si habrá back detrás de ella.
+- Servilletas: UNA por lugar. Con dos dobleces (p. ej. corbata negra y corazón rojo) se alternan con el mismo reparto que las copas
+  (el 1er doblez con la copa 1); nunca dos en el mismo lugar. Corbata = franja que cruza el plato de lado a lado (no moño).
 - Servilletas de colores que no están en inventario van como "Servilleta de tela" con la cantidad de cada color y doblez en la nota.
 - Cojín de silla: opción de la mesa (`sillaCojin`), 1 cojín por silla (cross back, Tiffany o Boss).
 - Plato base: uno, o dos alternados (`platoBase` y `platoBase2`), mitad y mitad con el mismo reparto que las copas.
@@ -54,6 +59,7 @@ respétalos; si un evento no los cumple, avisa antes de corregirlo.
 - Recalcular no pisa lo que el planner eligió a mano (origen manual/kit); quita los "elegir uno" ya resueltos.
 
 ## Ficha técnica (PDF)
+- Montaje: UN solo montaje para todas las mesas de invitados; lo que cambia entre mesas (centro alto/bajo, menú, tipo de mesa) se anota como variación con sus números de mesa. La mesa principal va aparte.
 - Orden: datos → mesas y lugares → minuto a minuto → staff → proveedores → montaje → croquis →
   INVITADOS POR MESA (mesa principal primero) → requisición.
 - Hora de término del minuto: la escrita en la actividad "(H:MM PM – H:MM PM)"; si no hay, se deduce (en gris).

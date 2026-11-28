@@ -168,13 +168,19 @@
         if (n - n1) sumar(c2, n - n1, 'Cristalería');
       } else if (c1) sumar(c1, n, 'Cristalería');
       else if (c2) sumar(c2, n, 'Cristalería');
-      // Servilletas: una por doblez y lugar, separadas por color
+      // Servilletas: UNA por lugar. Con dos dobleces se reparten como las copas (copasReparto o mitad y mitad),
+      // separadas por color
       var folds = Array.isArray(c.servilletaDoblez) ? c.servilletaDoblez : (c.servilletaDoblez ? [c.servilletaDoblez] : []);
-      folds.forEach(function (f) {
+      var repSv = parseInt(c.copasReparto, 10);
+      var nSv1 = isNaN(repSv) ? Math.ceil(n / 2) : Math.max(0, Math.min(n, repSv));
+      folds.forEach(function (f, i) {
+        var piezas = folds.length === 1 ? n : folds.length === 2 ? (i === 0 ? nSv1 : n - nSv1)
+          : Math.floor(n / folds.length) + (i < n % folds.length ? 1 : 0);
+        if (!piezas) return;
         var color = c['servilletaColor_' + f] || (f === 'corazon' ? c.servilletaColorCorazon : f === 'corbata' ? c.servilletaColorCorbata : c.servilletaColorOtros) || 'blanco';
         // En el inventario: "Servilleta azul cielo", "Servilleta corrugada azul plumbago"… o la genérica "Servilleta de tela"
         var tono = norm(String(color).replace(/_/g, ' '));
-        sumar('Servilleta ' + tono, n, 'Mantelería', 'doblez ' + f, ['Servilleta corrugada ' + tono]);
+        sumar('Servilleta ' + tono, piezas, 'Mantelería', 'doblez ' + f, ['Servilleta corrugada ' + tono]);
       });
       if (c.mantelColor && c.mantelColor !== 'sin_mantel') sumar('Mantel ' + cap(c.mantelColor).toLowerCase(), e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mantelería', 'confirmar forma (redondo / cuadrado / tablón)');
       if (c.caminoColor && c.caminoColor !== 'ninguno') sumar('Camino ' + cap(c.caminoColor).toLowerCase(), e.type === 'table_imperial' ? (e.tablones || 1) : 1, 'Mantelería');
@@ -206,7 +212,7 @@
       if (/carrito/.test(norm(e.name))) sumar('Carrito de snacks', 1, 'Snacks y estaciones');
       else if (e.type === 'table_gifts') sumar('Mesa de regalos — elegir mesa', 1, 'Mesas y periqueras');
       else if (e.type === 'table_cake') sumar('Mesa de pastel — elegir mesa', 1, 'Mesas y periqueras');
-      else if (e.type === 'table_photographers') sumar('Mesa para fotógrafos', 1, 'Mesas y periqueras', 'entre la barra y el DJ');
+      // table_photographers: la llevan los fotógrafos; solo se ubica en el croquis (no sale de bodega)
     });
 
     // Templete (por ejemplo, para dar altura a la mesa principal)
@@ -270,7 +276,10 @@
     var deTipo = function (re) { return elements.filter(function (e) { return re.test(e.type || ''); }); };
     // Back: su estructura es una portería
     var backs = elements.filter(function (e) { return /backdrop|back_/.test(e.type) || /\bback\b/i.test(e.name || ''); });
-    if (backs.length) sumar('Portería metálica (dorada o negra)', backs.length, 'Decoración y estructuras', 'estructura del back');
+    backs.forEach(function (e) {
+      var p = e.porteria === 'negra' ? 'Portería metálica negra' : e.porteria === 'dorada' ? 'Portería metálica dorada' : 'Portería metálica (dorada o negra)';
+      sumar(p, 1, 'Decoración y estructuras', 'estructura del back');
+    });
     // Alfombra roja colocada en el plano
     if (deTipo(/^red_carpet$/).length) sumar('Alfombra roja', deTipo(/^red_carpet$/).length, 'Decoración y estructuras');
     // Letras gigantes del plano con su texto (p. ej. "M & E"): las que hay en bodega se piden; las que no, quedan pendientes
@@ -278,9 +287,12 @@
       var letras = String(e.letras || '').toUpperCase().replace(/\s+/g, '').split('');
       if (!letras.length) { pendientes.push('Letras gigantes: indicar qué letras lleva "' + (e.name || 'Letras') + '".'); return; }
       var hay = { E: 1, L: 1, O: 1, V: 1 }, faltan = [];
-      letras.forEach(function (l) { if (hay[l]) sumar('Letra gigante ' + l, 1, 'Letras gigantes', e.letras); else faltan.push(l === '&' ? '"&"' : l); });
-      if (faltan.length) pendientes.push('Letras gigantes "' + e.letras + '": en bodega solo hay E, L, O, V y XV; confirmar si van y quién consigue ' + faltan.join(', ') + '.');
-      ilumina = true;
+      // letrasPorConfirmar: aún no se sabe si van; letrasSinFocos: van sin focos (no piden focos ni extensiones)
+      var notaL = e.letras + (e.letrasPorConfirmar ? ' · POR CONFIRMAR si van' : '') + (e.letrasSinFocos ? ' · sin focos' : '');
+      letras.forEach(function (l) { if (hay[l]) sumar('Letra gigante ' + l, 1, 'Letras gigantes', notaL); else faltan.push(l === '&' ? '"&"' : l); });
+      if (e.letrasPorConfirmar) pendientes.push('Letras gigantes "' + e.letras + '": por confirmar si van' + (e.letrasSinFocos ? ' (si van, sin focos)' : '') + (faltan.length ? '; en bodega solo hay E, L, O, V y XV, falta quién consigue ' + faltan.join(', ') : '') + '.');
+      else if (faltan.length) pendientes.push('Letras gigantes "' + e.letras + '": en bodega solo hay E, L, O, V y XV; confirmar si van y quién consigue ' + faltan.join(', ') + '.');
+      if (!e.letrasSinFocos) ilumina = true;
     });
     if (ilumina && !items.some(function (i) { return i.nombre === 'Focos para letras gigantes'; })) {
       sumar('Focos para letras gigantes', '', 'Iluminación y eléctrico', 'POR CONFIRMAR: cuántos focos lleva cada letra');
@@ -290,7 +302,8 @@
     if (!ilumina) pendientes.push('Extensiones eléctricas: definir si se llevan y cuántas.');
     // Chisperos colocados en el plano
     var chisperos = deTipo(/^sparklers$/).length;
-    if (chisperos) pendientes.push('Chisperos: ' + chisperos + ' en el plano; confirmar proveedor, en qué momento se detonan y quién los detona.');
+    var provChisp = (d.proveedores || []).find(function (p) { return /chispero/.test(norm((p.servicio || '') + ' ' + (p.servicioOtro || ''))); });
+    if (chisperos) pendientes.push('Chisperos: ' + chisperos + ' en el plano; ' + (provChisp ? 'los proporciona ' + provChisp.nombre + '; confirmar' : 'confirmar proveedor,') + ' en qué momento se detonan y quién los detona.');
     // Periqueras: cada una con su sombrilla; definir cuántas de madera y cuántas de metal
     var nPeri = L.coctel.filter(function (e) { return e.type !== 'lounge_set'; }).length;
     if (nPeri) {
