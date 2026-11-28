@@ -849,7 +849,12 @@ window.Visualizer3D = (function () {
       }
       // No cayó justo sobre una mesa (en el celular se ven chicas): se busca la mesa más cercana al punto tocado
       var p = _puntoEnPiso(e.clientX, e.clientY);
-      if (p) window.dispatchEvent(new CustomEvent('plano:tocar', { detail: { x: p.x, y: p.z, tolerancia: e.pointerType === 'touch' ? 1.5 : 0.8, id3d: id || null } }));
+      if (!p) return;
+      // Tolerancia según el acercamiento: ~40 px de pantalla con el dedo (~15 px con mouse) convertidos a metros
+      var px = e.pointerType === 'touch' ? 40 : 15;
+      var p2 = _puntoEnPiso(e.clientX + px, e.clientY);
+      var tol = Math.max(e.pointerType === 'touch' ? 1.5 : 0.8, p2 ? Math.min(6, p.distanceTo(p2)) : 0);
+      window.dispatchEvent(new CustomEvent('plano:tocar', { detail: { x: p.x, y: p.z, tolerancia: tol, id3d: id || null } }));
     });
     console.log('[Visualizer3D] Initialized.');
   }

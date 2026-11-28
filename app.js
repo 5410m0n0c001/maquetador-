@@ -3720,8 +3720,11 @@
         : '<p class="mesa-pop-vacia">Sin invitados asignados.</p>') +
       '  <div class="mesa-pop-pie">Número = lugares (invitado + acompañantes)</div>' +
       '</div>';
+    var abiertoEn = Date.now();
     pop.addEventListener('click', function (e) {
-      if (e.target === pop || e.target.closest('.mesa-pop-close')) _cerrarInvitadosMesa();
+      // En celular, al levantar el dedo el navegador manda un clic extra que cae sobre la ventana recién abierta:
+      // durante el primer medio segundo se ignora el clic en el fondo (la X sí cierra)
+      if (e.target.closest('.mesa-pop-close') || (e.target === pop && Date.now() - abiertoEn > 600)) _cerrarInvitadosMesa();
     });
     // En pantalla completa, la ventanita va dentro de lo que está en pantalla completa (si no, no se ve)
     _contenedorPop().appendChild(pop);
@@ -3747,8 +3750,11 @@
       (prov.telefono ? '<li><span>Teléfono</span><b>' + _escHtml(prov.telefono) + '</b></li>' : '') +
       (prov.llegada ? '<li><span>Llega / monta</span><b>' + _escHtml(prov.llegada) + '</b></li>' : '') +
       '</ul></div>';
+    var abiertoEn = Date.now();
     pop.addEventListener('click', function (e) {
-      if (e.target === pop || e.target.closest('.mesa-pop-close')) _cerrarInvitadosMesa();
+      // En celular, al levantar el dedo el navegador manda un clic extra que cae sobre la ventana recién abierta:
+      // durante el primer medio segundo se ignora el clic en el fondo (la X sí cierra)
+      if (e.target.closest('.mesa-pop-close') || (e.target === pop && Date.now() - abiertoEn > 600)) _cerrarInvitadosMesa();
     });
     _contenedorPop().appendChild(pop);
   }
